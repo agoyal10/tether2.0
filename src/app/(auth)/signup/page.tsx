@@ -2,15 +2,21 @@
 
 export const dynamic = "force-dynamic";
 
-import { useState } from "react";
+import { Suspense, useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import toast from "react-hot-toast";
 import { createClient } from "@/lib/supabase/client";
 import { generateInviteCode } from "@/lib/utils";
 
 export default function SignupPage() {
+  return <Suspense><SignupForm /></Suspense>;
+}
+
+function SignupForm() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const next = searchParams.get("next") ?? "/dashboard";
   const supabase = createClient();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -20,9 +26,10 @@ export default function SignupPage() {
 
   async function handleGoogle() {
     setGoogleLoading(true);
+    const callbackUrl = `${window.location.origin}/auth/callback?next=${encodeURIComponent(next)}`;
     const { error } = await supabase.auth.signInWithOAuth({
       provider: "google",
-      options: { redirectTo: `${window.location.origin}/auth/callback` },
+      options: { redirectTo: callbackUrl },
     });
     if (error) {
       toast.error(error.message);
@@ -58,7 +65,7 @@ export default function SignupPage() {
     }
 
     toast.success("Welcome to Tether! 💞");
-    router.push("/invite");
+    router.push(next);
     router.refresh();
     setLoading(false);
   }
@@ -136,7 +143,7 @@ export default function SignupPage() {
 
         <p className="mt-6 text-center text-sm text-gray-400">
           Already have an account?{" "}
-          <Link href="/login" className="font-medium text-lavender-dark hover:underline">
+          <Link href={`/login${next !== "/dashboard" ? `?next=${encodeURIComponent(next)}` : ""}`} className="font-medium text-lavender-dark hover:underline">
             Sign in
           </Link>
         </p>

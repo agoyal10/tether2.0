@@ -104,9 +104,22 @@ export default function PartnerPage() {
     toast.success("Disconnected");
   }
 
+  async function logout() {
+    await supabase.auth.signOut();
+    router.push("/login");
+  }
+
   return (
     <div className="flex flex-col gap-6">
-      <h1 className="text-2xl font-bold text-gray-800">Partner</h1>
+      <div className="flex items-center justify-between">
+        <h1 className="text-2xl font-bold text-gray-800 dark:text-gray-100">Partner</h1>
+        <button
+          onClick={logout}
+          className="rounded-2xl px-3 py-1.5 text-xs font-medium text-gray-400 hover:bg-gray-100 hover:text-gray-600 dark:hover:bg-gray-800 transition-all"
+        >
+          Log out
+        </button>
+      </div>
 
       {/* Connected state */}
       {partner ? (
