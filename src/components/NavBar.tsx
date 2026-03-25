@@ -59,6 +59,10 @@ export default function NavBar() {
 
     fetchUnread();
 
+    // Re-fetch when tab becomes visible (catches connect/disconnect while app was in background)
+    const onVisible = () => { if (document.visibilityState === "visible") fetchUnread(); };
+    document.addEventListener("visibilitychange", onVisible);
+
     const channel = supabase
       .channel("navbar-unread")
       .on("postgres_changes", { event: "*", schema: "public", table: "connections" }, fetchUnread)
@@ -66,8 +70,11 @@ export default function NavBar() {
       .on("postgres_changes", { event: "*", schema: "public", table: "chat_reads" }, fetchUnread)
       .subscribe();
 
-    return () => { supabase.removeChannel(channel); };
-  }, [supabase]);
+    return () => {
+      document.removeEventListener("visibilitychange", onVisible);
+      supabase.removeChannel(channel);
+    };
+  }, [supabase, path]);
 
   const NAV_ITEMS = [
     { href: "/dashboard", label: "Home",     icon: "🏠", badge: unread > 0, disabled: false },
