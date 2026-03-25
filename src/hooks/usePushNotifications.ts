@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import toast from "react-hot-toast";
 
 type PermissionState = NotificationPermission | "unsupported" | "needs-install";
 
@@ -8,15 +9,16 @@ export function usePushNotifications() {
   const [state, setState] = useState<PermissionState>("unsupported");
 
   useEffect(() => {
+    const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
+    const isStandalone =
+      window.matchMedia("(display-mode: standalone)").matches ||
+      (navigator as { standalone?: boolean }).standalone === true;
+
     if (!("serviceWorker" in navigator) || !("PushManager" in window)) {
-      // On iOS Safari (not installed), PushManager is unavailable
-      const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
-      const isStandalone = window.matchMedia("(display-mode: standalone)").matches;
-      if (isIOS && !isStandalone) {
-        setState("needs-install");
-      }
+      if (isIOS && !isStandalone) setState("needs-install");
       return;
     }
+
     setState(Notification.permission);
     navigator.serviceWorker.register("/sw.js").catch(console.warn);
   }, []);
@@ -24,28 +26,50 @@ export function usePushNotifications() {
   async function requestPermission() {
     if (state !== "default") return;
 
-    // Notification.requestPermission() MUST be the first await — iOS voids
-    // the user gesture if any other async call precedes it.
+    // Must be first await — iOS voids user gesture after any preceding async call
     const result = await Notification.requestPermission();
     setState(result);
+
+    if (result === "denied") {
+      toast.error("Notifications blocked. Go to iPhone Settings → Tether → Notifications to enable.");
+      return;
+    }
     if (result !== "granted") return;
 
-    const reg = await navigator.serviceWorker.ready;
-    const existing = await reg.pushManager.getSubscription();
-    if (existing) return;
+    try {
+      const reg = await navigator.serviceWorker.ready;
+      const existing = await reg.pushManager.getSubscription();
+      if (existing) {
+        toast.success("Notifications enabled! 🔔");
+        return;
+      }
 
-    const subscription = await reg.pushManager.subscribe({
-      userVisibleOnly: true,
-      applicationServerKey: urlBase64ToUint8Array(
-        process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY!
-      ) as unknown as ArrayBuffer,
-    });
+      const vapidKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY;
+      if (!vapidKey) {
+        toast.error("Push config missing — contact support.");
+        return;
+      }
 
-    await fetch("/api/push/subscribe", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(subscription),
-    });
+      const subscription = await reg.pushManager.subscribe({
+        userVisibleOnly: true,
+        applicationServerKey: urlBase64ToUint8Array(vapidKey) as unknown as ArrayBuffer,
+      });
+
+      const res = await fetch("/api/push/subscribe", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(subscription),
+      });
+
+      if (res.ok) {
+        toast.success("Notifications enabled! 🔔");
+      } else {
+        toast.error("Could not save subscription. Try again.");
+      }
+    } catch (err) {
+      console.error("Push subscription error:", err);
+      toast.error("Something went wrong enabling notifications.");
+    }
   }
 
   return { state, requestPermission };
