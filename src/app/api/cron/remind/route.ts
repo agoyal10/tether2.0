@@ -3,7 +3,6 @@ import webpush from "web-push";
 import { createAdminClient } from "@/lib/supabase/admin";
 
 export async function GET(req: NextRequest) {
-  // Verify cron secret
   const auth = req.headers.get("authorization");
   if (auth !== `Bearer ${process.env.CRON_SECRET}`) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -16,45 +15,30 @@ export async function GET(req: NextRequest) {
   );
 
   const admin = createAdminClient();
-  const nowUtc = new Date();
 
-  // Fetch all users with reminders enabled
+  // Get all users with reminders enabled
   const { data: profiles } = await admin
     .from("profiles")
-    .select("id, display_name, reminder_hour, reminder_timezone")
+    .select("id")
     .eq("reminder_enabled", true);
 
   if (!profiles || profiles.length === 0) return NextResponse.json({ ok: true, sent: 0 });
 
-  // Filter to users whose local hour matches now
-  const eligible = profiles.filter((p: { reminder_hour: number; reminder_timezone: string }) => {
-    try {
-      const localHour = new Date(nowUtc.toLocaleString("en-US", { timeZone: p.reminder_timezone })).getHours();
-      return localHour === p.reminder_hour;
-    } catch {
-      return false;
-    }
-  });
+  const todayStart = new Date();
+  todayStart.setUTCHours(0, 0, 0, 0);
 
-  if (eligible.length === 0) return NextResponse.json({ ok: true, sent: 0 });
-
-  // For each eligible user, check if they've already checked in today (in their timezone)
   let sent = 0;
-  for (const profile of eligible) {
-    const localMidnight = new Date(
-      new Date().toLocaleDateString("en-CA", { timeZone: profile.reminder_timezone }) + "T00:00:00"
-    );
-
+  for (const profile of profiles) {
+    // Skip if already checked in today
     const { data: todayLog } = await admin
       .from("mood_logs")
       .select("id")
       .eq("user_id", profile.id)
-      .gte("created_at", localMidnight.toISOString())
+      .gte("created_at", todayStart.toISOString())
       .maybeSingle();
 
-    if (todayLog) continue; // Already checked in today
+    if (todayLog) continue;
 
-    // Get their push subscriptions
     const { data: subs } = await admin
       .from("push_subscriptions")
       .select("endpoint, p256dh, auth")
