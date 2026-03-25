@@ -106,7 +106,7 @@ export default function PartnerPage() {
 
     const [a, b] = [profile.id, found.id].sort();
     const { error } = await supabase.from("connections").upsert(
-      { user_a_id: a, user_b_id: b, status: "active" },
+      { user_a_id: a, user_b_id: b, status: "active", created_at: new Date().toISOString() },
       { onConflict: "user_a_id,user_b_id" }
     );
 

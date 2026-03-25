@@ -29,23 +29,25 @@ export default async function DashboardPage() {
 
   const admin = createAdminClient();
 
-  // Fetch partner's logs
+  // Fetch partner's logs — only those created after this connection started
   let partnerLogs: MoodLog[] = [];
-  if (partnerId) {
+  if (partnerId && connection) {
     const { data } = await admin
       .from("mood_logs")
       .select("*, profile:profiles!mood_logs_user_id_fkey(*)")
       .eq("user_id", partnerId)
+      .gte("created_at", connection.created_at)
       .order("created_at", { ascending: false })
       .limit(6);
     partnerLogs = (data ?? []) as MoodLog[];
   }
 
-  // Fetch own logs
+  // Fetch own logs — only those created after this connection started
   const { data: myLogsRaw } = await supabase
     .from("mood_logs")
     .select("*")
     .eq("user_id", user.id)
+    .gte("created_at", connection?.created_at ?? new Date(0).toISOString())
     .order("created_at", { ascending: false })
     .limit(6);
   const myLogs = (myLogsRaw ?? []) as MoodLog[];

@@ -22,6 +22,19 @@ export default async function ChatPage({ params }: Props) {
 
   if (!log) notFound();
 
+  // If viewing someone else's log, verify an active connection exists that predates the log
+  if (log.user_id !== user.id) {
+    const { data: connection } = await supabase
+      .from("connections")
+      .select("created_at")
+      .or(`user_a_id.eq.${user.id},user_b_id.eq.${user.id}`)
+      .or(`user_a_id.eq.${log.user_id},user_b_id.eq.${log.user_id}`)
+      .eq("status", "active")
+      .lte("created_at", log.created_at)
+      .maybeSingle();
+    if (!connection) notFound();
+  }
+
   const { data: messages } = await supabase
     .from("messages")
     .select("*, profile:profiles(*)")
