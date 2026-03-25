@@ -9,6 +9,7 @@ import { createClient } from "@/lib/supabase/client";
 export default function NavBar() {
   const path = usePathname();
   const [unread, setUnread] = useState(0);
+  const [hasPartner, setHasPartner] = useState(false);
   const supabase = createClient();
 
   useEffect(() => {
@@ -23,7 +24,8 @@ export default function NavBar() {
         .eq("status", "active")
         .single();
 
-      if (!conn) { setUnread(0); return; }
+      if (!conn) { setUnread(0); setHasPartner(false); return; }
+      setHasPartner(true);
       const partnerId = conn.user_a_id === user.id ? conn.user_b_id : conn.user_a_id;
 
       // Get partner's mood log IDs
@@ -67,9 +69,9 @@ export default function NavBar() {
   }, [supabase]);
 
   const NAV_ITEMS = [
-    { href: "/dashboard", label: "Home",     icon: "🏠", badge: unread > 0 },
-    { href: "/checkin",   label: "Check-in", icon: "💬", badge: false },
-    { href: "/partner",   label: "Partner",  icon: "💞", badge: false },
+    { href: "/dashboard", label: "Home",     icon: "🏠", badge: unread > 0, disabled: false },
+    { href: "/checkin",   label: "Check-in", icon: "💬", badge: false,      disabled: !hasPartner },
+    { href: "/partner",   label: "Partner",  icon: "💞", badge: false,      disabled: false },
   ];
 
   return (
@@ -77,6 +79,18 @@ export default function NavBar() {
       <div className="mx-auto flex max-w-md items-center justify-around px-4 py-2">
         {NAV_ITEMS.map((item) => {
           const active = path === item.href;
+          if (item.disabled) {
+            return (
+              <div
+                key={item.href}
+                className="relative flex flex-col items-center gap-0.5 rounded-2xl px-4 py-2 text-xs font-medium text-gray-300 dark:text-gray-600 cursor-not-allowed select-none"
+                title="Connect a partner first"
+              >
+                <span className="text-xl opacity-40">{item.icon}</span>
+                {item.label}
+              </div>
+            );
+          }
           return (
             <Link
               key={item.href}
