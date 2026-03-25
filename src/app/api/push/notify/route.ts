@@ -51,7 +51,8 @@ export async function POST(req: NextRequest) {
     .select("endpoint, p256dh, auth")
     .eq("user_id", partnerId);
 
-  if (!subs || subs.length === 0) return NextResponse.json({ ok: true });
+  console.log(`[push] subs for partner ${partnerId}:`, subs?.length ?? 0);
+  if (!subs || subs.length === 0) return NextResponse.json({ ok: true, reason: "no subs" });
 
   const payload = JSON.stringify({
     title: `${senderName} checked in ${moodConfig?.emoji ?? ""}`,
@@ -59,7 +60,7 @@ export async function POST(req: NextRequest) {
     url: `/chat/${moodLogId}`,
   });
 
-  await Promise.allSettled(
+  const results = await Promise.allSettled(
     subs.map((sub) =>
       webpush.sendNotification(
         { endpoint: sub.endpoint, keys: { p256dh: sub.p256dh, auth: sub.auth } },
@@ -68,5 +69,10 @@ export async function POST(req: NextRequest) {
     )
   );
 
-  return NextResponse.json({ ok: true });
+  results.forEach((r, i) => {
+    if (r.status === "rejected") console.error(`[push] sub[${i}] failed:`, r.reason);
+    else console.log(`[push] sub[${i}] sent, status:`, r.value.statusCode);
+  });
+
+  return NextResponse.json({ ok: true, sent: results.length });
 }
