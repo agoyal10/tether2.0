@@ -5,6 +5,7 @@ import { generateInviteCode } from "@/lib/utils";
 export async function GET(request: NextRequest) {
   const { searchParams, origin } = new URL(request.url);
   const code = searchParams.get("code");
+  const next = searchParams.get("next") ?? "/dashboard";
 
   if (!code) {
     return NextResponse.redirect(`${origin}/login?error=oauth`);
@@ -13,7 +14,7 @@ export async function GET(request: NextRequest) {
   // We need to set cookies on the response, so we build the response first
   // and pass it into the Supabase client so it can write the session cookie.
   const isNewUser = { value: false };
-  let redirectTo = `${origin}/dashboard`;
+  let redirectTo = `${origin}${next}`;
 
   const response = NextResponse.redirect(redirectTo);
 
@@ -62,7 +63,7 @@ export async function GET(request: NextRequest) {
       invite_code: generateInviteCode(),
     });
 
-    redirectTo = `${origin}/invite`;
+    redirectTo = next === "/dashboard" ? `${origin}/invite` : `${origin}${next}`;
   }
 
   // Update the redirect URL and return with session cookies attached

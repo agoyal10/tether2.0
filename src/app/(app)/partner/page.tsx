@@ -50,6 +50,17 @@ export default function PartnerPage() {
     setTimeout(() => setCopied(false), 2000);
   }
 
+  async function shareLink() {
+    if (!profile) return;
+    const url = `${window.location.origin}/join/${profile.invite_code}`;
+    if (navigator.share) {
+      await navigator.share({ title: "Join me on Tether 💞", url }).catch(() => {});
+    } else {
+      await navigator.clipboard.writeText(url);
+      toast.success("Invite link copied!");
+    }
+  }
+
   async function connectPartner(e: React.FormEvent) {
     e.preventDefault();
     const code = partnerCode.trim().toUpperCase();
@@ -110,14 +121,14 @@ export default function PartnerPage() {
             </div>
           </div>
 
-          <div className="rounded-3xl bg-gray-50 p-5">
-            <p className="text-xs font-semibold uppercase tracking-widest text-gray-400 mb-3">Your Invite Code</p>
+          <div className="rounded-3xl bg-gray-50 p-5 dark:bg-gray-800">
+            <p className="text-xs font-semibold uppercase tracking-widest text-gray-400 mb-3">Invite Another Device</p>
             <div className="flex items-center justify-between gap-3">
               <span className="text-2xl font-bold tracking-[0.2em] text-lavender-dark">
                 {profile?.invite_code ?? "------"}
               </span>
-              <button onClick={copyCode} className="rounded-2xl bg-lavender px-4 py-2 text-sm font-semibold text-white hover:bg-lavender-dark transition-all">
-                {copied ? "Copied!" : "Copy"}
+              <button onClick={shareLink} className="rounded-2xl bg-lavender px-4 py-2 text-sm font-semibold text-white hover:bg-lavender-dark transition-all">
+                Share Link
               </button>
             </div>
           </div>
@@ -133,15 +144,21 @@ export default function PartnerPage() {
         /* Not connected state */
         <div className="flex flex-col gap-6">
           <div className="rounded-3xl bg-lavender-light p-5">
-            <p className="text-xs font-semibold uppercase tracking-widest text-lavender-dark mb-3">Your Invite Code</p>
+            <p className="text-xs font-semibold uppercase tracking-widest text-lavender-dark mb-3">Invite Your Partner</p>
             <div className="flex items-center justify-between gap-3">
               <span className="text-3xl font-bold tracking-[0.25em] text-lavender-dark">
                 {profile?.invite_code ?? "------"}
               </span>
-              <button onClick={copyCode} className="rounded-2xl bg-lavender px-4 py-2 text-sm font-semibold text-white hover:bg-lavender-dark transition-all">
-                {copied ? "Copied!" : "Copy"}
+              <button onClick={copyCode} className="rounded-2xl bg-white/70 px-4 py-2 text-sm font-semibold text-lavender-dark hover:bg-white transition-all">
+                {copied ? "Copied!" : "Copy Code"}
               </button>
             </div>
+            <button
+              onClick={shareLink}
+              className="mt-3 w-full rounded-2xl bg-lavender py-2.5 text-sm font-semibold text-white hover:bg-lavender-dark transition-all"
+            >
+              Share Invite Link 💌
+            </button>
           </div>
 
           <form onSubmit={connectPartner} className="flex flex-col gap-3">

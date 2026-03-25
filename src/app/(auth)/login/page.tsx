@@ -4,12 +4,14 @@ export const dynamic = "force-dynamic";
 
 import { useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import toast from "react-hot-toast";
 import { createClient } from "@/lib/supabase/client";
 
 export default function LoginPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const next = searchParams.get("next") ?? "/dashboard";
   const supabase = createClient();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -23,7 +25,7 @@ export default function LoginPage() {
     if (error) {
       toast.error(error.message);
     } else {
-      router.push("/dashboard");
+      router.push(next);
       router.refresh();
     }
     setLoading(false);
@@ -31,9 +33,10 @@ export default function LoginPage() {
 
   async function handleGoogle() {
     setGoogleLoading(true);
+    const callbackUrl = `${window.location.origin}/auth/callback?next=${encodeURIComponent(next)}`;
     const { error } = await supabase.auth.signInWithOAuth({
       provider: "google",
-      options: { redirectTo: `${window.location.origin}/auth/callback` },
+      options: { redirectTo: callbackUrl },
     });
     if (error) {
       toast.error(error.message);
@@ -105,7 +108,7 @@ export default function LoginPage() {
 
         <p className="mt-6 text-center text-sm text-gray-400">
           Don&apos;t have an account?{" "}
-          <Link href="/signup" className="font-medium text-lavender-dark hover:underline">
+          <Link href={`/signup${next !== "/dashboard" ? `?next=${encodeURIComponent(next)}` : ""}`} className="font-medium text-lavender-dark hover:underline">
             Create one
           </Link>
         </p>
