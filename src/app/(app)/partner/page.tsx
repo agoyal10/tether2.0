@@ -134,18 +134,6 @@ export default function PartnerPage() {
             </div>
           </div>
 
-          <div className="rounded-3xl bg-gray-50 p-5 dark:bg-gray-800">
-            <p className="text-xs font-semibold uppercase tracking-widest text-gray-400 mb-3">Invite Another Device</p>
-            <div className="flex items-center justify-between gap-3">
-              <span className="text-2xl font-bold tracking-[0.2em] text-lavender-dark">
-                {profile?.invite_code ?? "------"}
-              </span>
-              <button onClick={shareLink} className="rounded-2xl bg-lavender px-4 py-2 text-sm font-semibold text-white hover:bg-lavender-dark transition-all">
-                Share Link
-              </button>
-            </div>
-          </div>
-
           <button
             onClick={disconnect}
             className="w-full rounded-3xl border border-blush py-3 text-sm font-medium text-blush-dark hover:bg-blush-light transition-all"
