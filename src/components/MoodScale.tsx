@@ -56,7 +56,7 @@ export default function MoodScale({ onSubmit, isLoading = false, naughtyMode = f
       </div>
 
       {/* Emoji Scale */}
-      <div className="flex items-center justify-between gap-2">
+      <div className="flex items-center justify-between gap-1">
         {configs.map((config) => {
           const isSelected = selected === config.level;
           return (
@@ -68,18 +68,18 @@ export default function MoodScale({ onSubmit, isLoading = false, naughtyMode = f
               aria-label={config.label}
               aria-pressed={isSelected}
               className={cn(
-                "flex flex-1 flex-col items-center gap-1.5 rounded-3xl border-2 p-3 transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-lavender",
+                "flex flex-1 flex-col items-center gap-1 rounded-2xl border-2 px-1 py-2 transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-lavender",
                 isSelected
                   ? [config.color, config.borderColor, "shadow-card"]
                   : "border-transparent bg-gray-50 hover:bg-gray-100"
               )}
             >
-              <span className={cn("text-3xl transition-all", isSelected ? "scale-110" : "")}>
+              <span className={cn("text-2xl transition-all", isSelected ? "scale-110" : "")}>
                 {config.emoji}
               </span>
               <span
                 className={cn(
-                  "text-[11px] font-medium leading-tight",
+                  "text-[10px] font-medium leading-tight",
                   isSelected ? config.textColor : "text-gray-400"
                 )}
               >
