@@ -133,7 +133,7 @@ export default function SettingsPage() {
             <p className="text-xs text-gray-400 mt-0.5">Daily nudge at 8:00 PM if you haven&apos;t checked in</p>
           </div>
           <button
-            onClick={() => saveReminder(!reminderEnabled, 20)}
+            onClick={() => saveReminder(!reminderEnabled)}
             disabled={savingReminder}
             className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none ${
               reminderEnabled ? "bg-lavender" : "bg-gray-200 dark:bg-gray-600"
