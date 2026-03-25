@@ -121,6 +121,7 @@ export default function PartnerPage() {
 
   async function disconnect() {
     if (!connection) return;
+    await fetch("/api/push/disconnect", { method: "POST" });
     await supabase.from("connections").update({ status: "blocked" }).eq("id", connection.id);
     setConnection(null);
     setPartner(null);
