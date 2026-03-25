@@ -61,6 +61,7 @@ export default function NavBar() {
 
     const channel = supabase
       .channel("navbar-unread")
+      .on("postgres_changes", { event: "*", schema: "public", table: "connections" }, fetchUnread)
       .on("postgres_changes", { event: "*", schema: "public", table: "messages" }, fetchUnread)
       .on("postgres_changes", { event: "*", schema: "public", table: "chat_reads" }, fetchUnread)
       .subscribe();
