@@ -65,12 +65,20 @@ export default function ChatThread({
   async function sendMessage() {
     if (!content.trim() || sending) return;
     setSending(true);
+    const trimmed = content.trim();
 
     await supabase.from("messages").insert({
       mood_log_id: moodLogId,
       sender_id: currentUserId,
-      content: content.trim(),
+      content: trimmed,
     });
+
+    // Notify partner (best-effort)
+    fetch("/api/push/message", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ moodLogId, content: trimmed }),
+    }).catch(() => {});
 
     setContent("");
     setSending(false);

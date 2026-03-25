@@ -43,7 +43,7 @@ export default async function ChatPage({ params }: Props) {
     <div className="flex h-[calc(100vh-5rem)] flex-col gap-4">
       <div>
         <h1 className="mb-3 text-xl font-bold text-gray-800">Chat</h1>
-        <MoodCard log={log} isPartner={log.user_id !== user.id} />
+        <MoodCard log={log} isPartner={log.user_id !== user.id} hideLink />
       </div>
       <div className="-mx-4 flex-1 overflow-hidden rounded-t-4xl bg-white shadow-card">
         <ChatThread

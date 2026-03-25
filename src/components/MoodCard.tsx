@@ -12,9 +12,10 @@ interface MoodCardProps {
   log: MoodLog;
   isPartner?: boolean;
   unreadCount?: number;
+  hideLink?: boolean;
 }
 
-export default function MoodCard({ log, isPartner = false, unreadCount = 0 }: MoodCardProps) {
+export default function MoodCard({ log, isPartner = false, unreadCount = 0, hideLink = false }: MoodCardProps) {
   const config = ALL_CONFIGS.find((m) => m.level === log.mood)!;
 
   return (
@@ -59,22 +60,24 @@ export default function MoodCard({ log, isPartner = false, unreadCount = 0 }: Mo
       )}
 
       {/* CTA */}
-      <Link
-        href={`/chat/${log.id}`}
-        className={cn(
-          "mt-4 flex w-full items-center justify-center gap-2 rounded-2xl py-2.5 text-center text-sm font-semibold transition-all hover:opacity-90 focus:outline-none",
-          "bg-white/70 backdrop-blur-sm",
-          config.textColor
-        )}
-      >
-        {log.is_resolved ? "View Chat" : "Open Chat"}
-        {unreadCount > 0 && (
-          <span className="rounded-full bg-blush-dark px-1.5 py-0.5 text-[10px] font-bold text-white">
-            {unreadCount} new
-          </span>
-        )}
-        <span>→</span>
-      </Link>
+      {!hideLink && (
+        <Link
+          href={`/chat/${log.id}`}
+          className={cn(
+            "mt-4 flex w-full items-center justify-center gap-2 rounded-2xl py-2.5 text-center text-sm font-semibold transition-all hover:opacity-90 focus:outline-none",
+            "bg-white/70 backdrop-blur-sm",
+            config.textColor
+          )}
+        >
+          {log.is_resolved ? "View Chat" : "Open Chat"}
+          {unreadCount > 0 && (
+            <span className="rounded-full bg-blush-dark px-1.5 py-0.5 text-[10px] font-bold text-white">
+              {unreadCount} new
+            </span>
+          )}
+          <span>→</span>
+        </Link>
+      )}
     </motion.div>
   );
 }
