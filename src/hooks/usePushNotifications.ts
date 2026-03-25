@@ -2,26 +2,35 @@
 
 import { useEffect, useState } from "react";
 
+type PermissionState = NotificationPermission | "unsupported" | "needs-install";
+
 export function usePushNotifications() {
-  const [permission, setPermission] = useState<NotificationPermission | null>(null);
-  const [supported, setSupported] = useState(false);
+  const [state, setState] = useState<PermissionState>("unsupported");
 
   useEffect(() => {
-    if ("serviceWorker" in navigator && "PushManager" in window) {
-      setSupported(true);
-      setPermission(Notification.permission);
-      navigator.serviceWorker.register("/sw.js").catch(console.warn);
+    if (!("serviceWorker" in navigator) || !("PushManager" in window)) {
+      // On iOS Safari (not installed), PushManager is unavailable
+      const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
+      const isStandalone = window.matchMedia("(display-mode: standalone)").matches;
+      if (isIOS && !isStandalone) {
+        setState("needs-install");
+      }
+      return;
     }
+    setState(Notification.permission);
+    navigator.serviceWorker.register("/sw.js").catch(console.warn);
   }, []);
 
   async function requestPermission() {
-    if (!supported) return;
+    if (state !== "default") return;
 
-    const reg = await navigator.serviceWorker.ready;
+    // Notification.requestPermission() MUST be the first await — iOS voids
+    // the user gesture if any other async call precedes it.
     const result = await Notification.requestPermission();
-    setPermission(result);
+    setState(result);
     if (result !== "granted") return;
 
+    const reg = await navigator.serviceWorker.ready;
     const existing = await reg.pushManager.getSubscription();
     if (existing) return;
 
@@ -39,7 +48,7 @@ export function usePushNotifications() {
     });
   }
 
-  return { supported, permission, requestPermission };
+  return { state, requestPermission };
 }
 
 function urlBase64ToUint8Array(base64String: string): Uint8Array {
