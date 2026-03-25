@@ -18,11 +18,12 @@ export async function POST(req: NextRequest) {
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const { moodLogId } = await req.json();
+  const admin = createAdminClient();
 
-  // Get the mood log
-  const { data: log } = await supabase
+  // Get the mood log (admin bypasses RLS, FK hint avoids ambiguous join)
+  const { data: log } = await admin
     .from("mood_logs")
-    .select("*, profile:profiles(display_name)")
+    .select("*, profile:profiles!mood_logs_user_id_fkey(display_name)")
     .eq("id", moodLogId)
     .single();
 
@@ -32,7 +33,7 @@ export async function POST(req: NextRequest) {
   const senderName = (log.profile as { display_name: string })?.display_name ?? "Your partner";
 
   // Get partner ID
-  const { data: connection } = await supabase
+  const { data: connection } = await admin
     .from("connections")
     .select("user_a_id, user_b_id")
     .or(`user_a_id.eq.${user.id},user_b_id.eq.${user.id}`)
@@ -45,7 +46,6 @@ export async function POST(req: NextRequest) {
     connection.user_a_id === user.id ? connection.user_b_id : connection.user_a_id;
 
   // Fetch partner's push subscriptions (admin bypasses RLS)
-  const admin = createAdminClient();
   const { data: subs } = await admin
     .from("push_subscriptions")
     .select("endpoint, p256dh, auth")
