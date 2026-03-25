@@ -80,6 +80,7 @@ export default function NavBar() {
     { href: "/dashboard", label: "Home",     icon: "🏠", badge: unread > 0, disabled: false },
     { href: "/checkin",   label: "Check-in", icon: "💬", badge: false,      disabled: !hasPartner },
     { href: "/partner",   label: "Partner",  icon: "💞", badge: false,      disabled: false },
+    { href: "/settings",  label: "Settings", icon: "⚙️", badge: false,      disabled: false },
   ];
 
   return (

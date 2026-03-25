@@ -12,27 +12,19 @@ export default function PartnerPage() {
   const router = useRouter();
   const supabase = createClient();
   const [profile, setProfile] = useState<Profile | null>(null);
-  const [email, setEmail] = useState<string>("");
   const [partner, setPartner] = useState<Profile | null>(null);
   const [connection, setConnection] = useState<Connection | null>(null);
   const [partnerCode, setPartnerCode] = useState("");
   const [loading, setLoading] = useState(false);
   const [copied, setCopied] = useState(false);
 
-  // Profile editing state
-  const [editingName, setEditingName] = useState(false);
-  const [nameInput, setNameInput] = useState("");
-  const [savingName, setSavingName] = useState(false);
-
   useEffect(() => {
     supabase.auth.getUser().then(async ({ data: { user } }) => {
       if (!user) { router.push("/login"); return; }
-      setEmail(user.email ?? "");
 
       const { data: p } = await supabase
         .from("profiles").select("*").eq("id", user.id).single<Profile>();
       setProfile(p);
-      if (p) setNameInput(p.display_name);
 
       const { data: conn } = await supabase
         .from("connections")
@@ -50,21 +42,6 @@ export default function PartnerPage() {
       }
     });
   }, [supabase, router]);
-
-  async function saveName() {
-    const name = nameInput.trim();
-    if (!name || !profile || name === profile.display_name) { setEditingName(false); return; }
-    setSavingName(true);
-    const { error } = await supabase.from("profiles").update({ display_name: name }).eq("id", profile.id);
-    if (error) {
-      toast.error("Could not save name.");
-    } else {
-      setProfile({ ...profile, display_name: name });
-      toast.success("Name updated!");
-      setEditingName(false);
-    }
-    setSavingName(false);
-  }
 
   async function copyCode() {
     if (!profile) return;
@@ -128,63 +105,10 @@ export default function PartnerPage() {
     toast.success("Disconnected");
   }
 
-  async function logout() {
-    await supabase.auth.signOut();
-    router.push("/login");
-  }
-
   return (
     <div className="flex flex-col gap-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-gray-800 dark:text-gray-100">Partner</h1>
-        <button
-          onClick={logout}
-          className="rounded-2xl px-3 py-1.5 text-xs font-medium text-gray-400 hover:bg-gray-100 hover:text-gray-600 dark:hover:bg-gray-800 transition-all"
-        >
-          Log out
-        </button>
-      </div>
+      <h1 className="text-2xl font-bold text-gray-800 dark:text-gray-100">Partner</h1>
 
-      {/* Profile card */}
-      <div className="rounded-3xl bg-gray-50 dark:bg-gray-800 p-5 flex items-center gap-4">
-        <div className="flex h-14 w-14 items-center justify-center rounded-full bg-lavender text-2xl text-white font-bold shrink-0">
-          {profile?.display_name[0].toUpperCase() ?? "?"}
-        </div>
-        <div className="flex-1 min-w-0">
-          {editingName ? (
-            <div className="flex items-center gap-2">
-              <input
-                autoFocus
-                value={nameInput}
-                onChange={(e) => setNameInput(e.target.value)}
-                onKeyDown={(e) => { if (e.key === "Enter") saveName(); if (e.key === "Escape") setEditingName(false); }}
-                maxLength={40}
-                className="flex-1 rounded-xl border border-lavender bg-white dark:bg-gray-700 px-3 py-1.5 text-sm font-semibold text-gray-800 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-lavender/30"
-              />
-              <button
-                onClick={saveName}
-                disabled={savingName}
-                className="rounded-xl bg-lavender px-3 py-1.5 text-xs font-semibold text-white hover:bg-lavender-dark disabled:opacity-60 transition-all"
-              >
-                {savingName ? "…" : "Save"}
-              </button>
-            </div>
-          ) : (
-            <div className="flex items-center gap-2">
-              <p className="font-semibold text-gray-800 dark:text-gray-100 truncate">{profile?.display_name}</p>
-              <button
-                onClick={() => setEditingName(true)}
-                className="text-xs text-lavender hover:underline shrink-0"
-              >
-                Edit
-              </button>
-            </div>
-          )}
-          <p className="text-sm text-gray-400 truncate mt-0.5">{email}</p>
-        </div>
-      </div>
-
-      {/* Connected state */}
       {partner ? (
         <div className="flex flex-col gap-4">
           <div className="rounded-3xl bg-lavender-light p-5 flex items-center gap-4">
@@ -205,7 +129,6 @@ export default function PartnerPage() {
           </button>
         </div>
       ) : (
-        /* Not connected state */
         <div className="flex flex-col gap-6">
           <div className="rounded-3xl bg-lavender-light p-5">
             <p className="text-xs font-semibold uppercase tracking-widest text-lavender-dark mb-3">Invite Your Partner</p>
@@ -226,13 +149,13 @@ export default function PartnerPage() {
           </div>
 
           <form onSubmit={connectPartner} className="flex flex-col gap-3">
-            <label className="text-sm font-medium text-gray-600">Enter Partner&apos;s Code</label>
+            <label className="text-sm font-medium text-gray-600 dark:text-gray-300">Enter Partner&apos;s Code</label>
             <input
               type="text"
               maxLength={6}
               value={partnerCode}
               onChange={(e) => setPartnerCode(e.target.value.toUpperCase())}
-              className="rounded-2xl border border-gray-200 bg-white px-4 py-3 text-center text-xl font-bold tracking-[0.25em] uppercase focus:border-lavender focus:outline-none focus:ring-2 focus:ring-lavender/30 transition-all"
+              className="rounded-2xl border border-gray-200 bg-white px-4 py-3 text-center text-xl font-bold tracking-[0.25em] uppercase focus:border-lavender focus:outline-none focus:ring-2 focus:ring-lavender/30 transition-all dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100"
               placeholder="XXXXXX"
             />
             <button
