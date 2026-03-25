@@ -12,19 +12,27 @@ export default function PartnerPage() {
   const router = useRouter();
   const supabase = createClient();
   const [profile, setProfile] = useState<Profile | null>(null);
+  const [email, setEmail] = useState<string>("");
   const [partner, setPartner] = useState<Profile | null>(null);
   const [connection, setConnection] = useState<Connection | null>(null);
   const [partnerCode, setPartnerCode] = useState("");
   const [loading, setLoading] = useState(false);
   const [copied, setCopied] = useState(false);
 
+  // Profile editing state
+  const [editingName, setEditingName] = useState(false);
+  const [nameInput, setNameInput] = useState("");
+  const [savingName, setSavingName] = useState(false);
+
   useEffect(() => {
     supabase.auth.getUser().then(async ({ data: { user } }) => {
       if (!user) { router.push("/login"); return; }
+      setEmail(user.email ?? "");
 
       const { data: p } = await supabase
         .from("profiles").select("*").eq("id", user.id).single<Profile>();
       setProfile(p);
+      if (p) setNameInput(p.display_name);
 
       const { data: conn } = await supabase
         .from("connections")
@@ -42,6 +50,21 @@ export default function PartnerPage() {
       }
     });
   }, [supabase, router]);
+
+  async function saveName() {
+    const name = nameInput.trim();
+    if (!name || !profile || name === profile.display_name) { setEditingName(false); return; }
+    setSavingName(true);
+    const { error } = await supabase.from("profiles").update({ display_name: name }).eq("id", profile.id);
+    if (error) {
+      toast.error("Could not save name.");
+    } else {
+      setProfile({ ...profile, display_name: name });
+      toast.success("Name updated!");
+      setEditingName(false);
+    }
+    setSavingName(false);
+  }
 
   async function copyCode() {
     if (!profile) return;
@@ -119,6 +142,45 @@ export default function PartnerPage() {
         >
           Log out
         </button>
+      </div>
+
+      {/* Profile card */}
+      <div className="rounded-3xl bg-gray-50 dark:bg-gray-800 p-5 flex items-center gap-4">
+        <div className="flex h-14 w-14 items-center justify-center rounded-full bg-lavender text-2xl text-white font-bold shrink-0">
+          {profile?.display_name[0].toUpperCase() ?? "?"}
+        </div>
+        <div className="flex-1 min-w-0">
+          {editingName ? (
+            <div className="flex items-center gap-2">
+              <input
+                autoFocus
+                value={nameInput}
+                onChange={(e) => setNameInput(e.target.value)}
+                onKeyDown={(e) => { if (e.key === "Enter") saveName(); if (e.key === "Escape") setEditingName(false); }}
+                maxLength={40}
+                className="flex-1 rounded-xl border border-lavender bg-white dark:bg-gray-700 px-3 py-1.5 text-sm font-semibold text-gray-800 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-lavender/30"
+              />
+              <button
+                onClick={saveName}
+                disabled={savingName}
+                className="rounded-xl bg-lavender px-3 py-1.5 text-xs font-semibold text-white hover:bg-lavender-dark disabled:opacity-60 transition-all"
+              >
+                {savingName ? "…" : "Save"}
+              </button>
+            </div>
+          ) : (
+            <div className="flex items-center gap-2">
+              <p className="font-semibold text-gray-800 dark:text-gray-100 truncate">{profile?.display_name}</p>
+              <button
+                onClick={() => setEditingName(true)}
+                className="text-xs text-lavender hover:underline shrink-0"
+              >
+                Edit
+              </button>
+            </div>
+          )}
+          <p className="text-sm text-gray-400 truncate mt-0.5">{email}</p>
+        </div>
       </div>
 
       {/* Connected state */}
