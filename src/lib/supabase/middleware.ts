@@ -30,15 +30,18 @@ export async function updateSession(request: NextRequest) {
   } = await supabase.auth.getUser();
 
   const { pathname } = request.nextUrl;
-  const isAuthRoute = pathname.startsWith("/login") || pathname.startsWith("/signup") || pathname.startsWith("/join/");
+  const isAuthOnlyRoute = pathname.startsWith("/login") || pathname.startsWith("/signup");
+  const isPublicRoute = isAuthOnlyRoute || pathname.startsWith("/join/");
 
-  if (!user && !isAuthRoute) {
+  if (!user && !isPublicRoute) {
     const url = request.nextUrl.clone();
     url.pathname = "/login";
     return NextResponse.redirect(url);
   }
 
-  if (user && isAuthRoute) {
+  // Redirect logged-in users away from login/signup, but NOT from /join/
+  // (join page needs to run to create the connection)
+  if (user && isAuthOnlyRoute) {
     const url = request.nextUrl.clone();
     url.pathname = "/dashboard";
     return NextResponse.redirect(url);
