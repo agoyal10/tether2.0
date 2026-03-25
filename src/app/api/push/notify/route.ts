@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import webpush from "web-push";
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { MOOD_CONFIGS, NAUGHTY_MOOD_CONFIGS } from "@/types";
 
 const ALL_CONFIGS = [...MOOD_CONFIGS, ...NAUGHTY_MOOD_CONFIGS];
@@ -43,8 +44,9 @@ export async function POST(req: NextRequest) {
   const partnerId =
     connection.user_a_id === user.id ? connection.user_b_id : connection.user_a_id;
 
-  // Fetch partner's push subscriptions
-  const { data: subs } = await supabase
+  // Fetch partner's push subscriptions (admin bypasses RLS)
+  const admin = createAdminClient();
+  const { data: subs } = await admin
     .from("push_subscriptions")
     .select("endpoint, p256dh, auth")
     .eq("user_id", partnerId);
