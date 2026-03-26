@@ -22,6 +22,7 @@ export default function ChatThread({ moodLogId, currentUserId, initialMessages }
   const [pendingMedia, setPendingMedia] = useState<{ path: string; type: "image" | "video" } | null>(null);
   const [showEmojis, setShowEmojis] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const isInitialMount = useRef(true);
@@ -66,9 +67,14 @@ export default function ChatThread({ moodLogId, currentUserId, initialMessages }
   }, [moodLogId, supabase]);
 
   useEffect(() => {
-    const behavior = isInitialMount.current ? "instant" : "smooth";
-    isInitialMount.current = false;
-    bottomRef.current?.scrollIntoView({ behavior: behavior as ScrollBehavior });
+    const container = scrollContainerRef.current;
+    if (!container) return;
+    if (isInitialMount.current) {
+      isInitialMount.current = false;
+      container.scrollTop = container.scrollHeight;
+    } else {
+      bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+    }
   }, [messages]);
 
   async function handleFileSelect(e: React.ChangeEvent<HTMLInputElement>) {
@@ -166,7 +172,7 @@ export default function ChatThread({ moodLogId, currentUserId, initialMessages }
   return (
     <div className="flex h-full flex-col">
       {/* Message list */}
-      <div className="flex-1 overflow-y-auto px-4 py-4 space-y-3 dark:bg-gray-900">
+      <div ref={scrollContainerRef} className="flex-1 overflow-y-auto px-4 py-4 space-y-3 dark:bg-gray-900">
         <AnimatePresence initial={false}>
           {messages.map((msg) => {
             const isMine = msg.sender_id === currentUserId;
