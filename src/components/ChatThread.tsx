@@ -109,13 +109,14 @@ export default function ChatThread({ moodLogId, currentUserId, initialMessages }
       media_path: pendingMedia?.path ?? null,
     });
 
-    if (trimmed) {
-      fetch("/api/push/message", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ moodLogId, content: trimmed || "Sent a photo 📷" }),
-      }).catch(() => {});
-    }
+    fetch("/api/push/message", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        moodLogId,
+        content: trimmed || (pendingMedia?.type === "video" ? "Sent a video 🎥" : "Sent a photo 📷"),
+      }),
+    }).catch(() => {});
 
     setContent("");
     setPendingMedia(null);
