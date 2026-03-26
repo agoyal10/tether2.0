@@ -21,11 +21,15 @@ export default function ChatThread({ moodLogId, currentUserId, initialMessages }
   const [uploading, setUploading] = useState(false);
   const [pendingMedia, setPendingMedia] = useState<{ path: string; type: "image" | "video" } | null>(null);
   const [showEmojis, setShowEmojis] = useState(false);
+  const [isPartnerTyping, setIsPartnerTyping] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const isInitialMount = useRef(true);
+  const channelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
+  const typingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const lastTypingSentRef = useRef(0);
 
   const EMOJIS = ["❤️","💞","😘","🥰","😍","💋","🔥","💦","😈","🫦","🥵","💫","✨","🌹","💌","🫶","😊","😂","🤣","😭","🙈","💀","🫠","😏","🤭","😉","🧋","💯","👀","🤤"];
   const CUSTOM_STICKERS = [
@@ -69,9 +73,23 @@ export default function ChatThread({ moodLogId, currentUserId, initialMessages }
         const newMsg = { ...(payload.new as Message), profile: profile as Profile };
         setMessages((prev) => [...prev, newMsg]);
         if (newMsg.media_path) fetchSignedUrlsForPaths([newMsg.media_path]);
+        // Partner sent a message — clear typing indicator
+        if ((payload.new as Message).sender_id !== currentUserId) {
+          setIsPartnerTyping(false);
+        }
+      })
+      .on("broadcast", { event: "typing" }, () => {
+        setIsPartnerTyping(true);
+        if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
+        typingTimeoutRef.current = setTimeout(() => setIsPartnerTyping(false), 3000);
       })
       .subscribe();
-    return () => { supabase.removeChannel(channel); };
+    channelRef.current = channel;
+    return () => {
+      supabase.removeChannel(channel);
+      channelRef.current = null;
+      if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
+    };
   }, [moodLogId, supabase]);
 
 
@@ -91,11 +109,11 @@ export default function ChatThread({ moodLogId, currentUserId, initialMessages }
     return () => clearTimeout(timer);
   }, []);
 
-  // Smooth scroll for new messages
+  // Smooth scroll for new messages or typing indicator
   useEffect(() => {
     if (isInitialMount.current) { isInitialMount.current = false; return; }
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages]);
+  }, [messages, isPartnerTyping]);
 
   async function handleFileSelect(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
@@ -236,6 +254,29 @@ export default function ChatThread({ moodLogId, currentUserId, initialMessages }
             );
           })}
         </AnimatePresence>
+        <AnimatePresence>
+          {isPartnerTyping && (
+            <motion.div
+              key="typing"
+              initial={{ opacity: 0, y: 6 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 6 }}
+              className="flex items-start"
+            >
+              <div className="rounded-3xl rounded-bl-md bg-white px-4 py-3 shadow-soft dark:bg-gray-800">
+                <div className="flex gap-1 items-center h-4">
+                  {[0, 1, 2].map((i) => (
+                    <span
+                      key={i}
+                      className="h-1.5 w-1.5 rounded-full bg-gray-400 animate-bounce"
+                      style={{ animationDelay: `${i * 0.15}s` }}
+                    />
+                  ))}
+                </div>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
         <div ref={bottomRef} />
       </div>
 
@@ -337,7 +378,16 @@ export default function ChatThread({ moodLogId, currentUserId, initialMessages }
           <textarea
             ref={textareaRef}
             value={content}
-            onChange={(e) => { setContent(e.target.value); setShowEmojis(false); }}
+            onChange={(e) => {
+              setContent(e.target.value);
+              setShowEmojis(false);
+              // Broadcast typing — throttle to once per second
+              const now = Date.now();
+              if (channelRef.current && now - lastTypingSentRef.current > 1000) {
+                lastTypingSentRef.current = now;
+                channelRef.current.send({ type: "broadcast", event: "typing", payload: {} });
+              }
+            }}
             onKeyDown={handleKeyDown}
             placeholder="Write a message…"
             rows={1}
