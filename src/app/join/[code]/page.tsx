@@ -80,7 +80,7 @@ export default async function JoinPage({ params }: { params: Promise<{ code: str
     if (!existing) {
       const [a, b] = [user.id, inviter.id].sort();
       await admin.from("connections").upsert(
-        { user_a_id: a, user_b_id: b, status: "active", created_at: new Date().toISOString() },
+        { user_a_id: a, user_b_id: b, status: "active" },
         { onConflict: "user_a_id,user_b_id" }
       );
     }
