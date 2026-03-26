@@ -66,10 +66,20 @@ export default function ChatThread({ moodLogId, currentUserId, initialMessages }
     return () => { supabase.removeChannel(channel); };
   }, [moodLogId, supabase]);
 
-  // Scroll to bottom instantly on first render
+  // Scroll to bottom on first render (also after images load)
   useLayoutEffect(() => {
     const container = scrollContainerRef.current;
     if (container) container.scrollTop = container.scrollHeight;
+  }, []);
+
+  useEffect(() => {
+    const container = scrollContainerRef.current;
+    if (!container) return;
+    // Fallback: re-scroll after images/videos may have loaded and expanded content
+    const timer = setTimeout(() => {
+      container.scrollTop = container.scrollHeight;
+    }, 500);
+    return () => clearTimeout(timer);
   }, []);
 
   // Smooth scroll for new messages
