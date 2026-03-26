@@ -11,9 +11,14 @@ import type { Connection, Profile } from "@/types";
 export default function PartnerPage() {
   const router = useRouter();
   const supabase = createClient();
-  const [profile, setProfile] = useState<Profile | null>(null);
-  const [partner, setPartner] = useState<Profile | null>(null);
-  const [connection, setConnection] = useState<Connection | null>(null);
+  function cached<T>(key: string): T | null {
+    if (typeof window === "undefined") return null;
+    try { return JSON.parse(localStorage.getItem(key) ?? "null"); } catch { return null; }
+  }
+
+  const [profile, setProfile] = useState<Profile | null>(() => cached("tether_profile"));
+  const [partner, setPartner] = useState<Profile | null>(() => cached("tether_partner"));
+  const [connection, setConnection] = useState<Connection | null>(() => cached("tether_connection"));
   const [partnerCode, setPartnerCode] = useState("");
   const [loading, setLoading] = useState(false);
   const [copied, setCopied] = useState(false);
@@ -24,7 +29,7 @@ export default function PartnerPage() {
 
       const { data: p } = await supabase
         .from("profiles").select("*").eq("id", user.id).single<Profile>();
-      setProfile(p);
+      if (p) { setProfile(p); localStorage.setItem("tether_profile", JSON.stringify(p)); }
 
       const { data: conn } = await supabase
         .from("connections")
@@ -32,13 +37,16 @@ export default function PartnerPage() {
         .or(`user_a_id.eq.${user.id},user_b_id.eq.${user.id}`)
         .eq("status", "active")
         .single<Connection>();
-      setConnection(conn);
-
+      setConnection(conn ?? null);
       if (conn) {
+        localStorage.setItem("tether_connection", JSON.stringify(conn));
         const partnerId = conn.user_a_id === user.id ? conn.user_b_id : conn.user_a_id;
         const { data: partnerProfile } = await supabase
           .from("profiles").select("*").eq("id", partnerId).single<Profile>();
-        setPartner(partnerProfile);
+        if (partnerProfile) { setPartner(partnerProfile); localStorage.setItem("tether_partner", JSON.stringify(partnerProfile)); }
+      } else {
+        localStorage.removeItem("tether_connection");
+        localStorage.removeItem("tether_partner");
       }
     });
   }, [supabase, router]);
@@ -102,6 +110,8 @@ export default function PartnerPage() {
     await supabase.from("connections").update({ status: "blocked" }).eq("id", connection.id);
     setConnection(null);
     setPartner(null);
+    localStorage.removeItem("tether_connection");
+    localStorage.removeItem("tether_partner");
     toast.success("Disconnected");
   }
 

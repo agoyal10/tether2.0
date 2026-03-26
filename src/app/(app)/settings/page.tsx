@@ -13,28 +13,24 @@ import type { Profile } from "@/types";
 export default function SettingsPage() {
   const router = useRouter();
   const supabase = createClient();
-  const [profile, setProfile] = useState<Profile & { reminder_enabled: boolean; reminder_hour: number; reminder_timezone: string } | null>(null);
+  type FullProfile = Profile & { reminder_enabled: boolean; reminder_hour: number; reminder_timezone: string };
+
+  function readCachedProfile(): FullProfile | null {
+    if (typeof window === "undefined") return null;
+    try { return JSON.parse(localStorage.getItem("tether_profile") ?? "null"); } catch { return null; }
+  }
+
+  const [profile, setProfile] = useState<FullProfile | null>(readCachedProfile);
   const [email, setEmail] = useState("");
 
   const [editingName, setEditingName] = useState(false);
-  const [nameInput, setNameInput] = useState("");
+  const [nameInput, setNameInput] = useState(() => readCachedProfile()?.display_name ?? "");
   const [savingName, setSavingName] = useState(false);
 
-  const [reminderEnabled, setReminderEnabled] = useState(false);
+  const [reminderEnabled, setReminderEnabled] = useState(() => readCachedProfile()?.reminder_enabled ?? false);
   const [savingReminder, setSavingReminder] = useState(false);
 
   useEffect(() => {
-    // Show cached profile instantly to avoid flash
-    const cached = localStorage.getItem("tether_profile");
-    if (cached) {
-      try {
-        const p = JSON.parse(cached);
-        setProfile(p);
-        setNameInput(p.display_name);
-        setReminderEnabled(p.reminder_enabled ?? false);
-      } catch {}
-    }
-
     supabase.auth.getUser().then(async ({ data: { user } }) => {
       if (!user) { router.push("/login"); return; }
       setEmail(user.email ?? "");
