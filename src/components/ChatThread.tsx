@@ -21,6 +21,7 @@ export default function ChatThread({ moodLogId, currentUserId, initialMessages }
   const [uploading, setUploading] = useState(false);
   const [pendingMedia, setPendingMedia] = useState<{ path: string; type: "image" | "video" } | null>(null);
   const [showEmojis, setShowEmojis] = useState(false);
+  const [inputReady, setInputReady] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -68,7 +69,8 @@ export default function ChatThread({ moodLogId, currentUserId, initialMessages }
 
   // Prevent keyboard from auto-appearing on iOS when chat opens
   useEffect(() => {
-    textareaRef.current?.blur();
+    const t = setTimeout(() => setInputReady(true), 500);
+    return () => clearTimeout(t);
   }, []);
 
   // Scroll to bottom on first render (also after images load)
@@ -337,6 +339,7 @@ export default function ChatThread({ moodLogId, currentUserId, initialMessages }
             onKeyDown={handleKeyDown}
             placeholder="Write a message…"
             rows={1}
+            readOnly={!inputReady}
             className="flex-1 resize-none bg-transparent text-sm text-gray-700 placeholder:text-gray-300 focus:outline-none dark:text-gray-100 dark:placeholder:text-gray-600"
             style={{ maxHeight: "120px" }}
           />
