@@ -21,6 +21,11 @@ export default function ChatThread({ moodLogId, currentUserId, initialMessages }
   const [uploading, setUploading] = useState(false);
   const [pendingMedia, setPendingMedia] = useState<{ path: string; type: "image" | "video" } | null>(null);
   const [showEmojis, setShowEmojis] = useState(false);
+  const [showGiphy, setShowGiphy] = useState(false);
+  const [giphyQuery, setGiphyQuery] = useState("");
+  const [giphyResults, setGiphyResults] = useState<{ id: string; url: string; preview: string; title: string }[]>([]);
+  const [giphyLoading, setGiphyLoading] = useState(false);
+  const giphyInputRef = useRef<HTMLInputElement>(null);
   const [isPartnerTyping, setIsPartnerTyping] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
@@ -31,7 +36,52 @@ export default function ChatThread({ moodLogId, currentUserId, initialMessages }
   const typingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const lastTypingSentRef = useRef(0);
 
-  const EMOJIS = ["❤️","💞","😘","🥰","😍","💋","🔥","💦","😈","🫦","🥵","💫","✨","🌹","💌","🫶","😊","😂","🤣","😭","🙈","💀","🫠","😏","🤭","😉","🧋","💯","👀","🤤"];
+  const GIPHY_KEY = process.env.NEXT_PUBLIC_GIPHY_API_KEY;
+
+  // Fetch GIFs (trending when query empty, search otherwise)
+  useEffect(() => {
+    if (!showGiphy || !GIPHY_KEY) return;
+    const controller = new AbortController();
+    const delay = setTimeout(async () => {
+      setGiphyLoading(true);
+      try {
+        const endpoint = giphyQuery.trim()
+          ? `https://api.giphy.com/v1/gifs/search?api_key=${GIPHY_KEY}&q=${encodeURIComponent(giphyQuery)}&limit=24&rating=pg-13`
+          : `https://api.giphy.com/v1/gifs/trending?api_key=${GIPHY_KEY}&limit=24&rating=pg-13`;
+        const res = await fetch(endpoint, { signal: controller.signal });
+        const json = await res.json();
+        setGiphyResults(
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          (json.data ?? []).map((g: any) => ({
+            id: g.id,
+            url: g.images.original.url,
+            preview: g.images.fixed_width_small.url,
+            title: g.title,
+          }))
+        );
+      } catch { /* aborted or network error */ }
+      setGiphyLoading(false);
+    }, giphyQuery ? 400 : 0);
+    return () => { clearTimeout(delay); controller.abort(); };
+  }, [showGiphy, giphyQuery, GIPHY_KEY]);
+
+  async function sendGif(url: string) {
+    setShowGiphy(false);
+    setGiphyQuery("");
+    await supabase.from("messages").insert({
+      mood_log_id: moodLogId,
+      sender_id: currentUserId,
+      content: `giphy:${url}`,
+      media_path: null,
+    });
+    fetch("/api/push/message", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ moodLogId, content: "Sent a GIF 🎞️" }),
+    }).catch(() => {});
+  }
+
+  const EMOJIS =["❤️","💞","😘","🥰","😍","💋","🔥","💦","😈","🫦","🥵","💫","✨","🌹","💌","🫶","😊","😂","🤣","😭","🙈","💀","🫠","😏","🤭","😉","🧋","💯","👀","🤤"];
   const CUSTOM_STICKERS = [
     { src: "/sticker-angry.png",   alt: "angry",   traySize: "h-8 w-8", chatSize: "h-10 w-10" },
     { src: "/sticker-cozy.png",    alt: "cozy",    traySize: "h-8 w-8", chatSize: "h-10 w-10" },
@@ -227,7 +277,10 @@ export default function ChatThread({ moodLogId, currentUserId, initialMessages }
                 animate={{ opacity: 1, y: 0 }}
                 className={cn("flex flex-col gap-0.5", isMine ? "items-end" : "items-start")}
               >
-                {msg.content?.startsWith("/sticker-") ? (
+                {msg.content?.startsWith("giphy:") ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={msg.content.slice(6)} alt="GIF" className="mt-1 max-w-[200px] rounded-2xl" />
+                ) : msg.content?.startsWith("/sticker-") ? (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img src={msg.content} alt="sticker" className={`${stickerChatSize[msg.content] ?? "h-10 w-10"} object-contain`} />
                 ) : msg.media_path && !msg.content ? (
@@ -339,6 +392,48 @@ export default function ChatThread({ moodLogId, currentUserId, initialMessages }
         </div>
       )}
 
+      {/* GIPHY picker */}
+      {showGiphy && (
+        <div className="border-t border-gray-100 bg-white dark:border-gray-800 dark:bg-gray-900">
+          <div className="px-3 pt-2 pb-1">
+            <input
+              ref={giphyInputRef}
+              value={giphyQuery}
+              onChange={(e) => setGiphyQuery(e.target.value)}
+              placeholder="Search GIFs…"
+              className="w-full rounded-2xl border border-gray-200 bg-gray-50 px-3 py-1.5 text-sm text-gray-700 placeholder:text-gray-300 focus:border-lavender focus:outline-none dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100"
+              autoFocus
+            />
+          </div>
+          <div className="h-48 overflow-y-auto px-2 pb-2">
+            {giphyLoading ? (
+              <div className="flex h-full items-center justify-center">
+                <svg className="h-5 w-5 animate-spin text-lavender" viewBox="0 0 24 24" fill="none">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
+                </svg>
+              </div>
+            ) : !GIPHY_KEY ? (
+              <p className="py-4 text-center text-xs text-gray-400">Add NEXT_PUBLIC_GIPHY_API_KEY to enable GIFs</p>
+            ) : (
+              <div className="grid grid-cols-3 gap-1.5 pt-1">
+                {giphyResults.map((gif) => (
+                  <button
+                    key={gif.id}
+                    onClick={() => sendGif(gif.url)}
+                    className="overflow-hidden rounded-xl focus:outline-none focus:ring-2 focus:ring-lavender"
+                  >
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src={gif.preview} alt={gif.title} className="h-20 w-full object-cover" />
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+          <p className="pb-1 text-center text-[9px] text-gray-300">Powered by GIPHY</p>
+        </div>
+      )}
+
       {/* Input bar */}
       <div className="border-t border-gray-100 bg-white px-4 py-3 dark:border-gray-800 dark:bg-gray-900">
         <div className="flex items-center gap-2 rounded-3xl border border-gray-200 bg-gray-50 px-3 py-2 focus-within:border-lavender focus-within:bg-white transition-all dark:border-gray-700 dark:bg-gray-800 dark:focus-within:bg-gray-700">
@@ -368,7 +463,15 @@ export default function ChatThread({ moodLogId, currentUserId, initialMessages }
           </button>
           <button
             onMouseDown={(e) => e.preventDefault()}
-            onClick={() => setShowEmojis((v) => !v)}
+            onClick={() => { setShowGiphy((v) => !v); setShowEmojis(false); }}
+            aria-label="GIF"
+            className={cn("flex h-7 w-7 shrink-0 items-center justify-center rounded text-[10px] font-bold tracking-tight transition-all border", showGiphy ? "border-lavender bg-lavender text-white" : "border-gray-300 text-gray-400 hover:border-lavender hover:text-lavender dark:border-gray-600")}
+          >
+            GIF
+          </button>
+          <button
+            onMouseDown={(e) => e.preventDefault()}
+            onClick={() => { setShowEmojis((v) => !v); setShowGiphy(false); }}
             aria-label="Emoji"
             className="flex h-7 w-7 shrink-0 items-center justify-center text-gray-400 hover:text-lavender transition-all"
           >
