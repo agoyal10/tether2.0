@@ -26,7 +26,8 @@ export default function ChatThread({ moodLogId, currentUserId, initialMessages }
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const isInitialMount = useRef(true);
 
-  const EMOJIS = ["❤️","💞","😘","🥰","😍","💋","🔥","💦","😈","🫦","🥵","💫","✨","🌹","💌","🫶","😊","😂","🤣","😭","🙈","💀","🫠","😏","🤭","😉","🫁","💯","👀","🤤"];
+  const EMOJIS = ["❤️","💞","😘","🥰","😍","💋","🔥","💦","😈","🫦","🥵","💫","✨","🌹","💌","🫶","😊","😂","🤣","😭","🙈","💀","🫠","😏","🤭","😉","🧋","💯","👀","🤤"];
+  const CUSTOM_STICKERS = [{ src: "/sticker-angry.png", alt: "angry" }];
   const supabase = createClient();
 
   // Fetch signed URLs for given paths
@@ -176,7 +177,10 @@ export default function ChatThread({ moodLogId, currentUserId, initialMessages }
                 animate={{ opacity: 1, y: 0 }}
                 className={cn("flex flex-col gap-0.5", isMine ? "items-end" : "items-start")}
               >
-                {msg.media_path && !msg.content ? (
+                {msg.content?.startsWith("/sticker-") ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={msg.content} alt="sticker" className="h-20 w-20 object-contain" />
+                ) : msg.media_path && !msg.content ? (
                   <div className={cn("max-w-[78%]", isMine ? "items-end flex flex-col" : "items-start flex flex-col")}>
                     {renderMedia(msg)}
                   </div>
@@ -224,6 +228,24 @@ export default function ChatThread({ moodLogId, currentUserId, initialMessages }
       {showEmojis && (
         <div className="border-t border-gray-100 bg-white px-4 py-2 dark:border-gray-800 dark:bg-gray-900">
           <div className="flex flex-wrap gap-1.5">
+            {CUSTOM_STICKERS.map((s) => (
+              <button
+                key={s.src}
+                onClick={async () => {
+                  setShowEmojis(false);
+                  await supabase.from("messages").insert({
+                    mood_log_id: moodLogId,
+                    sender_id: currentUserId,
+                    content: s.src,
+                    media_path: null,
+                  });
+                }}
+                className="p-1 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-all"
+              >
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={s.src} alt={s.alt} className="h-8 w-8 object-contain" />
+              </button>
+            ))}
             {EMOJIS.map((e) => (
               <button
                 key={e}
