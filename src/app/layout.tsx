@@ -30,9 +30,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <meta name="apple-mobile-web-app-title" content="Tether" />
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
         {/* Apple splash screens — iOS shows these during PWA launch before any HTTP request */}
-        {/* iPhone 16 Pro Max */}
+        {/* iPhone 17 Air */}
+        <link rel="apple-touch-startup-image" media="screen and (device-width: 420px) and (device-height: 912px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)" href="/splash/splash-1260x2736.png" />
+        {/* iPhone 16 Pro Max / 17 Pro Max */}
         <link rel="apple-touch-startup-image" media="screen and (device-width: 440px) and (device-height: 956px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)" href="/splash/splash-1320x2868.png" />
-        {/* iPhone 16 Pro */}
+        {/* iPhone 16 Pro / 17 / 17 Pro */}
         <link rel="apple-touch-startup-image" media="screen and (device-width: 402px) and (device-height: 874px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)" href="/splash/splash-1206x2622.png" />
         {/* iPhone 16 Plus / 15 Plus / 14 Pro Max / 15 Pro Max */}
         <link rel="apple-touch-startup-image" media="screen and (device-width: 430px) and (device-height: 932px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)" href="/splash/splash-1290x2796.png" />
