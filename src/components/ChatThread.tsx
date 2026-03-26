@@ -127,6 +127,7 @@ export default function ChatThread({ moodLogId, currentUserId, initialMessages }
 
     setContent("");
     setPendingMedia(null);
+    setShowEmojis(false);
     setSending(false);
   }
 
