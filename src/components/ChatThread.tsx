@@ -20,8 +20,12 @@ export default function ChatThread({ moodLogId, currentUserId, initialMessages }
   const [signedUrls, setSignedUrls] = useState<Record<string, string>>({});
   const [uploading, setUploading] = useState(false);
   const [pendingMedia, setPendingMedia] = useState<{ path: string; type: "image" | "video" } | null>(null);
+  const [showEmojis, setShowEmojis] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  const EMOJIS = ["❤️","💞","😘","🥰","😍","💋","🔥","💦","😈","🫦","🥵","💫","✨","🌹","💌","🫶","😊","😂","🤣","😭","🙈","💀","🫠","😏","🤭","😉","🫁","💯","👀","🤤"];
   const supabase = createClient();
 
   // Fetch signed URLs for given paths
@@ -213,9 +217,29 @@ export default function ChatThread({ moodLogId, currentUserId, initialMessages }
         </div>
       )}
 
+      {/* Emoji picker */}
+      {showEmojis && (
+        <div className="border-t border-gray-100 bg-white px-4 py-2 dark:border-gray-800 dark:bg-gray-900">
+          <div className="flex flex-wrap gap-1.5">
+            {EMOJIS.map((e) => (
+              <button
+                key={e}
+                onClick={() => {
+                  setContent((prev) => prev + e);
+                  textareaRef.current?.focus();
+                }}
+                className="text-xl leading-none p-1 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-all"
+              >
+                {e}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* Input bar */}
       <div className="border-t border-gray-100 bg-white px-4 py-3 dark:border-gray-800 dark:bg-gray-900">
-        <div className="flex items-end gap-2 rounded-3xl border border-gray-200 bg-gray-50 px-4 py-2 focus-within:border-lavender focus-within:bg-white transition-all dark:border-gray-700 dark:bg-gray-800 dark:focus-within:bg-gray-700">
+        <div className="flex items-center gap-2 rounded-3xl border border-gray-200 bg-gray-50 px-3 py-2 focus-within:border-lavender focus-within:bg-white transition-all dark:border-gray-700 dark:bg-gray-800 dark:focus-within:bg-gray-700">
           <input
             ref={fileInputRef}
             type="file"
@@ -227,7 +251,7 @@ export default function ChatThread({ moodLogId, currentUserId, initialMessages }
             onClick={() => fileInputRef.current?.click()}
             disabled={uploading}
             aria-label="Attach media"
-            className="mb-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-gray-400 hover:text-lavender transition-all disabled:opacity-40"
+            className="flex h-7 w-7 shrink-0 items-center justify-center text-gray-400 hover:text-lavender transition-all disabled:opacity-40"
           >
             {uploading ? (
               <svg className="h-4 w-4 animate-spin" viewBox="0 0 24 24" fill="none">
@@ -240,7 +264,15 @@ export default function ChatThread({ moodLogId, currentUserId, initialMessages }
               </svg>
             )}
           </button>
+          <button
+            onClick={() => setShowEmojis((v) => !v)}
+            aria-label="Emoji"
+            className="flex h-7 w-7 shrink-0 items-center justify-center text-lg leading-none text-gray-400 hover:text-lavender transition-all"
+          >
+            🙂
+          </button>
           <textarea
+            ref={textareaRef}
             value={content}
             onChange={(e) => setContent(e.target.value)}
             onKeyDown={handleKeyDown}
@@ -254,7 +286,7 @@ export default function ChatThread({ moodLogId, currentUserId, initialMessages }
             disabled={(!content.trim() && !pendingMedia) || sending}
             aria-label="Send"
             className={cn(
-              "mb-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full transition-all",
+              "flex h-8 w-8 shrink-0 items-center justify-center rounded-full transition-all",
               (content.trim() || pendingMedia)
                 ? "bg-lavender text-white hover:bg-lavender-dark"
                 : "bg-gray-200 text-gray-400"
