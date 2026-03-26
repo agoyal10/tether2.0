@@ -31,6 +31,7 @@ export default function ChatThread({ moodLogId, currentUserId, initialMessages }
   const CUSTOM_STICKERS = [
     { src: "/sticker-angry.png", alt: "angry" },
     { src: "/sticker-cozy.png", alt: "cozy" },
+    { src: "/sticker-payal.png", alt: "Payal" },
   ];
   const supabase = createClient();
 
