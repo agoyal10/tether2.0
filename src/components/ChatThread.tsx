@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { formatDistanceToNow } from "date-fns";
 import { cn } from "@/lib/utils";
@@ -39,7 +39,7 @@ export default function ChatThread({ moodLogId, currentUserId, initialMessages, 
   const stickerChatSize: Record<string, string> = Object.fromEntries(
     CUSTOM_STICKERS.map((s) => [s.src, s.chatSize])
   );
-  const supabase = useMemo(() => createClient(), []);
+  const supabase = createClient();
 
   // Fetch signed URLs for given paths
   async function fetchSignedUrlsForPaths(paths: string[]) {
@@ -66,22 +66,11 @@ export default function ChatThread({ moodLogId, currentUserId, initialMessages, 
         event: "INSERT", schema: "public", table: "messages",
         filter: `mood_log_id=eq.${moodLogId}`,
       }, async (payload) => {
-        const incoming = payload.new as Message;
         const { data: profile } = await supabase
-          .from("profiles").select("*").eq("id", incoming.sender_id).single();
-        const newMsg = { ...incoming, profile: profile as Profile };
-        setMessages((prev) => {
-          if (prev.some((m) => m.id === newMsg.id)) return prev;
-          return [...prev, newMsg];
-        });
+          .from("profiles").select("*").eq("id", payload.new.sender_id).single();
+        const newMsg = { ...(payload.new as Message), profile: profile as Profile };
+        setMessages((prev) => [...prev, newMsg]);
         if (newMsg.media_path) fetchSignedUrlsForPaths([newMsg.media_path]);
-        // Mark chat as read when partner's message arrives while we have the chat open
-        if (newMsg.sender_id !== currentUserId) {
-          supabase.from("chat_reads").upsert(
-            { user_id: currentUserId, mood_log_id: moodLogId, last_read_at: new Date().toISOString() },
-            { onConflict: "user_id,mood_log_id" }
-          );
-        }
       })
       .on("postgres_changes", {
         event: "*", schema: "public", table: "chat_reads",
@@ -93,9 +82,7 @@ export default function ChatThread({ moodLogId, currentUserId, initialMessages, 
       })
       .subscribe();
     return () => { supabase.removeChannel(channel); };
-  // supabase is stable (useMemo), moodLogId never changes
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [moodLogId]);
+  }, [moodLogId, supabase]);
 
 
   // Scroll to bottom on first render (also after images load)
@@ -152,23 +139,12 @@ export default function ChatThread({ moodLogId, currentUserId, initialMessages, 
     const trimmed = content.trim();
     const media = pendingMedia; // capture before any awaits
 
-    const { data: inserted } = await supabase
-      .from("messages")
-      .insert({
-        mood_log_id: moodLogId,
-        sender_id: currentUserId,
-        content: trimmed,
-        media_path: media?.path ?? null,
-      })
-      .select("*, profile:profiles(*)")
-      .single<Message>();
-
-    if (inserted) {
-      setMessages((prev) => {
-        if (prev.some((m) => m.id === inserted.id)) return prev;
-        return [...prev, inserted];
-      });
-    }
+    await supabase.from("messages").insert({
+      mood_log_id: moodLogId,
+      sender_id: currentUserId,
+      content: trimmed,
+      media_path: media?.path ?? null,
+    });
 
     const notifContent = trimmed || (media?.type === "video" ? "Sent a video 🎥" : "Sent a photo 📷");
     fetch("/api/push/message", {
@@ -312,14 +288,12 @@ export default function ChatThread({ moodLogId, currentUserId, initialMessages, 
                 key={s.src}
                 onClick={async () => {
                   setShowEmojis(false);
-                  const { data: inserted } = await supabase
-                    .from("messages")
-                    .insert({ mood_log_id: moodLogId, sender_id: currentUserId, content: s.src, media_path: null })
-                    .select("*, profile:profiles(*)")
-                    .single<Message>();
-                  if (inserted) {
-                    setMessages((prev) => prev.some((m) => m.id === inserted.id) ? prev : [...prev, inserted]);
-                  }
+                  await supabase.from("messages").insert({
+                    mood_log_id: moodLogId,
+                    sender_id: currentUserId,
+                    content: s.src,
+                    media_path: null,
+                  });
                 }}
                 className="p-1 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-all"
               >
