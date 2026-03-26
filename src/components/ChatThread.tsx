@@ -124,7 +124,14 @@ export default function ChatThread({ moodLogId, currentUserId, initialMessages }
   function renderMedia(msg: Message) {
     if (!msg.media_path) return null;
     const url = signedUrls[msg.media_path];
-    if (!url) return <div className="mt-1 h-32 w-48 animate-pulse rounded-2xl bg-gray-200 dark:bg-gray-700" />;
+    if (!url) return (
+      <div className="mt-1 flex h-12 w-12 items-center justify-center">
+        <svg className="h-5 w-5 animate-spin text-gray-300" viewBox="0 0 24 24" fill="none">
+          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
+        </svg>
+      </div>
+    );
 
     const isVideo = msg.media_path.match(/\.(mp4|mov|webm|avi)$/i);
     if (isVideo) {
