@@ -29,10 +29,10 @@ export default function ChatThread({ moodLogId, currentUserId, initialMessages }
 
   const EMOJIS = ["❤️","💞","😘","🥰","😍","💋","🔥","💦","😈","🫦","🥵","💫","✨","🌹","💌","🫶","😊","😂","🤣","😭","🙈","💀","🫠","😏","🤭","😉","🧋","💯","👀","🤤"];
   const CUSTOM_STICKERS = [
-    { src: "/sticker-angry.png", alt: "angry" },
-    { src: "/sticker-cozy.png", alt: "cozy" },
-    { src: "/sticker-payal.png", alt: "Payal" },
-    { src: "/sticker-katakna.png", alt: "katakna" },
+    { src: "/sticker-angry.png", alt: "angry", size: "h-8 w-8" },
+    { src: "/sticker-cozy.png", alt: "cozy", size: "h-8 w-8" },
+    { src: "/sticker-payal.png", alt: "Payal", size: "h-8 w-8" },
+    { src: "/sticker-katakna.png", alt: "katakna", size: "h-5 w-5" },
   ];
   const supabase = createClient();
 
@@ -275,7 +275,7 @@ export default function ChatThread({ moodLogId, currentUserId, initialMessages }
                 className="p-1 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-all"
               >
                 {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={s.src} alt={s.alt} className="h-8 w-8 object-contain" />
+                <img src={s.src} alt={s.alt} className={`${s.size} object-contain`} />
               </button>
             ))}
             {EMOJIS.map((e) => (
