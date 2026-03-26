@@ -2,9 +2,10 @@ import { redirect } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { getCachedProfile } from "@/lib/profile-cache";
 import DashboardRefresher from "@/components/DashboardRefresher";
 import { MiniCard, HistoryChip } from "@/components/DashboardCards";
-import type { MoodLog, Profile } from "@/types";
+import type { MoodLog } from "@/types";
 
 export const dynamic = "force-dynamic";
 
@@ -13,9 +14,9 @@ export default async function DashboardPage() {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect("/login");
 
-  // Fetch profile and connection in parallel
-  const [{ data: profile }, { data: connection }] = await Promise.all([
-    supabase.from("profiles").select("*").eq("id", user.id).single<Profile>(),
+  // Fetch profile (cached) and connection in parallel
+  const [profile, { data: connection }] = await Promise.all([
+    getCachedProfile(user.id),
     supabase.from("connections")
       .select("*")
       .or(`user_a_id.eq.${user.id},user_b_id.eq.${user.id}`)

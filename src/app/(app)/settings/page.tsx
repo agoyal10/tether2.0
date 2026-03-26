@@ -6,6 +6,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
 import { createClient } from "@/lib/supabase/client";
+import { revalidateProfileCache } from "@/lib/actions";
 import ThemeToggle from "@/components/ThemeToggle";
 import type { Profile } from "@/types";
 
@@ -23,6 +24,17 @@ export default function SettingsPage() {
   const [savingReminder, setSavingReminder] = useState(false);
 
   useEffect(() => {
+    // Show cached profile instantly to avoid flash
+    const cached = localStorage.getItem("tether_profile");
+    if (cached) {
+      try {
+        const p = JSON.parse(cached);
+        setProfile(p);
+        setNameInput(p.display_name);
+        setReminderEnabled(p.reminder_enabled ?? false);
+      } catch {}
+    }
+
     supabase.auth.getUser().then(async ({ data: { user } }) => {
       if (!user) { router.push("/login"); return; }
       setEmail(user.email ?? "");
@@ -33,6 +45,7 @@ export default function SettingsPage() {
         setProfile(p);
         setNameInput(p.display_name);
         setReminderEnabled(p.reminder_enabled ?? false);
+        localStorage.setItem("tether_profile", JSON.stringify(p));
       }
     });
   }, [supabase, router]);
@@ -45,7 +58,10 @@ export default function SettingsPage() {
     if (error) {
       toast.error("Could not save name.");
     } else {
-      setProfile({ ...profile, display_name: name });
+      const updated = { ...profile, display_name: name };
+      setProfile(updated);
+      localStorage.setItem("tether_profile", JSON.stringify(updated));
+      revalidateProfileCache(profile.id);
       toast.success("Name updated!");
       setEditingName(false);
     }
