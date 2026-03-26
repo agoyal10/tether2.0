@@ -2,7 +2,7 @@
 
 export const dynamic = "force-dynamic";
 
-import { useEffect, useState } from "react";
+import { useEffect, useLayoutEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
 import { createClient } from "@/lib/supabase/client";
@@ -15,25 +15,35 @@ export default function SettingsPage() {
   const supabase = createClient();
   type FullProfile = Profile & { reminder_enabled: boolean; reminder_hour: number; reminder_timezone: string };
 
-  function readCachedProfile(): FullProfile | null {
-    if (typeof window === "undefined") return null;
-    try { return JSON.parse(localStorage.getItem("tether_profile") ?? "null"); } catch { return null; }
-  }
-
-  const [profile, setProfile] = useState<FullProfile | null>(readCachedProfile);
+  const [profile, setProfile] = useState<FullProfile | null>(null);
   const [email, setEmail] = useState("");
-
   const [editingName, setEditingName] = useState(false);
-  const [nameInput, setNameInput] = useState(() => readCachedProfile()?.display_name ?? "");
+  const [nameInput, setNameInput] = useState("");
   const [savingName, setSavingName] = useState(false);
-
-  const [reminderEnabled, setReminderEnabled] = useState(() => readCachedProfile()?.reminder_enabled ?? false);
+  const [reminderEnabled, setReminderEnabled] = useState(false);
   const [savingReminder, setSavingReminder] = useState(false);
+
+  // Load from localStorage before first paint — skipped on server, runs sync on client
+  useLayoutEffect(() => {
+    try {
+      const cached = localStorage.getItem("tether_profile");
+      if (cached) {
+        const p = JSON.parse(cached) as FullProfile;
+        setProfile(p);
+        setNameInput(p.display_name ?? "");
+        setReminderEnabled(p.reminder_enabled ?? false);
+      }
+      const cachedEmail = localStorage.getItem("tether_email");
+      if (cachedEmail) setEmail(cachedEmail);
+    } catch {}
+  }, []);
 
   useEffect(() => {
     supabase.auth.getUser().then(async ({ data: { user } }) => {
       if (!user) { router.push("/login"); return; }
-      setEmail(user.email ?? "");
+      const userEmail = user.email ?? "";
+      setEmail(userEmail);
+      localStorage.setItem("tether_email", userEmail);
 
       const { data: p } = await supabase
         .from("profiles").select("*").eq("id", user.id).single();
