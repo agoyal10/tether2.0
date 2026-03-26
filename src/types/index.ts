@@ -145,6 +145,7 @@ export interface Message {
   mood_log_id: string;
   sender_id: string;
   content: string;
+  media_path: string | null;
   created_at: string;
   // joined
   profile?: Profile;

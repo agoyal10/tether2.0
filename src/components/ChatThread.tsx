@@ -13,57 +13,92 @@ interface ChatThreadProps {
   initialMessages: Message[];
 }
 
-export default function ChatThread({
-  moodLogId,
-  currentUserId,
-  initialMessages,
-}: ChatThreadProps) {
+export default function ChatThread({ moodLogId, currentUserId, initialMessages }: ChatThreadProps) {
   const [messages, setMessages] = useState<Message[]>(initialMessages);
   const [content, setContent] = useState("");
   const [sending, setSending] = useState(false);
+  const [signedUrls, setSignedUrls] = useState<Record<string, string>>({});
+  const [uploading, setUploading] = useState(false);
+  const [pendingMedia, setPendingMedia] = useState<{ path: string; type: "image" | "video" } | null>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const supabase = createClient();
 
-  // Subscribe to new messages in real-time
+  // Fetch signed URLs for messages with media
+  async function fetchSignedUrls(msgs: Message[]) {
+    const paths = msgs.map((m) => m.media_path).filter(Boolean) as string[];
+    const unsigned = paths.filter((p) => !signedUrls[p]);
+    if (!unsigned.length) return;
+
+    const res = await fetch("/api/media/sign", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ paths: unsigned }),
+    });
+    const { urls } = await res.json();
+    if (urls) setSignedUrls((prev) => ({ ...prev, ...urls }));
+  }
+
+  useEffect(() => {
+    fetchSignedUrls(initialMessages);
+  }, []);
+
+  // Realtime subscription
   useEffect(() => {
     const channel = supabase
       .channel(`chat:${moodLogId}`)
-      .on(
-        "postgres_changes",
-        {
-          event: "INSERT",
-          schema: "public",
-          table: "messages",
-          filter: `mood_log_id=eq.${moodLogId}`,
-        },
-        async (payload) => {
-          // Fetch sender profile
-          const { data: profile } = await supabase
-            .from("profiles")
-            .select("*")
-            .eq("id", payload.new.sender_id)
-            .single();
-
-          setMessages((prev) => [
-            ...prev,
-            { ...(payload.new as Message), profile: profile as Profile },
-          ]);
-        }
-      )
+      .on("postgres_changes", {
+        event: "INSERT", schema: "public", table: "messages",
+        filter: `mood_log_id=eq.${moodLogId}`,
+      }, async (payload) => {
+        const { data: profile } = await supabase
+          .from("profiles").select("*").eq("id", payload.new.sender_id).single();
+        const newMsg = { ...(payload.new as Message), profile: profile as Profile };
+        setMessages((prev) => [...prev, newMsg]);
+        if (newMsg.media_path) fetchSignedUrls([newMsg]);
+      })
       .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
+    return () => { supabase.removeChannel(channel); };
   }, [moodLogId, supabase]);
 
-  // Scroll to bottom on new message
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
+  async function handleFileSelect(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    e.target.value = "";
+
+    setUploading(true);
+    const formData = new FormData();
+    formData.append("file", file);
+
+    const res = await fetch("/api/media/upload", { method: "POST", body: formData });
+    const data = await res.json();
+
+    if (!res.ok) {
+      alert(data.error ?? "Upload failed");
+      setUploading(false);
+      return;
+    }
+
+    const type = file.type.startsWith("video/") ? "video" : "image";
+    setPendingMedia({ path: data.path, type });
+
+    // Get a signed URL for the preview
+    const signRes = await fetch("/api/media/sign", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ paths: [data.path] }),
+    });
+    const { urls } = await signRes.json();
+    if (urls) setSignedUrls((prev) => ({ ...prev, ...urls }));
+    setUploading(false);
+  }
+
   async function sendMessage() {
-    if (!content.trim() || sending) return;
+    if ((!content.trim() && !pendingMedia) || sending) return;
     setSending(true);
     const trimmed = content.trim();
 
@@ -71,16 +106,19 @@ export default function ChatThread({
       mood_log_id: moodLogId,
       sender_id: currentUserId,
       content: trimmed,
+      media_path: pendingMedia?.path ?? null,
     });
 
-    // Notify partner (best-effort)
-    fetch("/api/push/message", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ moodLogId, content: trimmed }),
-    }).catch(() => {});
+    if (trimmed) {
+      fetch("/api/push/message", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ moodLogId, content: trimmed || "Sent a photo 📷" }),
+      }).catch(() => {});
+    }
 
     setContent("");
+    setPendingMedia(null);
     setSending(false);
   }
 
@@ -90,6 +128,33 @@ export default function ChatThread({
       sendMessage();
     }
   }
+
+  function renderMedia(msg: Message) {
+    if (!msg.media_path) return null;
+    const url = signedUrls[msg.media_path];
+    if (!url) return <div className="mt-1 h-32 w-48 animate-pulse rounded-2xl bg-gray-200 dark:bg-gray-700" />;
+
+    const isVideo = msg.media_path.match(/\.(mp4|mov|webm|avi)$/i);
+    if (isVideo) {
+      return (
+        <video
+          src={url}
+          controls
+          playsInline
+          className="mt-1 max-w-[240px] rounded-2xl overflow-hidden"
+        />
+      );
+    }
+    return (
+      <a href={url} target="_blank" rel="noopener noreferrer">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src={url} alt="Shared photo" className="mt-1 max-w-[240px] rounded-2xl object-cover" />
+      </a>
+    );
+  }
+
+  const isMineClass = "rounded-br-md bg-lavender text-white";
+  const isTheirsClass = "rounded-bl-md bg-white text-gray-700 dark:bg-gray-800 dark:text-gray-100";
 
   return (
     <div className="flex h-full flex-col">
@@ -105,16 +170,20 @@ export default function ChatThread({
                 animate={{ opacity: 1, y: 0 }}
                 className={cn("flex flex-col gap-0.5", isMine ? "items-end" : "items-start")}
               >
-                <div
-                  className={cn(
-                    "max-w-[78%] rounded-3xl px-4 py-2.5 text-sm leading-relaxed shadow-soft",
-                    isMine
-                      ? "rounded-br-md bg-lavender text-white"
-                      : "rounded-bl-md bg-white text-gray-700 dark:bg-gray-800 dark:text-gray-100"
-                  )}
-                >
-                  {msg.content}
-                </div>
+                {msg.media_path && !msg.content ? (
+                  <div className={cn("max-w-[78%]", isMine ? "items-end flex flex-col" : "items-start flex flex-col")}>
+                    {renderMedia(msg)}
+                  </div>
+                ) : (
+                  <>
+                    {msg.media_path && renderMedia(msg)}
+                    {msg.content && (
+                      <div className={cn("max-w-[78%] rounded-3xl px-4 py-2.5 text-sm leading-relaxed shadow-soft", isMine ? isMineClass : isTheirsClass)}>
+                        {msg.content}
+                      </div>
+                    )}
+                  </>
+                )}
                 <span className="text-[10px] text-gray-300 px-1">
                   {formatDistanceToNow(new Date(msg.created_at), { addSuffix: true })}
                 </span>
@@ -125,9 +194,53 @@ export default function ChatThread({
         <div ref={bottomRef} />
       </div>
 
+      {/* Media preview */}
+      {pendingMedia && (
+        <div className="border-t border-gray-100 bg-white px-4 pt-3 dark:border-gray-800 dark:bg-gray-900">
+          <div className="relative inline-block">
+            {pendingMedia.type === "video" ? (
+              <video src={signedUrls[pendingMedia.path]} className="h-24 rounded-xl object-cover" />
+            ) : (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={signedUrls[pendingMedia.path]} alt="Preview" className="h-24 rounded-xl object-cover" />
+            )}
+            <button
+              onClick={() => setPendingMedia(null)}
+              className="absolute -right-2 -top-2 flex h-5 w-5 items-center justify-center rounded-full bg-gray-800 text-white text-xs"
+            >
+              ×
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Input bar */}
       <div className="border-t border-gray-100 bg-white px-4 py-3 dark:border-gray-800 dark:bg-gray-900">
         <div className="flex items-end gap-2 rounded-3xl border border-gray-200 bg-gray-50 px-4 py-2 focus-within:border-lavender focus-within:bg-white transition-all dark:border-gray-700 dark:bg-gray-800 dark:focus-within:bg-gray-700">
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/*,video/*"
+            className="hidden"
+            onChange={handleFileSelect}
+          />
+          <button
+            onClick={() => fileInputRef.current?.click()}
+            disabled={uploading}
+            aria-label="Attach media"
+            className="mb-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-gray-400 hover:text-lavender transition-all disabled:opacity-40"
+          >
+            {uploading ? (
+              <svg className="h-4 w-4 animate-spin" viewBox="0 0 24 24" fill="none">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
+              </svg>
+            ) : (
+              <svg viewBox="0 0 24 24" className="h-5 w-5 fill-current">
+                <path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/>
+              </svg>
+            )}
+          </button>
           <textarea
             value={content}
             onChange={(e) => setContent(e.target.value)}
@@ -139,11 +252,11 @@ export default function ChatThread({
           />
           <button
             onClick={sendMessage}
-            disabled={!content.trim() || sending}
+            disabled={(!content.trim() && !pendingMedia) || sending}
             aria-label="Send"
             className={cn(
               "mb-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full transition-all",
-              content.trim()
+              (content.trim() || pendingMedia)
                 ? "bg-lavender text-white hover:bg-lavender-dark"
                 : "bg-gray-200 text-gray-400"
             )}

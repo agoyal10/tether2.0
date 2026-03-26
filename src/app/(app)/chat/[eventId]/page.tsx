@@ -37,7 +37,7 @@ export default async function ChatPage({ params }: Props) {
 
   const { data: messages } = await supabase
     .from("messages")
-    .select("*, profile:profiles(*)")
+    .select("*, profile:profiles(*), media_path")
     .eq("mood_log_id", eventId)
     .order("created_at", { ascending: true });
 
