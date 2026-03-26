@@ -14,7 +14,8 @@ export function KeyboardProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     const vv = window.visualViewport;
     if (!vv) return;
-    const onResize = () => setKeyboardOpen(vv.height < window.innerHeight * 0.75);
+    const baseHeight = vv.height; // capture before keyboard ever opens
+    const onResize = () => setKeyboardOpen(vv.height < baseHeight * 0.75);
     vv.addEventListener("resize", onResize);
     return () => vv.removeEventListener("resize", onResize);
   }, []);
