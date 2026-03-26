@@ -171,6 +171,10 @@ export default function ChatThread({ moodLogId, currentUserId, initialMessages }
   const isMineClass = "rounded-br-md bg-lavender text-white";
   const isTheirsClass = "rounded-bl-md bg-white text-gray-700 dark:bg-gray-800 dark:text-gray-100";
 
+  function isEmojiOnly(str: string) {
+    return /^[\p{Emoji_Presentation}\p{Extended_Pictographic}\s]+$/u.test(str.trim());
+  }
+
   return (
     <div className="flex h-full flex-col">
       {/* Message list */}
@@ -196,9 +200,13 @@ export default function ChatThread({ moodLogId, currentUserId, initialMessages }
                   <>
                     {msg.media_path && renderMedia(msg)}
                     {msg.content && (
-                      <div className={cn("max-w-[78%] rounded-3xl px-4 py-2.5 text-sm leading-relaxed shadow-soft", isMine ? isMineClass : isTheirsClass)}>
-                        {msg.content}
-                      </div>
+                      isEmojiOnly(msg.content) ? (
+                        <span className="text-4xl leading-none">{msg.content}</span>
+                      ) : (
+                        <div className={cn("max-w-[78%] rounded-3xl px-4 py-2.5 text-sm leading-relaxed shadow-soft", isMine ? isMineClass : isTheirsClass)}>
+                          {msg.content}
+                        </div>
+                      )
                     )}
                   </>
                 )}
