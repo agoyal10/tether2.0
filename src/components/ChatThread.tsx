@@ -66,6 +66,11 @@ export default function ChatThread({ moodLogId, currentUserId, initialMessages }
     return () => { supabase.removeChannel(channel); };
   }, [moodLogId, supabase]);
 
+  // Prevent keyboard from auto-appearing on iOS when chat opens
+  useEffect(() => {
+    textareaRef.current?.blur();
+  }, []);
+
   // Scroll to bottom on first render (also after images load)
   useLayoutEffect(() => {
     const container = scrollContainerRef.current;
