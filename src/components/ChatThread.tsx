@@ -21,7 +21,6 @@ export default function ChatThread({ moodLogId, currentUserId, initialMessages }
   const [uploading, setUploading] = useState(false);
   const [pendingMedia, setPendingMedia] = useState<{ path: string; type: "image" | "video" } | null>(null);
   const [showEmojis, setShowEmojis] = useState(false);
-  const [inputReady, setInputReady] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -67,11 +66,6 @@ export default function ChatThread({ moodLogId, currentUserId, initialMessages }
     return () => { supabase.removeChannel(channel); };
   }, [moodLogId, supabase]);
 
-  // Prevent keyboard from auto-appearing on iOS when chat opens
-  useEffect(() => {
-    const t = setTimeout(() => setInputReady(true), 500);
-    return () => clearTimeout(t);
-  }, []);
 
   // Scroll to bottom on first render (also after images load)
   useLayoutEffect(() => {
@@ -337,10 +331,8 @@ export default function ChatThread({ moodLogId, currentUserId, initialMessages }
             value={content}
             onChange={(e) => { setContent(e.target.value); setShowEmojis(false); }}
             onKeyDown={handleKeyDown}
-            onTouchStart={() => setInputReady(true)}
             placeholder="Write a message…"
             rows={1}
-            readOnly={!inputReady}
             className="flex-1 resize-none bg-transparent text-sm text-gray-700 placeholder:text-gray-300 focus:outline-none dark:text-gray-100 dark:placeholder:text-gray-600"
             style={{ maxHeight: "120px" }}
           />

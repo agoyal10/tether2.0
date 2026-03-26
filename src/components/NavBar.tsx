@@ -74,7 +74,7 @@ export default function NavBar() {
       document.removeEventListener("visibilitychange", onVisible);
       supabase.removeChannel(channel);
     };
-  }, [supabase, path]);
+  }, [supabase]);
 
   const NAV_ITEMS = [
     { href: "/dashboard", label: "Home",     icon: "🏠", badge: unread > 0, disabled: false },
