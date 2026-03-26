@@ -128,6 +128,25 @@ export default function ChatThread({ moodLogId, currentUserId, initialMessages }
     fetchSignedUrlsForPaths(paths);
   }, []);
 
+  // Re-fetch messages when app comes back to foreground (e.g. tapping a push notification)
+  useEffect(() => {
+    async function refetchOnVisible() {
+      if (document.visibilityState !== "visible") return;
+      const { data } = await supabase
+        .from("messages")
+        .select("*, profile:profiles(*), media_path")
+        .eq("mood_log_id", moodLogId)
+        .order("created_at", { ascending: true });
+      if (!data) return;
+      setMessages(data as Message[]);
+      const paths = (data as Message[]).map((m) => m.media_path).filter(Boolean) as string[];
+      if (paths.length) fetchSignedUrlsForPaths(paths);
+    }
+    document.addEventListener("visibilitychange", refetchOnVisible);
+    return () => document.removeEventListener("visibilitychange", refetchOnVisible);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [moodLogId]);
+
   // Realtime subscription
   useEffect(() => {
     const channel = supabase
