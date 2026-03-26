@@ -30,7 +30,7 @@ export default function CheckinPage() {
     if (error) {
       toast.error("Could not save check-in. Try again.");
       setLoading(false);
-      return;
+      throw error;
     }
 
     // Notify partner via push (best-effort)

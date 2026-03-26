@@ -36,8 +36,12 @@ export default function MoodScale({ onSubmit, isLoading = false, naughtyMode = f
 
   async function handleSubmit() {
     if (!selected) return;
-    await onSubmit(selected, note.trim());
-    setSubmitted(true);
+    try {
+      await onSubmit(selected, note.trim());
+      setSubmitted(true);
+    } catch {
+      // parent handles error toast; stay on form so user can retry
+    }
   }
 
   if (submitted && selectedConfig) {

@@ -43,11 +43,25 @@ $$;
 
 -- ─── MOOD LOGS ───────────────────────────────────────────────
 create type public.mood_level as enum (
+  -- sweet
   'thriving',    -- 🚀
   'good',        -- 😊
   'okay',        -- ☁️
   'low',         -- 🌧️
-  'struggling'   -- 🌊
+  'struggling',  -- 🌊
+  'katakni',     -- 😤
+  -- naughty
+  'soaked',      -- 💦
+  'burning',     -- 🥵
+  'heated',      -- 🔥
+  'frisky',      -- 💋
+  'naughty',     -- 😈
+  -- love
+  'smitten',     -- 🥰
+  'adoring',     -- 💕
+  'connected',   -- 💞
+  'longing',     -- 💭
+  'tender'       -- 🌸
 );
 
 create table public.mood_logs (
