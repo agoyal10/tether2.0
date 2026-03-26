@@ -32,6 +32,7 @@ export default function ChatThread({ moodLogId, currentUserId, initialMessages }
     { src: "/sticker-angry.png", alt: "angry" },
     { src: "/sticker-cozy.png", alt: "cozy" },
     { src: "/sticker-payal.png", alt: "Payal" },
+    { src: "/sticker-katakna.png", alt: "katakna" },
   ];
   const supabase = createClient();
 
