@@ -68,12 +68,30 @@ export default function ChatThread({ moodLogId, currentUserId, initialMessages }
   async function sendGif(url: string) {
     setShowGiphy(false);
     setGiphyQuery("");
-    await supabase.from("messages").insert({
+
+    const optimisticId = `optimistic-${Date.now()}`;
+    const optimistic: Message = {
+      id: optimisticId,
       mood_log_id: moodLogId,
       sender_id: currentUserId,
       content: `giphy:${url}`,
       media_path: null,
-    });
+      created_at: new Date().toISOString(),
+    };
+    setMessages((prev) => [...prev, optimistic]);
+
+    const { data: inserted } = await supabase.from("messages").insert({
+      mood_log_id: moodLogId,
+      sender_id: currentUserId,
+      content: `giphy:${url}`,
+      media_path: null,
+    }).select().single();
+
+    if (inserted) {
+      setMessages((prev) => prev.map((m) => m.id === optimisticId ? { ...inserted } : m));
+      broadcastMessage(inserted);
+    }
+
     fetch("/api/push/message", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -114,23 +132,36 @@ export default function ChatThread({ moodLogId, currentUserId, initialMessages }
   useEffect(() => {
     const channel = supabase
       .channel(`chat:${moodLogId}`)
-      .on("postgres_changes", {
-        event: "INSERT", schema: "public", table: "messages",
-      }, async (payload) => {
-        const incoming = payload.new as Message;
-        // Client-side filter — server-side eq filters on non-PK columns
-        // require REPLICA IDENTITY FULL and silently drop events without it
-        if (incoming.mood_log_id !== moodLogId) return;
+      // Broadcast: partner sends us a message directly via WebSocket (primary path)
+      .on("broadcast", { event: "new_message" }, async ({ payload }) => {
+        const incoming = payload.message as Message;
+        if (incoming.sender_id === currentUserId) return; // already shown optimistically
         const { data: profile } = await supabase
           .from("profiles").select("*").eq("id", incoming.sender_id).single();
         const newMsg = { ...incoming, profile: profile as Profile };
         setMessages((prev) => {
-          // Deduplicate in case we somehow receive the same message twice
           if (prev.some((m) => m.id === newMsg.id)) return prev;
           return [...prev, newMsg];
         });
         if (newMsg.media_path) fetchSignedUrlsForPaths([newMsg.media_path]);
-        if (incoming.sender_id !== currentUserId) setIsPartnerTyping(false);
+        setIsPartnerTyping(false);
+      })
+      // postgres_changes: fallback for reconnects / missed broadcasts
+      .on("postgres_changes", {
+        event: "INSERT", schema: "public", table: "messages",
+      }, async (payload) => {
+        const incoming = payload.new as Message;
+        if (incoming.mood_log_id !== moodLogId) return;
+        if (incoming.sender_id === currentUserId) return; // sender already sees optimistic msg
+        const { data: profile } = await supabase
+          .from("profiles").select("*").eq("id", incoming.sender_id).single();
+        const newMsg = { ...incoming, profile: profile as Profile };
+        setMessages((prev) => {
+          if (prev.some((m) => m.id === newMsg.id)) return prev;
+          return [...prev, newMsg];
+        });
+        if (newMsg.media_path) fetchSignedUrlsForPaths([newMsg.media_path]);
+        setIsPartnerTyping(false);
       })
       .on("broadcast", { event: "typing" }, () => {
         setIsPartnerTyping(true);
@@ -196,18 +227,47 @@ export default function ChatThread({ moodLogId, currentUserId, initialMessages }
     setUploading(false);
   }
 
+  async function broadcastMessage(msg: Message) {
+    channelRef.current?.send({
+      type: "broadcast",
+      event: "new_message",
+      payload: { message: msg },
+    });
+  }
+
   async function sendMessage() {
     if ((!content.trim() && !pendingMedia) || sending) return;
     setSending(true);
     const trimmed = content.trim();
-    const media = pendingMedia; // capture before any awaits
+    const media = pendingMedia;
 
-    await supabase.from("messages").insert({
+    // Optimistically show message immediately
+    const optimisticId = `optimistic-${Date.now()}`;
+    const optimistic: Message = {
+      id: optimisticId,
       mood_log_id: moodLogId,
       sender_id: currentUserId,
       content: trimmed,
       media_path: media?.path ?? null,
-    });
+      created_at: new Date().toISOString(),
+    };
+    setMessages((prev) => [...prev, optimistic]);
+    setContent("");
+    setPendingMedia(null);
+    setShowEmojis(false);
+
+    const { data: inserted } = await supabase.from("messages").insert({
+      mood_log_id: moodLogId,
+      sender_id: currentUserId,
+      content: trimmed,
+      media_path: media?.path ?? null,
+    }).select().single();
+
+    if (inserted) {
+      // Swap optimistic entry for real DB row
+      setMessages((prev) => prev.map((m) => m.id === optimisticId ? { ...inserted } : m));
+      broadcastMessage(inserted);
+    }
 
     const notifContent = trimmed || (media?.type === "video" ? "Sent a video 🎥" : "Sent a photo 📷");
     fetch("/api/push/message", {
@@ -216,9 +276,6 @@ export default function ChatThread({ moodLogId, currentUserId, initialMessages }
       body: JSON.stringify({ moodLogId, content: notifContent }),
     }).catch(() => {});
 
-    setContent("");
-    setPendingMedia(null);
-    setShowEmojis(false);
     setSending(false);
   }
 
