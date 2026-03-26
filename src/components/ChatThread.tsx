@@ -22,7 +22,6 @@ export default function ChatThread({ moodLogId, currentUserId, initialMessages }
   const [pendingMedia, setPendingMedia] = useState<{ path: string; type: "image" | "video" } | null>(null);
   const [showEmojis, setShowEmojis] = useState(false);
   const [isPartnerTyping, setIsPartnerTyping] = useState(false);
-  const [replyingTo, setReplyingTo] = useState<Message | null>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -69,14 +68,9 @@ export default function ChatThread({ moodLogId, currentUserId, initialMessages }
         event: "INSERT", schema: "public", table: "messages",
         filter: `mood_log_id=eq.${moodLogId}`,
       }, async (payload) => {
-        const incoming = payload.new as Message;
-        const [{ data: profile }, { data: replyMsg }] = await Promise.all([
-          supabase.from("profiles").select("*").eq("id", incoming.sender_id).single(),
-          incoming.reply_to_id
-            ? supabase.from("messages").select("id, content, sender_id, media_path, profile:profiles(display_name)").eq("id", incoming.reply_to_id).single()
-            : Promise.resolve({ data: null }),
-        ]);
-        const newMsg = { ...incoming, profile: profile as Profile, reply_to: replyMsg ?? null } as Message;
+        const { data: profile } = await supabase
+          .from("profiles").select("*").eq("id", payload.new.sender_id).single();
+        const newMsg = { ...(payload.new as Message), profile: profile as Profile };
         setMessages((prev) => [...prev, newMsg]);
         if (newMsg.media_path) fetchSignedUrlsForPaths([newMsg.media_path]);
         // Partner sent a message — clear typing indicator
@@ -154,13 +148,11 @@ export default function ChatThread({ moodLogId, currentUserId, initialMessages }
     const trimmed = content.trim();
     const media = pendingMedia; // capture before any awaits
 
-    const replyId = replyingTo?.id ?? null;
     await supabase.from("messages").insert({
       mood_log_id: moodLogId,
       sender_id: currentUserId,
       content: trimmed,
       media_path: media?.path ?? null,
-      reply_to_id: replyId,
     });
 
     const notifContent = trimmed || (media?.type === "video" ? "Sent a video 🎥" : "Sent a photo 📷");
@@ -173,7 +165,6 @@ export default function ChatThread({ moodLogId, currentUserId, initialMessages }
     setContent("");
     setPendingMedia(null);
     setShowEmojis(false);
-    setReplyingTo(null);
     setSending(false);
   }
 
@@ -236,53 +227,27 @@ export default function ChatThread({ moodLogId, currentUserId, initialMessages }
                 animate={{ opacity: 1, y: 0 }}
                 className={cn("flex flex-col gap-0.5", isMine ? "items-end" : "items-start")}
               >
-                {/* Swipe-to-reply wrapper */}
-                <motion.div
-                  drag="x"
-                  dragConstraints={{ left: 0, right: 0 }}
-                  dragElastic={{ left: 0, right: 0.25 }}
-                  dragSnapToOrigin
-                  onDragEnd={(_, info) => {
-                    if (info.offset.x > 48) setReplyingTo(msg);
-                  }}
-                  className={cn("flex w-full", isMine ? "justify-end" : "justify-start")}
-                >
-                  <div className={cn("flex flex-col gap-1", isMine ? "items-end" : "items-start", "max-w-[78%]")}>
-                    {/* Quoted reply */}
-                    {msg.reply_to && (
-                      <div className={cn(
-                        "flex flex-col rounded-2xl px-3 py-1.5 text-xs opacity-80 border-l-2",
-                        isMine ? "border-white/60 bg-lavender-dark/40 text-white/80" : "border-lavender bg-gray-100 text-gray-500 dark:bg-gray-700 dark:text-gray-400"
-                      )}>
-                        <span className="font-semibold text-[10px] mb-0.5">
-                          {msg.reply_to.sender_id === currentUserId ? "You" : (msg.reply_to.profile?.display_name ?? "Partner")}
-                        </span>
-                        <span className="truncate max-w-[200px]">
-                          {msg.reply_to.content?.startsWith("/sticker-") ? "Sticker" : msg.reply_to.media_path && !msg.reply_to.content ? "Photo" : (msg.reply_to.content ?? "Message")}
-                        </span>
-                      </div>
-                    )}
-                    {msg.content?.startsWith("/sticker-") ? (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img src={msg.content} alt="sticker" className={`${stickerChatSize[msg.content] ?? "h-10 w-10"} object-contain`} />
-                    ) : msg.media_path && !msg.content ? (
-                      renderMedia(msg)
-                    ) : (
-                      <>
-                        {msg.media_path && renderMedia(msg)}
-                        {msg.content && (
-                          isEmojiOnly(msg.content) ? (
-                            <span className="text-4xl leading-none">{msg.content}</span>
-                          ) : (
-                            <div className={cn("break-words rounded-3xl px-4 py-2.5 text-sm leading-relaxed shadow-soft", isMine ? isMineClass : isTheirsClass)}>
-                              {msg.content}
-                            </div>
-                          )
-                        )}
-                      </>
-                    )}
+                {msg.content?.startsWith("/sticker-") ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={msg.content} alt="sticker" className={`${stickerChatSize[msg.content] ?? "h-10 w-10"} object-contain`} />
+                ) : msg.media_path && !msg.content ? (
+                  <div className={cn("max-w-[78%]", isMine ? "items-end flex flex-col" : "items-start flex flex-col")}>
+                    {renderMedia(msg)}
                   </div>
-                </motion.div>
+                ) : (
+                  <>
+                    {msg.media_path && renderMedia(msg)}
+                    {msg.content && (
+                      isEmojiOnly(msg.content) ? (
+                        <span className="text-4xl leading-none">{msg.content}</span>
+                      ) : (
+                        <div className={cn("max-w-[78%] break-words rounded-3xl px-4 py-2.5 text-sm leading-relaxed shadow-soft", isMine ? isMineClass : isTheirsClass)}>
+                          {msg.content}
+                        </div>
+                      )
+                    )}
+                  </>
+                )}
                 <span className="text-[10px] text-gray-300 px-1">
                   {formatDistanceToNow(new Date(msg.created_at), { addSuffix: true })}
                 </span>
@@ -333,21 +298,6 @@ export default function ChatThread({ moodLogId, currentUserId, initialMessages }
               ×
             </button>
           </div>
-        </div>
-      )}
-
-      {/* Reply preview */}
-      {replyingTo && (
-        <div className="flex items-center gap-2 border-t border-gray-100 bg-white px-4 py-2 dark:border-gray-800 dark:bg-gray-900">
-          <div className="flex-1 border-l-2 border-lavender pl-2">
-            <p className="text-[10px] font-semibold text-lavender">
-              {replyingTo.sender_id === currentUserId ? "You" : (replyingTo.profile?.display_name ?? "Partner")}
-            </p>
-            <p className="truncate text-xs text-gray-400">
-              {replyingTo.content?.startsWith("/sticker-") ? "Sticker" : replyingTo.media_path && !replyingTo.content ? "Photo" : (replyingTo.content ?? "Message")}
-            </p>
-          </div>
-          <button onClick={() => setReplyingTo(null)} className="text-gray-400 hover:text-gray-600 text-lg leading-none">×</button>
         </div>
       )}
 

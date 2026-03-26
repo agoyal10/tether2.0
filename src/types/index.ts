@@ -160,16 +160,8 @@ export interface Message {
   content: string;
   media_path: string | null;
   created_at: string;
-  reply_to_id: string | null;
   // joined
   profile?: Profile;
-  reply_to?: {
-    id: string;
-    content: string;
-    sender_id: string;
-    media_path: string | null;
-    profile?: { display_name: string };
-  } | null;
 }
 
 export interface PushSubscription {
