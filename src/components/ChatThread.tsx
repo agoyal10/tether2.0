@@ -24,6 +24,7 @@ export default function ChatThread({ moodLogId, currentUserId, initialMessages }
   const bottomRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const isInitialMount = useRef(true);
 
   const EMOJIS = ["❤️","💞","😘","🥰","😍","💋","🔥","💦","😈","🫦","🥵","💫","✨","🌹","💌","🫶","😊","😂","🤣","😭","🙈","💀","🫠","😏","🤭","😉","🫁","💯","👀","🤤"];
   const supabase = createClient();
@@ -64,7 +65,9 @@ export default function ChatThread({ moodLogId, currentUserId, initialMessages }
   }, [moodLogId, supabase]);
 
   useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+    const behavior = isInitialMount.current ? "instant" : "smooth";
+    isInitialMount.current = false;
+    bottomRef.current?.scrollIntoView({ behavior: behavior as ScrollBehavior });
   }, [messages]);
 
   async function handleFileSelect(e: React.ChangeEvent<HTMLInputElement>) {
