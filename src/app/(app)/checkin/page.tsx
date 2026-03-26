@@ -14,7 +14,7 @@ export default function CheckinPage() {
   const router = useRouter();
   const supabase = createClient();
   const [loading, setLoading] = useState(false);
-  const { naughtyMode, toggle: toggleNaughty } = useNaughtyMode();
+  const { mode, toggle: toggleMode } = useNaughtyMode();
 
   async function handleSubmit(mood: MoodLevel, note: string) {
     setLoading(true);
@@ -40,30 +40,38 @@ export default function CheckinPage() {
       body: JSON.stringify({ moodLogId: log.id }),
     }).catch(() => {});
 
-    toast.success(naughtyMode ? "Sent! They'll know 😈" : "Check-in sent! 💞");
+    const successMsg =
+      mode === "naughty" ? "Sent! They'll know 😈" :
+      mode === "love" ? "Love sent! 💕" :
+      "Check-in sent! 💞";
+    toast.success(successMsg);
     setTimeout(() => router.push("/dashboard"), 1500);
     setLoading(false);
   }
+
+  const modeLabel = mode === "naughty" ? "😈 Naughty" : mode === "love" ? "💕 Love" : "😇 Sweet";
+  const modeBg =
+    mode === "naughty" ? "bg-blush text-white shadow-card" :
+    mode === "love" ? "bg-lavender text-white shadow-card" :
+    "bg-gray-100 text-gray-400 hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-500";
+  const cardBg =
+    mode === "naughty" ? "bg-blush-light dark:bg-gray-900" :
+    mode === "love" ? "bg-lavender-light dark:bg-gray-900" :
+    "bg-white dark:bg-gray-900";
 
   return (
     <div>
       <div className="mb-6 flex items-center justify-between">
         <h1 className="text-2xl font-bold text-gray-800 dark:text-gray-100">Check In</h1>
         <button
-          onClick={toggleNaughty}
-          className={`flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold transition-all ${
-            naughtyMode
-              ? "bg-blush text-white shadow-card"
-              : "bg-gray-100 text-gray-400 hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-500"
-          }`}
+          onClick={toggleMode}
+          className={`flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold transition-all ${modeBg}`}
         >
-          {naughtyMode ? "😈 Naughty" : "😇 Sweet"}
+          {modeLabel}
         </button>
       </div>
-      <div className={`rounded-4xl p-6 shadow-card transition-colors ${
-        naughtyMode ? "bg-blush-light dark:bg-gray-900" : "bg-white dark:bg-gray-900"
-      }`}>
-        <MoodScale onSubmit={handleSubmit} isLoading={loading} naughtyMode={naughtyMode} />
+      <div className={`rounded-4xl p-6 shadow-card transition-colors ${cardBg}`}>
+        <MoodScale onSubmit={handleSubmit} isLoading={loading} mode={mode} />
       </div>
     </div>
   );

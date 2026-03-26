@@ -3,6 +3,7 @@
 export type MoodLevel =
   | "thriving" | "good" | "okay" | "low" | "struggling"
   | "soaked" | "burning" | "heated" | "frisky" | "naughty"
+  | "smitten" | "adoring" | "connected" | "longing" | "tender"
   | "katakni";
 
 export interface MoodConfig {
@@ -61,6 +62,54 @@ export const NAUGHTY_MOOD_CONFIGS: MoodConfig[] = [
     textColor: "text-sage-dark",
     borderColor: "border-sage",
     description: "Mischievous thoughts…",
+  },
+];
+
+export const LOVE_MOOD_CONFIGS: MoodConfig[] = [
+  {
+    level: "smitten",
+    emoji: "🥰",
+    label: "Smitten",
+    color: "bg-blush-light",
+    textColor: "text-blush-dark",
+    borderColor: "border-blush",
+    description: "Head over heels for you",
+  },
+  {
+    level: "adoring",
+    emoji: "💕",
+    label: "Adoring",
+    color: "bg-lavender-light",
+    textColor: "text-lavender-dark",
+    borderColor: "border-lavender",
+    description: "Feeling so much love for you",
+  },
+  {
+    level: "connected",
+    emoji: "💞",
+    label: "Connected",
+    color: "bg-sage-light",
+    textColor: "text-sage-dark",
+    borderColor: "border-sage",
+    description: "Feeling close and bonded",
+  },
+  {
+    level: "longing",
+    emoji: "💭",
+    label: "Longing",
+    color: "bg-sky-light",
+    textColor: "text-sky-dark",
+    borderColor: "border-sky",
+    description: "Missing you and wishing you were here",
+  },
+  {
+    level: "tender",
+    emoji: "🌸",
+    label: "Tender",
+    color: "bg-peach-light",
+    textColor: "text-peach-dark",
+    borderColor: "border-peach",
+    description: "Feeling soft and loving",
   },
 ];
 

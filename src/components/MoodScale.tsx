@@ -3,21 +3,36 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
-import { MOOD_CONFIGS, NAUGHTY_MOOD_CONFIGS, KATAKNI_CONFIG, type MoodLevel } from "@/types";
+import { MOOD_CONFIGS, NAUGHTY_MOOD_CONFIGS, LOVE_MOOD_CONFIGS, KATAKNI_CONFIG, type MoodLevel } from "@/types";
+import type { CheckinMode } from "@/components/NaughtyModeProvider";
 
 interface MoodScaleProps {
   onSubmit: (mood: MoodLevel, note: string) => Promise<void>;
   isLoading?: boolean;
   naughtyMode?: boolean;
+  mode?: CheckinMode;
 }
 
-export default function MoodScale({ onSubmit, isLoading = false, naughtyMode = false }: MoodScaleProps) {
+export default function MoodScale({ onSubmit, isLoading = false, naughtyMode = false, mode }: MoodScaleProps) {
   const [selected, setSelected] = useState<MoodLevel | null>(null);
   const [note, setNote] = useState("");
   const [submitted, setSubmitted] = useState(false);
 
-  const configs = naughtyMode ? NAUGHTY_MOOD_CONFIGS : [...MOOD_CONFIGS, KATAKNI_CONFIG];
+  const resolvedMode = mode ?? (naughtyMode ? "naughty" : "sweet");
+  const configs =
+    resolvedMode === "naughty"
+      ? NAUGHTY_MOOD_CONFIGS
+      : resolvedMode === "love"
+      ? LOVE_MOOD_CONFIGS
+      : [...MOOD_CONFIGS, KATAKNI_CONFIG];
   const selectedConfig = configs.find((m) => m.level === selected);
+
+  // Reset selection when mode changes
+  const [prevMode, setPrevMode] = useState(resolvedMode);
+  if (resolvedMode !== prevMode) {
+    setPrevMode(resolvedMode);
+    setSelected(null);
+  }
 
   async function handleSubmit() {
     if (!selected) return;
@@ -51,11 +66,17 @@ export default function MoodScale({ onSubmit, isLoading = false, naughtyMode = f
       {/* Heading */}
       <div>
         <h2 className="text-2xl font-semibold text-gray-800">
-          {naughtyMode ? "How naughty are you? 😈" : "How are you feeling?"}
+          {resolvedMode === "naughty"
+            ? "How naughty are you? 😈"
+            : resolvedMode === "love"
+            ? "Send some love 💕"
+            : "How are you feeling?"}
         </h2>
         <p className="mt-1 text-sm text-gray-400">
-          {naughtyMode
+          {resolvedMode === "naughty"
             ? "Let your partner know what you're craving…"
+            : resolvedMode === "love"
+            ? "Share how much you love and miss them."
             : "Tap an emoji to share your current mood with your partner."}
         </p>
       </div>
