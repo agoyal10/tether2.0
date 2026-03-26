@@ -39,7 +39,11 @@ export function NaughtyModeProvider({ children }: { children: React.ReactNode })
   }
 
   function toggle() {
-    setMode(mode === "sweet" ? "naughty" : mode === "naughty" ? "love" : "sweet");
+    setModeState((prev) => {
+      const next = prev === "sweet" ? "naughty" : prev === "naughty" ? "love" : "sweet";
+      localStorage.setItem("checkinMode", next);
+      return next;
+    });
   }
 
   return (
