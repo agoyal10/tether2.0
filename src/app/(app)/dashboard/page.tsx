@@ -13,15 +13,15 @@ export default async function DashboardPage() {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect("/login");
 
-  const { data: profile } = await supabase
-    .from("profiles").select("*").eq("id", user.id).single<Profile>();
-
-  const { data: connection } = await supabase
-    .from("connections")
-    .select("*")
-    .or(`user_a_id.eq.${user.id},user_b_id.eq.${user.id}`)
-    .eq("status", "active")
-    .maybeSingle();
+  // Fetch profile and connection in parallel
+  const [{ data: profile }, { data: connection }] = await Promise.all([
+    supabase.from("profiles").select("*").eq("id", user.id).single<Profile>(),
+    supabase.from("connections")
+      .select("*")
+      .or(`user_a_id.eq.${user.id},user_b_id.eq.${user.id}`)
+      .eq("status", "active")
+      .maybeSingle(),
+  ]);
 
   const partnerId = connection
     ? connection.user_a_id === user.id ? connection.user_b_id : connection.user_a_id
@@ -29,47 +29,49 @@ export default async function DashboardPage() {
 
   const admin = createAdminClient();
 
-  // Fetch partner's logs — only those created after this connection started
-  let partnerLogs: MoodLog[] = [];
-  if (partnerId && connection) {
-    const { data } = await admin
+  // Fetch partner logs and own logs in parallel
+  const [partnerLogsResult, myLogsResult] = await Promise.all([
+    partnerId && connection
+      ? admin
+          .from("mood_logs")
+          .select("*, profile:profiles!mood_logs_user_id_fkey(*)")
+          .eq("user_id", partnerId)
+          .gte("created_at", connection.created_at)
+          .order("created_at", { ascending: false })
+          .limit(6)
+      : Promise.resolve({ data: [] as MoodLog[], error: null }),
+    supabase
       .from("mood_logs")
-      .select("*, profile:profiles!mood_logs_user_id_fkey(*)")
-      .eq("user_id", partnerId)
-      .gte("created_at", connection.created_at)
+      .select("*")
+      .eq("user_id", user.id)
+      .gte("created_at", connection?.created_at ?? new Date(0).toISOString())
       .order("created_at", { ascending: false })
-      .limit(6);
-    partnerLogs = (data ?? []) as MoodLog[];
-  }
+      .limit(6),
+  ]);
 
-  // Fetch own logs — only those created after this connection started
-  const { data: myLogsRaw } = await supabase
-    .from("mood_logs")
-    .select("*")
-    .eq("user_id", user.id)
-    .gte("created_at", connection?.created_at ?? new Date(0).toISOString())
-    .order("created_at", { ascending: false })
-    .limit(6);
-  const myLogs = (myLogsRaw ?? []) as MoodLog[];
+  const partnerLogs = (partnerLogsResult.data ?? []) as MoodLog[];
+  const myLogs = (myLogsResult.data ?? []) as MoodLog[];
 
-  // Unread counts
+  // Fetch reads and messages in parallel
   const allLogIds = [...partnerLogs, ...myLogs].map((l) => l.id);
+  const safeLogIds = allLogIds.length > 0 ? allLogIds : ["none"];
 
-  const { data: reads } = await supabase
-    .from("chat_reads")
-    .select("mood_log_id, last_read_at")
-    .eq("user_id", user.id)
-    .in("mood_log_id", allLogIds.length > 0 ? allLogIds : ["none"]);
+  const [{ data: reads }, { data: allMessages }] = await Promise.all([
+    supabase
+      .from("chat_reads")
+      .select("mood_log_id, last_read_at")
+      .eq("user_id", user.id)
+      .in("mood_log_id", safeLogIds),
+    supabase
+      .from("messages")
+      .select("mood_log_id, sender_id, created_at")
+      .in("mood_log_id", safeLogIds),
+  ]);
 
   const lastReadMap: Record<string, string> = {};
   (reads ?? []).forEach(({ mood_log_id, last_read_at }: { mood_log_id: string; last_read_at: string }) => {
     lastReadMap[mood_log_id] = last_read_at;
   });
-
-  const { data: allMessages } = await supabase
-    .from("messages")
-    .select("mood_log_id, sender_id, created_at")
-    .in("mood_log_id", allLogIds.length > 0 ? allLogIds : ["none"]);
 
   const unreadCounts: Record<string, number> = {};
   (allMessages ?? []).forEach(({ mood_log_id, sender_id, created_at }: { mood_log_id: string; sender_id: string; created_at: string }) => {

@@ -1,12 +1,12 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 
 export default function DashboardRefresher({ partnerId }: { partnerId: string }) {
   const router = useRouter();
-  const supabase = createClient();
+  const supabase = useMemo(() => createClient(), []);
 
   useEffect(() => {
     const channel = supabase
@@ -24,7 +24,7 @@ export default function DashboardRefresher({ partnerId }: { partnerId: string })
       .subscribe();
 
     return () => { supabase.removeChannel(channel); };
-  }, [partnerId, router, supabase]);
+  }, [partnerId, router]);
 
   return null;
 }

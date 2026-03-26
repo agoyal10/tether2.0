@@ -35,19 +35,17 @@ export default function NavBar() {
 
       const logIds = logs.map((l: { id: string }) => l.id);
 
-      // Get last-read timestamps
-      const { data: reads } = await supabase
-        .from("chat_reads").select("mood_log_id, last_read_at")
-        .eq("user_id", user.id).in("mood_log_id", logIds);
+      // Fetch reads and messages in parallel
+      const [{ data: reads }, { data: msgs }] = await Promise.all([
+        supabase.from("chat_reads").select("mood_log_id, last_read_at")
+          .eq("user_id", user.id).in("mood_log_id", logIds),
+        supabase.from("messages").select("mood_log_id, sender_id, created_at")
+          .in("mood_log_id", logIds).eq("sender_id", partnerId),
+      ]);
       const lastReadMap: Record<string, string> = {};
       (reads ?? []).forEach(({ mood_log_id, last_read_at }: { mood_log_id: string; last_read_at: string }) => {
         lastReadMap[mood_log_id] = last_read_at;
       });
-
-      // Count partner messages sent after last read
-      const { data: msgs } = await supabase
-        .from("messages").select("mood_log_id, sender_id, created_at")
-        .in("mood_log_id", logIds).eq("sender_id", partnerId);
 
       const count = (msgs ?? []).filter(({ mood_log_id, created_at }: { mood_log_id: string; created_at: string }) => {
         const lastRead = lastReadMap[mood_log_id];
