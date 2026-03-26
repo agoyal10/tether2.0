@@ -201,7 +201,7 @@ export default function ChatThread({ moodLogId, currentUserId, initialMessages }
       </div>
 
       {/* Media preview */}
-      {pendingMedia && (
+      {pendingMedia && signedUrls[pendingMedia.path] && (
         <div className="border-t border-gray-100 bg-white px-4 pt-3 dark:border-gray-800 dark:bg-gray-900">
           <div className="relative inline-block">
             {pendingMedia.type === "video" ? (
