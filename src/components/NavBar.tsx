@@ -5,21 +5,14 @@ import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { cn } from "@/lib/utils";
 import { createClient } from "@/lib/supabase/client";
+import { useKeyboardOpen } from "@/components/KeyboardProvider";
 
 export default function NavBar() {
   const path = usePathname();
   const [unread, setUnread] = useState(0);
   const [hasPartner, setHasPartner] = useState(false);
-  const [keyboardOpen, setKeyboardOpen] = useState(false);
+  const keyboardOpen = useKeyboardOpen();
   const supabase = createClient();
-
-  useEffect(() => {
-    const vv = window.visualViewport;
-    if (!vv) return;
-    const onResize = () => setKeyboardOpen(vv.height < window.innerHeight * 0.75);
-    vv.addEventListener("resize", onResize);
-    return () => vv.removeEventListener("resize", onResize);
-  }, []);
 
   useEffect(() => {
     async function fetchUnread() {

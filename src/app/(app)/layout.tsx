@@ -1,10 +1,12 @@
 import NavBar from "@/components/NavBar";
 import MainWrapper from "@/components/MainWrapper";
+import { KeyboardProvider } from "@/components/KeyboardProvider";
 import { NaughtyModeProvider } from "@/components/NaughtyModeProvider";
 import PushSetup from "@/components/PushSetup";
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   return (
+    <KeyboardProvider>
     <NaughtyModeProvider>
     <div className="flex min-h-screen flex-col">
       {/* Seamless status bar fade */}
@@ -16,5 +18,6 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       <PushSetup />
     </div>
     </NaughtyModeProvider>
+    </KeyboardProvider>
   );
 }
