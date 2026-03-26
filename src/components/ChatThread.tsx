@@ -116,17 +116,21 @@ export default function ChatThread({ moodLogId, currentUserId, initialMessages }
       .channel(`chat:${moodLogId}`)
       .on("postgres_changes", {
         event: "INSERT", schema: "public", table: "messages",
-        filter: `mood_log_id=eq.${moodLogId}`,
       }, async (payload) => {
+        const incoming = payload.new as Message;
+        // Client-side filter — server-side eq filters on non-PK columns
+        // require REPLICA IDENTITY FULL and silently drop events without it
+        if (incoming.mood_log_id !== moodLogId) return;
         const { data: profile } = await supabase
-          .from("profiles").select("*").eq("id", payload.new.sender_id).single();
-        const newMsg = { ...(payload.new as Message), profile: profile as Profile };
-        setMessages((prev) => [...prev, newMsg]);
+          .from("profiles").select("*").eq("id", incoming.sender_id).single();
+        const newMsg = { ...incoming, profile: profile as Profile };
+        setMessages((prev) => {
+          // Deduplicate in case we somehow receive the same message twice
+          if (prev.some((m) => m.id === newMsg.id)) return prev;
+          return [...prev, newMsg];
+        });
         if (newMsg.media_path) fetchSignedUrlsForPaths([newMsg.media_path]);
-        // Partner sent a message — clear typing indicator
-        if ((payload.new as Message).sender_id !== currentUserId) {
-          setIsPartnerTyping(false);
-        }
+        if (incoming.sender_id !== currentUserId) setIsPartnerTyping(false);
       })
       .on("broadcast", { event: "typing" }, () => {
         setIsPartnerTyping(true);
