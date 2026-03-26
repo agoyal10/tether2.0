@@ -337,6 +337,7 @@ export default function ChatThread({ moodLogId, currentUserId, initialMessages }
             value={content}
             onChange={(e) => { setContent(e.target.value); setShowEmojis(false); }}
             onKeyDown={handleKeyDown}
+            onTouchStart={() => setInputReady(true)}
             placeholder="Write a message…"
             rows={1}
             readOnly={!inputReady}
