@@ -191,7 +191,7 @@ export default function ChatThread({ moodLogId, currentUserId, initialMessages }
               >
                 {msg.content?.startsWith("/sticker-") ? (
                   // eslint-disable-next-line @next/next/no-img-element
-                  <img src={msg.content} alt="sticker" className="h-20 w-20 object-contain" />
+                  <img src={msg.content} alt="sticker" className="h-9 w-9 object-contain" />
                 ) : msg.media_path && !msg.content ? (
                   <div className={cn("max-w-[78%]", isMine ? "items-end flex flex-col" : "items-start flex flex-col")}>
                     {renderMedia(msg)}
