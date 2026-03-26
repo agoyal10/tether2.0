@@ -32,7 +32,12 @@ export default function MoodScale({ onSubmit, isLoading = false, naughtyMode = f
         animate={{ opacity: 1, scale: 1 }}
         className="flex flex-col items-center gap-4 py-10 text-center"
       >
-        <span className="text-6xl">{selectedConfig.emoji}</span>
+        {selectedConfig.image ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={selectedConfig.image} alt={selectedConfig.label} className="h-16 w-16 object-contain" />
+        ) : (
+          <span className="text-6xl">{selectedConfig.emoji}</span>
+        )}
         <p className="text-xl font-semibold text-gray-700">Check-in sent!</p>
         <p className="text-sm text-gray-400">
           Your partner has been notified.
