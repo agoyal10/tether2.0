@@ -101,21 +101,20 @@ export default function ChatThread({ moodLogId, currentUserId, initialMessages }
     if ((!content.trim() && !pendingMedia) || sending) return;
     setSending(true);
     const trimmed = content.trim();
+    const media = pendingMedia; // capture before any awaits
 
     await supabase.from("messages").insert({
       mood_log_id: moodLogId,
       sender_id: currentUserId,
       content: trimmed,
-      media_path: pendingMedia?.path ?? null,
+      media_path: media?.path ?? null,
     });
 
+    const notifContent = trimmed || (media?.type === "video" ? "Sent a video 🎥" : "Sent a photo 📷");
     fetch("/api/push/message", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        moodLogId,
-        content: trimmed || (pendingMedia?.type === "video" ? "Sent a video 🎥" : "Sent a photo 📷"),
-      }),
+      body: JSON.stringify({ moodLogId, content: notifContent }),
     }).catch(() => {});
 
     setContent("");
