@@ -11,9 +11,10 @@ interface ChatThreadProps {
   moodLogId: string;
   currentUserId: string;
   initialMessages: Message[];
+  partnerLastRead: string | null;
 }
 
-export default function ChatThread({ moodLogId, currentUserId, initialMessages }: ChatThreadProps) {
+export default function ChatThread({ moodLogId, currentUserId, initialMessages, partnerLastRead: initialPartnerLastRead }: ChatThreadProps) {
   const [messages, setMessages] = useState<Message[]>(initialMessages);
   const [content, setContent] = useState("");
   const [sending, setSending] = useState(false);
@@ -21,6 +22,7 @@ export default function ChatThread({ moodLogId, currentUserId, initialMessages }
   const [uploading, setUploading] = useState(false);
   const [pendingMedia, setPendingMedia] = useState<{ path: string; type: "image" | "video" } | null>(null);
   const [showEmojis, setShowEmojis] = useState(false);
+  const [partnerLastRead, setPartnerLastRead] = useState<string | null>(initialPartnerLastRead);
   const bottomRef = useRef<HTMLDivElement>(null);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -69,6 +71,14 @@ export default function ChatThread({ moodLogId, currentUserId, initialMessages }
         const newMsg = { ...(payload.new as Message), profile: profile as Profile };
         setMessages((prev) => [...prev, newMsg]);
         if (newMsg.media_path) fetchSignedUrlsForPaths([newMsg.media_path]);
+      })
+      .on("postgres_changes", {
+        event: "*", schema: "public", table: "chat_reads",
+        filter: `mood_log_id=eq.${moodLogId}`,
+      }, (payload) => {
+        if ((payload.new as { user_id: string }).user_id !== currentUserId) {
+          setPartnerLastRead((payload.new as { last_read_at: string }).last_read_at);
+        }
       })
       .subscribe();
     return () => { supabase.removeChannel(channel); };
@@ -190,6 +200,13 @@ export default function ChatThread({ moodLogId, currentUserId, initialMessages }
   const isMineClass = "rounded-br-md bg-lavender text-white";
   const isTheirsClass = "rounded-bl-md bg-white text-gray-700 dark:bg-gray-800 dark:text-gray-100";
 
+  // Find the last message sent by me that the partner has read
+  const lastReadMsgId = partnerLastRead
+    ? [...messages].reverse().find(
+        (m) => m.sender_id === currentUserId && new Date(m.created_at) <= new Date(partnerLastRead)
+      )?.id ?? null
+    : null;
+
   function isEmojiOnly(str: string) {
     return /^[\p{Emoji_Presentation}\p{Extended_Pictographic}\u{FE0F}\u{200D}\s]+$/u.test(str.trim());
   }
@@ -232,6 +249,9 @@ export default function ChatThread({ moodLogId, currentUserId, initialMessages }
                 <span className="text-[10px] text-gray-300 px-1">
                   {formatDistanceToNow(new Date(msg.created_at), { addSuffix: true })}
                 </span>
+                {lastReadMsgId === msg.id && (
+                  <span className="text-[10px] text-lavender px-1">Read</span>
+                )}
               </motion.div>
             );
           })}

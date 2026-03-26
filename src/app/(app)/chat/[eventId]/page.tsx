@@ -35,17 +35,26 @@ export default async function ChatPage({ params }: Props) {
     if (!connection) notFound();
   }
 
-  const { data: messages } = await supabase
-    .from("messages")
-    .select("*, profile:profiles(*), media_path")
-    .eq("mood_log_id", eventId)
-    .order("created_at", { ascending: true });
+  // Fetch messages, partner read time, and mark as read in parallel
+  const partnerId = log.user_id === user.id ? null : log.user_id;
 
-  // Mark this chat as read (upsert last_read_at to now)
-  await supabase.from("chat_reads").upsert(
-    { user_id: user.id, mood_log_id: eventId, last_read_at: new Date().toISOString() },
-    { onConflict: "user_id,mood_log_id" }
-  );
+  const [{ data: messages }, { data: partnerRead }] = await Promise.all([
+    supabase
+      .from("messages")
+      .select("*, profile:profiles(*), media_path")
+      .eq("mood_log_id", eventId)
+      .order("created_at", { ascending: true }),
+    supabase
+      .from("chat_reads")
+      .select("last_read_at")
+      .eq("mood_log_id", eventId)
+      .eq("user_id", partnerId ?? user.id)
+      .maybeSingle(),
+    supabase.from("chat_reads").upsert(
+      { user_id: user.id, mood_log_id: eventId, last_read_at: new Date().toISOString() },
+      { onConflict: "user_id,mood_log_id" }
+    ),
+  ]);
 
   // Mark resolved if partner is viewing
   if (log.user_id !== user.id && !log.is_resolved) {
@@ -63,6 +72,7 @@ export default async function ChatPage({ params }: Props) {
           moodLogId={eventId}
           currentUserId={user.id}
           initialMessages={(messages ?? []) as Message[]}
+          partnerLastRead={partnerRead?.last_read_at ?? null}
         />
       </div>
     </div>
