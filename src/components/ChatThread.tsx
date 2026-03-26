@@ -24,23 +24,21 @@ export default function ChatThread({ moodLogId, currentUserId, initialMessages }
   const fileInputRef = useRef<HTMLInputElement>(null);
   const supabase = createClient();
 
-  // Fetch signed URLs for messages with media
-  async function fetchSignedUrls(msgs: Message[]) {
-    const paths = msgs.map((m) => m.media_path).filter(Boolean) as string[];
-    const unsigned = paths.filter((p) => !signedUrls[p]);
-    if (!unsigned.length) return;
-
+  // Fetch signed URLs for given paths
+  async function fetchSignedUrlsForPaths(paths: string[]) {
+    if (!paths.length) return;
     const res = await fetch("/api/media/sign", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ paths: unsigned }),
+      body: JSON.stringify({ paths }),
     });
     const { urls } = await res.json();
     if (urls) setSignedUrls((prev) => ({ ...prev, ...urls }));
   }
 
   useEffect(() => {
-    fetchSignedUrls(initialMessages);
+    const paths = initialMessages.map((m) => m.media_path).filter(Boolean) as string[];
+    fetchSignedUrlsForPaths(paths);
   }, []);
 
   // Realtime subscription
@@ -55,7 +53,7 @@ export default function ChatThread({ moodLogId, currentUserId, initialMessages }
           .from("profiles").select("*").eq("id", payload.new.sender_id).single();
         const newMsg = { ...(payload.new as Message), profile: profile as Profile };
         setMessages((prev) => [...prev, newMsg]);
-        if (newMsg.media_path) fetchSignedUrls([newMsg]);
+        if (newMsg.media_path) fetchSignedUrlsForPaths([newMsg.media_path]);
       })
       .subscribe();
     return () => { supabase.removeChannel(channel); };
@@ -87,13 +85,7 @@ export default function ChatThread({ moodLogId, currentUserId, initialMessages }
     setPendingMedia({ path: data.path, type });
 
     // Get a signed URL for the preview
-    const signRes = await fetch("/api/media/sign", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ paths: [data.path] }),
-    });
-    const { urls } = await signRes.json();
-    if (urls) setSignedUrls((prev) => ({ ...prev, ...urls }));
+    await fetchSignedUrlsForPaths([data.path]);
     setUploading(false);
   }
 
