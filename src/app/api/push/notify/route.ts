@@ -2,9 +2,9 @@ import { NextRequest, NextResponse } from "next/server";
 import webpush from "web-push";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { MOOD_CONFIGS, NAUGHTY_MOOD_CONFIGS } from "@/types";
+import { MOOD_CONFIGS, NAUGHTY_MOOD_CONFIGS, LOVE_MOOD_CONFIGS } from "@/types";
 
-const ALL_CONFIGS = [...MOOD_CONFIGS, ...NAUGHTY_MOOD_CONFIGS];
+const ALL_CONFIGS = [...MOOD_CONFIGS, ...NAUGHTY_MOOD_CONFIGS, ...LOVE_MOOD_CONFIGS];
 
 export async function POST(req: NextRequest) {
   // Configure VAPID inside the handler so env vars are only required at runtime
