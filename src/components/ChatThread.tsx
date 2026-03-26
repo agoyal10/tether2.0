@@ -172,7 +172,7 @@ export default function ChatThread({ moodLogId, currentUserId, initialMessages }
   const isTheirsClass = "rounded-bl-md bg-white text-gray-700 dark:bg-gray-800 dark:text-gray-100";
 
   function isEmojiOnly(str: string) {
-    return /^[\p{Emoji_Presentation}\p{Extended_Pictographic}\s]+$/u.test(str.trim());
+    return /^[\p{Emoji_Presentation}\p{Extended_Pictographic}\u{FE0F}\u{200D}\s]+$/u.test(str.trim());
   }
 
   return (
