@@ -1,4 +1,5 @@
 import NavBar from "@/components/NavBar";
+import MainWrapper from "@/components/MainWrapper";
 import { NaughtyModeProvider } from "@/components/NaughtyModeProvider";
 import PushSetup from "@/components/PushSetup";
 
@@ -8,9 +9,9 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     <div className="flex min-h-screen flex-col">
       {/* Seamless status bar fade */}
       <div className="fixed top-0 left-0 right-0 z-50 h-16 bg-gradient-to-b from-lavender-light via-lavender-light/80 to-transparent dark:from-gray-950 dark:via-gray-950/80 pointer-events-none" />
-      <main className="mx-auto w-full max-w-md flex-1 px-4 pb-24 pt-16">
+      <MainWrapper>
         {children}
-      </main>
+      </MainWrapper>
       <NavBar />
       <PushSetup />
     </div>
