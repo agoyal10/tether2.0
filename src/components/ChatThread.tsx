@@ -32,7 +32,7 @@ export default function ChatThread({ moodLogId, currentUserId, initialMessages }
     { src: "/sticker-angry.png",   alt: "angry",   traySize: "h-8 w-8", chatSize: "h-10 w-10" },
     { src: "/sticker-cozy.png",    alt: "cozy",    traySize: "h-8 w-8", chatSize: "h-10 w-10" },
     { src: "/sticker-payal.png",   alt: "Payal",   traySize: "h-8 w-8", chatSize: "h-10 w-10" },
-    { src: "/sticker-katakna.png", alt: "katakna", traySize: "h-5 w-5", chatSize: "h-9 w-9"  },
+    { src: "/sticker-katakna.png", alt: "katakna", traySize: "h-5 w-5", chatSize: "h-10 w-10" },
   ];
   const stickerChatSize: Record<string, string> = Object.fromEntries(
     CUSTOM_STICKERS.map((s) => [s.src, s.chatSize])
