@@ -10,7 +10,16 @@ export default function NavBar() {
   const path = usePathname();
   const [unread, setUnread] = useState(0);
   const [hasPartner, setHasPartner] = useState(false);
+  const [keyboardOpen, setKeyboardOpen] = useState(false);
   const supabase = createClient();
+
+  useEffect(() => {
+    const vv = window.visualViewport;
+    if (!vv) return;
+    const onResize = () => setKeyboardOpen(vv.height < window.innerHeight * 0.75);
+    vv.addEventListener("resize", onResize);
+    return () => vv.removeEventListener("resize", onResize);
+  }, []);
 
   useEffect(() => {
     async function fetchUnread() {
@@ -80,6 +89,8 @@ export default function NavBar() {
     { href: "/partner",   label: "Partner",  icon: "💞", badge: false,      disabled: false },
     { href: "/settings",  label: "Settings", icon: "⚙️", badge: false,      disabled: false },
   ];
+
+  if (keyboardOpen) return null;
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-50 border-t border-gray-100 bg-white/80 backdrop-blur-md dark:border-gray-800 dark:bg-gray-950/80">
