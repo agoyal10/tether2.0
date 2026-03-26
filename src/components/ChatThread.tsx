@@ -28,7 +28,10 @@ export default function ChatThread({ moodLogId, currentUserId, initialMessages }
   const isInitialMount = useRef(true);
 
   const EMOJIS = ["❤️","💞","😘","🥰","😍","💋","🔥","💦","😈","🫦","🥵","💫","✨","🌹","💌","🫶","😊","😂","🤣","😭","🙈","💀","🫠","😏","🤭","😉","🧋","💯","👀","🤤"];
-  const CUSTOM_STICKERS = [{ src: "/sticker-angry.png", alt: "angry" }];
+  const CUSTOM_STICKERS = [
+    { src: "/sticker-angry.png", alt: "angry" },
+    { src: "/sticker-cozy.png", alt: "cozy" },
+  ];
   const supabase = createClient();
 
   // Fetch signed URLs for given paths
