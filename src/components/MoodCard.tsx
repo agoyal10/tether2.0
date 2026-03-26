@@ -4,9 +4,9 @@ import { formatDistanceToNow } from "date-fns";
 import { motion } from "framer-motion";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
-import { MOOD_CONFIGS, NAUGHTY_MOOD_CONFIGS, type MoodLog } from "@/types";
+import { MOOD_CONFIGS, NAUGHTY_MOOD_CONFIGS, KATAKNI_CONFIG, type MoodLog } from "@/types";
 
-const ALL_CONFIGS = [...MOOD_CONFIGS, ...NAUGHTY_MOOD_CONFIGS];
+const ALL_CONFIGS = [...MOOD_CONFIGS, ...NAUGHTY_MOOD_CONFIGS, KATAKNI_CONFIG];
 
 interface MoodCardProps {
   log: MoodLog;
@@ -31,7 +31,12 @@ export default function MoodCard({ log, isPartner = false, unreadCount = 0, hide
       {/* Header */}
       <div className="flex items-start justify-between">
         <div className="flex items-center gap-3">
-          <span className="text-4xl">{config.emoji}</span>
+          {config.image ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={config.image} alt={config.label} className="h-10 w-10 object-contain" />
+          ) : (
+            <span className="text-4xl">{config.emoji}</span>
+          )}
           <div>
             <p className={cn("font-semibold", config.textColor)}>{config.label}</p>
             <p className="text-xs text-gray-400">

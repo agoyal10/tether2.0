@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
-import { MOOD_CONFIGS, NAUGHTY_MOOD_CONFIGS, type MoodLevel } from "@/types";
+import { MOOD_CONFIGS, NAUGHTY_MOOD_CONFIGS, KATAKNI_CONFIG, type MoodLevel } from "@/types";
 
 interface MoodScaleProps {
   onSubmit: (mood: MoodLevel, note: string) => Promise<void>;
@@ -16,7 +16,7 @@ export default function MoodScale({ onSubmit, isLoading = false, naughtyMode = f
   const [note, setNote] = useState("");
   const [submitted, setSubmitted] = useState(false);
 
-  const configs = naughtyMode ? NAUGHTY_MOOD_CONFIGS : MOOD_CONFIGS;
+  const configs = naughtyMode ? NAUGHTY_MOOD_CONFIGS : [...MOOD_CONFIGS, KATAKNI_CONFIG];
   const selectedConfig = configs.find((m) => m.level === selected);
 
   async function handleSubmit() {
@@ -74,9 +74,12 @@ export default function MoodScale({ onSubmit, isLoading = false, naughtyMode = f
                   : "border-transparent bg-gray-50 hover:bg-gray-100"
               )}
             >
-              <span className={cn("text-2xl transition-all", isSelected ? "scale-110" : "")}>
-                {config.emoji}
-              </span>
+              {config.image ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={config.image} alt={config.label} className={cn("h-7 w-7 object-contain transition-all", isSelected ? "scale-110" : "")} />
+              ) : (
+                <span className={cn("text-2xl transition-all", isSelected ? "scale-110" : "")}>{config.emoji}</span>
+              )}
               <span
                 className={cn(
                   "text-[10px] font-medium leading-tight",

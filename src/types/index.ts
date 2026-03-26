@@ -2,11 +2,13 @@
 
 export type MoodLevel =
   | "thriving" | "good" | "okay" | "low" | "struggling"
-  | "soaked" | "burning" | "heated" | "frisky" | "naughty";
+  | "soaked" | "burning" | "heated" | "frisky" | "naughty"
+  | "katakni";
 
 export interface MoodConfig {
   level: MoodLevel;
   emoji: string;
+  image?: string;      // optional custom image path (overrides emoji)
   label: string;
   color: string;       // Tailwind bg class
   textColor: string;   // Tailwind text class
@@ -61,6 +63,17 @@ export const NAUGHTY_MOOD_CONFIGS: MoodConfig[] = [
     description: "Mischievous thoughts…",
   },
 ];
+
+export const KATAKNI_CONFIG: MoodConfig = {
+  level: "katakni",
+  emoji: "😤",
+  image: "/sticker-angry.png",
+  label: "Katakni",
+  color: "bg-red-50",
+  textColor: "text-red-600",
+  borderColor: "border-red-300",
+  description: "Not in the mood for anything right now",
+};
 
 export const MOOD_CONFIGS: MoodConfig[] = [
   {

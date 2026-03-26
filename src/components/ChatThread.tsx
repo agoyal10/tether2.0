@@ -71,7 +71,11 @@ export default function ChatThread({ moodLogId, currentUserId, initialMessages }
     if (!container) return;
     if (isInitialMount.current) {
       isInitialMount.current = false;
-      container.scrollTop = container.scrollHeight;
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          container.scrollTop = container.scrollHeight;
+        });
+      });
     } else {
       bottomRef.current?.scrollIntoView({ behavior: "smooth" });
     }
