@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { formatDistanceToNow } from "date-fns";
 import { cn } from "@/lib/utils";
@@ -66,17 +66,16 @@ export default function ChatThread({ moodLogId, currentUserId, initialMessages }
     return () => { supabase.removeChannel(channel); };
   }, [moodLogId, supabase]);
 
-  useEffect(() => {
+  // Scroll to bottom instantly on first render
+  useLayoutEffect(() => {
     const container = scrollContainerRef.current;
-    if (!container) return;
-    if (isInitialMount.current) {
-      isInitialMount.current = false;
-      setTimeout(() => {
-        container.scrollTop = container.scrollHeight;
-      }, 100);
-    } else {
-      bottomRef.current?.scrollIntoView({ behavior: "smooth" });
-    }
+    if (container) container.scrollTop = container.scrollHeight;
+  }, []);
+
+  // Smooth scroll for new messages
+  useEffect(() => {
+    if (isInitialMount.current) { isInitialMount.current = false; return; }
+    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
   async function handleFileSelect(e: React.ChangeEvent<HTMLInputElement>) {
@@ -307,6 +306,7 @@ export default function ChatThread({ moodLogId, currentUserId, initialMessages }
             )}
           </button>
           <button
+            onMouseDown={(e) => e.preventDefault()}
             onClick={() => setShowEmojis((v) => !v)}
             aria-label="Emoji"
             className="flex h-7 w-7 shrink-0 items-center justify-center text-gray-400 hover:text-lavender transition-all"
