@@ -29,11 +29,14 @@ export default function ChatThread({ moodLogId, currentUserId, initialMessages }
 
   const EMOJIS = ["❤️","💞","😘","🥰","😍","💋","🔥","💦","😈","🫦","🥵","💫","✨","🌹","💌","🫶","😊","😂","🤣","😭","🙈","💀","🫠","😏","🤭","😉","🧋","💯","👀","🤤"];
   const CUSTOM_STICKERS = [
-    { src: "/sticker-angry.png", alt: "angry", size: "h-8 w-8" },
-    { src: "/sticker-cozy.png", alt: "cozy", size: "h-8 w-8" },
-    { src: "/sticker-payal.png", alt: "Payal", size: "h-8 w-8" },
-    { src: "/sticker-katakna.png", alt: "katakna", size: "h-5 w-5" },
+    { src: "/sticker-angry.png",   alt: "angry",   traySize: "h-8 w-8", chatSize: "h-10 w-10" },
+    { src: "/sticker-cozy.png",    alt: "cozy",    traySize: "h-8 w-8", chatSize: "h-10 w-10" },
+    { src: "/sticker-payal.png",   alt: "Payal",   traySize: "h-8 w-8", chatSize: "h-10 w-10" },
+    { src: "/sticker-katakna.png", alt: "katakna", traySize: "h-5 w-5", chatSize: "h-6 w-6"  },
   ];
+  const stickerChatSize: Record<string, string> = Object.fromEntries(
+    CUSTOM_STICKERS.map((s) => [s.src, s.chatSize])
+  );
   const supabase = createClient();
 
   // Fetch signed URLs for given paths
@@ -207,7 +210,7 @@ export default function ChatThread({ moodLogId, currentUserId, initialMessages }
               >
                 {msg.content?.startsWith("/sticker-") ? (
                   // eslint-disable-next-line @next/next/no-img-element
-                  <img src={msg.content} alt="sticker" className="h-10 w-10 object-contain" />
+                  <img src={msg.content} alt="sticker" className={`${stickerChatSize[msg.content] ?? "h-10 w-10"} object-contain`} />
                 ) : msg.media_path && !msg.content ? (
                   <div className={cn("max-w-[78%]", isMine ? "items-end flex flex-col" : "items-start flex flex-col")}>
                     {renderMedia(msg)}
@@ -275,7 +278,7 @@ export default function ChatThread({ moodLogId, currentUserId, initialMessages }
                 className="p-1 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-all"
               >
                 {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={s.src} alt={s.alt} className={`${s.size} object-contain`} />
+                <img src={s.src} alt={s.alt} className={`${s.traySize} object-contain`} />
               </button>
             ))}
             {EMOJIS.map((e) => (
