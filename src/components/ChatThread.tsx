@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { formatDistanceToNow } from "date-fns";
 import { cn } from "@/lib/utils";
@@ -41,7 +41,7 @@ export default function ChatThread({ moodLogId, currentUserId, initialMessages }
   const stickerChatSize: Record<string, string> = Object.fromEntries(
     CUSTOM_STICKERS.map((s) => [s.src, s.chatSize])
   );
-  const supabase = createClient();
+  const supabase = useMemo(() => createClient(), []);
 
   // Fetch signed URLs for given paths
   async function fetchSignedUrlsForPaths(paths: string[]) {
@@ -90,7 +90,8 @@ export default function ChatThread({ moodLogId, currentUserId, initialMessages }
       channelRef.current = null;
       if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
     };
-  }, [moodLogId, supabase]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [moodLogId]);
 
 
   // Scroll to bottom on first render (also after images load)
