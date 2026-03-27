@@ -28,6 +28,7 @@ export default function FlowerOverlay() {
 
   useEffect(() => {
     async function check() {
+      if (visible) return; // already showing
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
@@ -47,8 +48,15 @@ export default function FlowerOverlay() {
         setVisible(true);
       }
     }
+
     check();
-  }, [supabase]);
+
+    // Also check when app comes back to foreground
+    const onVisible = () => { if (document.visibilityState === "visible") check(); };
+    document.addEventListener("visibilitychange", onVisible);
+    return () => document.removeEventListener("visibilitychange", onVisible);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   async function dismiss() {
     setVisible(false);

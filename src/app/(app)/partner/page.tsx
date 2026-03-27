@@ -49,6 +49,7 @@ export default function PartnerPage() {
   const [partnerCode, setPartnerCode] = useState("");
   const [loading, setLoading] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [confirmDisconnect, setConfirmDisconnect] = useState(false);
 
   useEffect(() => {
     supabase.auth.getUser().then(async ({ data: { user } }) => {
@@ -173,12 +174,35 @@ export default function PartnerPage() {
 
           <NudgePartnerButton partnerName={partner.display_name} />
 
-          <button
-            onClick={disconnect}
-            className="w-full rounded-3xl border border-blush py-3 text-sm font-medium text-blush-dark hover:bg-blush-light transition-all"
-          >
-            Disconnect partner
-          </button>
+          <div className="mt-8">
+            {confirmDisconnect ? (
+              <div className="rounded-3xl border border-blush bg-blush-light/40 p-4 flex flex-col gap-3">
+                <p className="text-sm font-medium text-gray-700 text-center">Disconnect from {partner.display_name}?</p>
+                <p className="text-xs text-gray-400 text-center">Your chat history will be preserved if you reconnect.</p>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => setConfirmDisconnect(false)}
+                    className="flex-1 rounded-2xl border border-gray-200 py-2.5 text-sm font-medium text-gray-500 hover:bg-gray-50 transition-all"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={disconnect}
+                    className="flex-1 rounded-2xl bg-blush py-2.5 text-sm font-semibold text-white hover:bg-blush-dark transition-all"
+                  >
+                    Disconnect
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <button
+                onClick={() => setConfirmDisconnect(true)}
+                className="w-full rounded-3xl border border-gray-200 py-3 text-sm font-medium text-gray-400 hover:border-blush hover:text-blush-dark transition-all"
+              >
+                Disconnect partner
+              </button>
+            )}
+          </div>
         </div>
       ) : (
         <div className="flex flex-col gap-6">
