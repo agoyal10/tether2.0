@@ -544,34 +544,20 @@ function Burning({ className }: { className?: string }) {
   return (
     <svg viewBox="0 0 64 64" className={className} fill="none">
       <defs>
-        <linearGradient id="bn-lip" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor="#F43F5E" />
-          <stop offset="100%" stopColor="#9F1239" />
+        <linearGradient id="bn-f" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%"  stopColor="#FEF08A" />
+          <stop offset="45%" stopColor="#F97316" />
+          <stop offset="100%" stopColor="#DC2626" />
         </linearGradient>
-        <linearGradient id="bn-tongue" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor="#FCA5A5" />
-          <stop offset="100%" stopColor="#F87171" />
+        <linearGradient id="bn-fi" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%"  stopColor="#FEF9C3" />
+          <stop offset="100%" stopColor="#FCD34D" />
         </linearGradient>
       </defs>
-      {/* Lower lip — drawn first (back) */}
-      <path d="M8 40 Q20 46 32 47 Q44 46 56 40 C53 58 11 58 8 40Z" fill="url(#bn-lip)" />
-      {/* Mouth interior */}
-      <path d="M10 30 Q32 25 54 30 L54 42 Q32 47 10 42 Z" fill="#2D0A0A" />
-      {/* Teeth */}
-      <rect x="12" y="29" width="40" height="11" rx="3" fill="white" opacity="0.93" />
-      <line x1="22" y1="29" x2="22" y2="40" stroke="#E5E7EB" strokeWidth="0.8" opacity="0.5" />
-      <line x1="32" y1="29" x2="32" y2="40" stroke="#E5E7EB" strokeWidth="0.8" opacity="0.5" />
-      <line x1="42" y1="29" x2="42" y2="40" stroke="#E5E7EB" strokeWidth="0.8" opacity="0.5" />
-      {/* Tongue licking up over upper lip */}
-      <path d="M23 33 C23 26 27 19 32 18 C37 19 41 26 41 33 C38 31 35 29 32 29 C29 29 26 31 23 33Z" fill="url(#bn-tongue)" />
-      {/* Tongue center groove */}
-      <path d="M32 18 Q32 24 32 32" stroke="#FDA4AF" strokeWidth="1.2" opacity="0.5" strokeLinecap="round" />
-      {/* Upper lip — on top so tongue tucks under it */}
-      <path d="M8 30 C8 21 14 13 21 14 C26 15 30 21 32 21 C34 21 38 15 43 14 C50 13 56 21 56 30 Q44 35 32 35 Q20 35 8 30Z" fill="url(#bn-lip)" />
-      {/* Gloss on upper lip */}
-      <ellipse cx="22" cy="20" rx="6" ry="3" fill="white" opacity="0.22" transform="rotate(-15 22 20)" />
-      {/* Gloss on lower lip */}
-      <ellipse cx="32" cy="50" rx="13" ry="3" fill="white" opacity="0.28" />
+      {/* Outer flame */}
+      <path d="M32 61 C14 61 6 47 6 36 C6 24 16 16 22 10 C20 20 26 24 30 22 C26 14 34 4 36 2 C46 14 46 24 44 30 C50 22 54 30 54 36 C54 47 50 61 32 61Z" fill="url(#bn-f)" />
+      {/* Inner flame — bright yellow core */}
+      <path d="M32 54 C22 54 18 44 18 38 C18 30 26 24 30 28 C32 22 38 26 40 32 C44 28 46 34 46 38 C46 48 42 54 32 54Z" fill="url(#bn-fi)" />
     </svg>
   );
 }
@@ -656,21 +642,20 @@ function Naughty({ className }: { className?: string }) {
   return (
     <svg viewBox="0 0 64 64" className={className} fill="none">
       <defs>
-        <linearGradient id="nt-cf" x1="0" y1="0" x2="0" y2="1">
+        <linearGradient id="nt-body" x1="0" y1="0" x2="0" y2="1">
           <stop offset="0%" stopColor="#F9A8D4" />
           <stop offset="100%" stopColor="#DB2777" />
         </linearGradient>
       </defs>
-      {/* Left cuff — rounded rect / shackle shape, clearly a cuff not a circle */}
-      <rect x="2" y="20" width="26" height="24" rx="12" stroke="url(#nt-cf)" strokeWidth="6" fill="none" />
-      {/* Right cuff */}
-      <rect x="36" y="20" width="26" height="24" rx="12" stroke="url(#nt-cf)" strokeWidth="6" fill="none" />
-      {/* Chain link between them */}
-      <line x1="28" y1="32" x2="36" y2="32" stroke="#BE185D" strokeWidth="5" strokeLinecap="round" />
-      {/* Shine on left cuff */}
-      <path d="M5 24 Q9 19 14 20" stroke="white" strokeWidth="2" strokeLinecap="round" opacity="0.4" />
-      {/* Shine on right cuff */}
-      <path d="M39 24 Q43 19 48 20" stroke="white" strokeWidth="2" strokeLinecap="round" opacity="0.4" />
+      {/* Shackle arch */}
+      <path d="M20 32 C20 14 44 14 44 32" stroke="#F472B6" strokeWidth="8" fill="none" strokeLinecap="round" />
+      {/* Lock body */}
+      <rect x="11" y="29" width="42" height="30" rx="8" fill="url(#nt-body)" />
+      {/* Keyhole */}
+      <circle cx="32" cy="41" r="6" fill="white" opacity="0.35" />
+      <rect x="30" y="41" width="4" height="9" rx="2" fill="white" opacity="0.35" />
+      {/* Body shine */}
+      <ellipse cx="20" cy="36" rx="4" ry="7" fill="white" opacity="0.18" transform="rotate(-15 20 36)" />
     </svg>
   );
 }
