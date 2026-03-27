@@ -346,32 +346,40 @@ function Longing({ className }: { className?: string }) {
   return (
     <svg viewBox="0 0 64 64" className={className} fill="none">
       <defs>
-        <linearGradient id="lg-moon" x1="0" y1="0" x2="1" y2="1">
-          <stop offset="0%" stopColor="#FEF9C3" />
-          <stop offset="100%" stopColor="#FCD34D" />
+        <linearGradient id="lg-p1" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor="#FDE68A" />
+          <stop offset="100%" stopColor="#F59E0B" />
+        </linearGradient>
+        <linearGradient id="lg-p2" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor="#C4B5FD" />
+          <stop offset="100%" stopColor="#7C3AED" />
+        </linearGradient>
+        <linearGradient id="lg-heart" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor="#FB7185" />
+          <stop offset="100%" stopColor="#E11D48" />
         </linearGradient>
       </defs>
-      {/* Stars */}
-      <circle cx="10" cy="10" r="1.8" fill="#FCD34D" />
-      <circle cx="54" cy="8"  r="1.4" fill="#FCD34D" />
-      <circle cx="58" cy="24" r="1"   fill="#FCD34D" />
-      <circle cx="6"  cy="30" r="1.2" fill="#FCD34D" />
-      <circle cx="46" cy="4"  r="1"   fill="#C4B5FD" />
-      <path d="M50 18 L51 15 L52 18 L55 19 L52 20 L51 23 L50 20 L47 19Z" fill="#FCD34D" />
-      <path d="M4 18 L5 16 L6 18 L8 19 L6 20 L5 22 L4 20 L2 19Z" fill="#FCD34D" />
-      {/* Crescent moon */}
-      <circle cx="32" cy="34" r="18" fill="url(#lg-moon)" />
-      <circle cx="40" cy="28" r="14" fill="#0F172A" />
-      {/* Moon face */}
-      <circle cx="24" cy="32" r="2"   fill="#92400E" />
-      <circle cx="24" cy="38" r="2"   fill="#92400E" />
-      <path d="M20 42 Q22 45 26 43" stroke="#92400E" strokeWidth="1.5" strokeLinecap="round" fill="none" />
-      {/* Floating heart */}
-      <path d="M44 38 C44 36 45.2 34 46.5 35.5 C47.8 34 49 36 49 38 C49 40 46.5 43 46.5 43 C46.5 43 44 40 44 38Z" fill="#FB7185" />
-      {/* Thought dots connecting moon to heart */}
-      <circle cx="36" cy="46" r="1.5" fill="#FDA4AF" opacity="0.7" />
-      <circle cx="40" cy="44" r="1.2" fill="#FDA4AF" opacity="0.7" />
-      <circle cx="43" cy="42" r="1"   fill="#FDA4AF" opacity="0.7" />
+      {/* Stars in the gap */}
+      <circle cx="32" cy="7"  r="1.5" fill="#FCD34D" />
+      <circle cx="24" cy="11" r="1"   fill="#FCD34D" opacity="0.7" />
+      <circle cx="40" cy="9"  r="1"   fill="#FCD34D" opacity="0.7" />
+      {/* Dashed distance line */}
+      <line x1="26" y1="40" x2="38" y2="40" stroke="#E5E7EB" strokeWidth="1.5" strokeDasharray="2,2" opacity="0.5" />
+      {/* Left figure */}
+      <circle cx="12" cy="16" r="6" fill="url(#lg-p1)" />
+      <path d="M6 30 Q6 46 12 50 Q18 46 18 30 Q18 22 12 22 Q6 22 6 30Z" fill="url(#lg-p1)" />
+      {/* Left arm reaching right */}
+      <path d="M17 30 Q22 34 26 37" stroke="#F59E0B" strokeWidth="2.5" strokeLinecap="round" fill="none" />
+      {/* Right figure */}
+      <circle cx="52" cy="16" r="6" fill="url(#lg-p2)" />
+      <path d="M46 30 Q46 46 52 50 Q58 46 58 30 Q58 22 52 22 Q46 22 46 30Z" fill="url(#lg-p2)" />
+      {/* Right arm reaching left */}
+      <path d="M47 30 Q42 34 38 37" stroke="#7C3AED" strokeWidth="2.5" strokeLinecap="round" fill="none" />
+      {/* Floating heart between them */}
+      <path d="M28 20 C28 18 29.5 16 31 17.5 C32.5 16 34 18 34 20 C34 22 31 25 31 25 C31 25 28 22 28 20Z" fill="url(#lg-heart)" />
+      {/* Sparkles near heart */}
+      <path d="M20 16 L21 13 L22 16 L25 17 L22 18 L21 21 L20 18 L17 17Z" fill="#FCD34D" opacity="0.75" />
+      <path d="M40 14 L41 12 L42 14 L44 15 L42 16 L41 18 L40 16 L38 15Z" fill="#FCD34D" opacity="0.75" />
     </svg>
   );
 }
@@ -485,29 +493,41 @@ function Soaked({ className }: { className?: string }) {
   return (
     <svg viewBox="0 0 64 64" className={className} fill="none">
       <defs>
-        <linearGradient id="sk-d" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor="#BAE6FD" />
-          <stop offset="100%" stopColor="#0284C7" />
+        <linearGradient id="sk-band" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor="#FBCFE8" />
+          <stop offset="100%" stopColor="#F472B6" />
         </linearGradient>
-        <linearGradient id="sk-d2" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor="#E0F2FE" />
-          <stop offset="100%" stopColor="#38BDF8" />
+        <linearGradient id="sk-body" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor="#FCE7F3" />
+          <stop offset="100%" stopColor="#F9A8D4" />
+        </linearGradient>
+        <linearGradient id="sk-drop" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor="#BAE6FD" />
+          <stop offset="100%" stopColor="#0EA5E9" />
         </linearGradient>
       </defs>
-      {/* 3 big water drops */}
-      <path d="M16 14 Q16 6 20 4 Q24 2 26 8 Q28 14 26 20 Q24 26 20 26 Q16 22 16 14Z" fill="url(#sk-d)" />
-      <path d="M27 28 Q27 18 32 15 Q37 12 40 20 Q43 28 40 36 Q37 44 32 44 Q27 40 27 28Z" fill="url(#sk-d2)" />
-      <path d="M38 14 Q38 6 42 4 Q46 2 48 8 Q50 14 48 20 Q46 26 42 26 Q38 22 38 14Z" fill="url(#sk-d)" />
-      {/* Shine on drops */}
-      <ellipse cx="21" cy="12" rx="2" ry="3.5" fill="white" opacity="0.4" transform="rotate(-15 21 12)" />
-      <ellipse cx="33" cy="24" rx="2.5" ry="5" fill="white" opacity="0.4" transform="rotate(-10 33 24)" />
-      <ellipse cx="43" cy="12" rx="2" ry="3.5" fill="white" opacity="0.4" transform="rotate(-15 43 12)" />
-      {/* Splash at bottom */}
-      <path d="M10 52 Q16 46 22 52 Q28 58 34 52 Q40 46 46 52 Q52 58 58 52" stroke="#38BDF8" strokeWidth="2.5" strokeLinecap="round" fill="none" />
-      <path d="M12 58 Q18 54 24 58 Q30 62 36 58 Q42 54 48 58" stroke="#BAE6FD" strokeWidth="2" strokeLinecap="round" fill="none" opacity="0.7" />
-      {/* Steam wisps */}
-      <path d="M20 4 Q18 1 20 0 Q22 1 20 4" stroke="#BAE6FD" strokeWidth="1.2" strokeLinecap="round" fill="none" opacity="0.6" />
-      <path d="M44 4 Q42 1 44 0 Q46 1 44 4" stroke="#BAE6FD" strokeWidth="1.2" strokeLinecap="round" fill="none" opacity="0.6" />
+      {/* Waistband */}
+      <rect x="9" y="8" width="46" height="13" rx="6.5" fill="url(#sk-band)" />
+      {/* Lace dots on waistband */}
+      <circle cx="16" cy="14.5" r="1.8" fill="white" opacity="0.45" />
+      <circle cx="23" cy="14.5" r="1.8" fill="white" opacity="0.45" />
+      <circle cx="30" cy="14.5" r="1.8" fill="white" opacity="0.45" />
+      <circle cx="37" cy="14.5" r="1.8" fill="white" opacity="0.45" />
+      <circle cx="44" cy="14.5" r="1.8" fill="white" opacity="0.45" />
+      {/* Bow in center of waistband */}
+      <path d="M28 14.5 L32 11.5 L36 14.5 L32 17.5 Z" fill="#BE185D" />
+      <circle cx="32" cy="14.5" r="2.2" fill="#E11D48" />
+      {/* Panty body */}
+      <path d="M9 21 C6 28 10 38 18 46 C22 52 28 56 32 57 C36 56 42 52 46 46 C54 38 58 28 55 21 Z" fill="url(#sk-body)" />
+      {/* Leg opening highlights */}
+      <path d="M9 21 C6 28 10 38 18 46" stroke="white" strokeWidth="2" fill="none" opacity="0.25" strokeLinecap="round" />
+      <path d="M55 21 C58 28 54 38 46 46" stroke="white" strokeWidth="2" fill="none" opacity="0.25" strokeLinecap="round" />
+      {/* Water drops */}
+      <path d="M22 58 Q21 54 23 52 Q25 54 24 58 Z" fill="url(#sk-drop)" />
+      <path d="M32 60 Q31 56 33 54 Q35 56 34 60 Z" fill="url(#sk-drop)" />
+      <path d="M42 58 Q41 54 43 52 Q45 54 44 58 Z" fill="url(#sk-drop)" />
+      {/* Shine on body */}
+      <ellipse cx="22" cy="34" rx="4" ry="8" fill="white" opacity="0.15" transform="rotate(-20 22 34)" />
     </svg>
   );
 }
@@ -516,30 +536,38 @@ function Burning({ className }: { className?: string }) {
   return (
     <svg viewBox="0 0 64 64" className={className} fill="none">
       <defs>
-        <radialGradient id="bn-face" cx="40%" cy="35%" r="65%">
-          <stop offset="0%" stopColor="#FED7AA" />
-          <stop offset="100%" stopColor="#FB923C" />
-        </radialGradient>
+        <linearGradient id="bn-c" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor="#FFFBEB" />
+          <stop offset="100%" stopColor="#FDE68A" />
+        </linearGradient>
+        <linearGradient id="bn-f" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor="#FEF9C3" />
+          <stop offset="50%" stopColor="#F97316" />
+          <stop offset="100%" stopColor="#DC2626" />
+        </linearGradient>
       </defs>
-      {/* Face — flushed red */}
-      <circle cx="32" cy="36" r="20" fill="url(#bn-face)" />
-      {/* Deep blush cheeks */}
-      <ellipse cx="20" cy="42" rx="5.5" ry="3.5" fill="#EF4444" opacity="0.5" />
-      <ellipse cx="44" cy="42" rx="5.5" ry="3.5" fill="#EF4444" opacity="0.5" />
-      {/* Squinting hot eyes */}
-      <path d="M24 33 Q27 30 30 33" stroke="#7C2D12" strokeWidth="2" strokeLinecap="round" fill="none" />
-      <path d="M34 33 Q37 30 40 33" stroke="#7C2D12" strokeWidth="2" strokeLinecap="round" fill="none" />
-      {/* Wavy hot mouth */}
-      <path d="M25 42 Q29 46 32 43 Q35 40 39 44" stroke="#7C2D12" strokeWidth="2" strokeLinecap="round" fill="none" />
-      {/* Sweat drops */}
-      <path d="M18 26 Q17 22 19 20 Q21 22 20 26Z" fill="#93C5FD" />
-      <path d="M46 22 Q45 18 47 16 Q49 18 48 22Z" fill="#93C5FD" />
-      <path d="M10 38 Q9 35 10.5 33 Q12 35 11.5 38Z" fill="#93C5FD" />
-      {/* Small flames on top of head */}
-      <path d="M24 16 Q22 10 26 6 Q28 10 26 16Z" fill="#F97316" />
-      <path d="M32 14 Q30 6 34 2 Q38 6 36 14Z" fill="#EF4444" />
-      <path d="M40 16 Q38 10 42 6 Q44 10 42 16Z" fill="#F97316" />
-      <path d="M26 16 Q28 10 32 14 Q36 10 38 16Z" fill="#FDE68A" />
+      {/* Left candle body — leaning right */}
+      <path d="M10 58 L22 58 L24 24 L12 24 Z" fill="url(#bn-c)" />
+      <path d="M12 24 L24 24 L24 30 L12 30 Z" fill="#FDE68A" />
+      {/* Left wax drip */}
+      <path d="M11 28 Q8 35 9 44" stroke="#FEF3C7" strokeWidth="4" strokeLinecap="round" fill="none" opacity="0.9" />
+      {/* Left wick */}
+      <line x1="18" y1="18" x2="18" y2="24" stroke="#374151" strokeWidth="1.5" strokeLinecap="round" />
+      {/* Left flame */}
+      <path d="M14 20 Q13 12 18 6 Q23 12 22 20 Q20 24 18 22 Q16 24 14 20Z" fill="url(#bn-f)" />
+      <path d="M16 19 Q16 13 18 10 Q20 13 20 19 Q19 22 18 20 Q17 22 16 19Z" fill="#FEF9C3" opacity="0.55" />
+      {/* Right candle body — leaning left */}
+      <path d="M42 58 L54 58 L52 24 L40 24 Z" fill="url(#bn-c)" />
+      <path d="M40 24 L52 24 L52 30 L40 30 Z" fill="#FDE68A" />
+      {/* Right wax drip */}
+      <path d="M53 28 Q56 35 55 44" stroke="#FEF3C7" strokeWidth="4" strokeLinecap="round" fill="none" opacity="0.9" />
+      {/* Right wick */}
+      <line x1="46" y1="18" x2="46" y2="24" stroke="#374151" strokeWidth="1.5" strokeLinecap="round" />
+      {/* Right flame */}
+      <path d="M42 20 Q41 12 46 6 Q51 12 50 20 Q48 24 46 22 Q44 24 42 20Z" fill="url(#bn-f)" />
+      <path d="M44 19 Q44 13 46 10 Q48 13 48 19 Q47 22 46 20 Q45 22 44 19Z" fill="#FEF9C3" opacity="0.55" />
+      {/* Shared merged flame in the middle */}
+      <path d="M28 18 Q26 10 32 4 Q38 10 36 18 Q34 22 32 20 Q30 22 28 18Z" fill="url(#bn-f)" opacity="0.85" />
     </svg>
   );
 }
@@ -548,31 +576,40 @@ function Heated({ className }: { className?: string }) {
   return (
     <svg viewBox="0 0 64 64" className={className} fill="none">
       <defs>
-        <linearGradient id="ht-f1" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%"   stopColor="#FEF08A" />
-          <stop offset="40%"  stopColor="#F97316" />
-          <stop offset="100%" stopColor="#991B1B" />
+        <linearGradient id="ht-band" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor="#374151" />
+          <stop offset="100%" stopColor="#111827" />
         </linearGradient>
-        <linearGradient id="ht-f2" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%"   stopColor="#FDE68A" />
-          <stop offset="100%" stopColor="#EF4444" />
+        <linearGradient id="ht-metal" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor="#F3F4F6" />
+          <stop offset="100%" stopColor="#9CA3AF" />
         </linearGradient>
-        <linearGradient id="ht-f3" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%"   stopColor="#FFFBEB" />
-          <stop offset="100%" stopColor="#FCD34D" />
+        <linearGradient id="ht-heart" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor="#FB7185" />
+          <stop offset="100%" stopColor="#E11D48" />
         </linearGradient>
       </defs>
-      {/* Outer flame */}
-      <path d="M32 4 Q20 16 16 28 Q12 40 20 52 Q26 60 32 60 Q38 60 44 52 Q52 40 48 28 Q44 16 32 4Z" fill="url(#ht-f1)" />
-      {/* Mid flame */}
-      <path d="M32 14 Q24 24 22 34 Q20 44 26 52 Q29 56 32 56 Q35 56 38 52 Q44 44 42 34 Q40 24 32 14Z" fill="url(#ht-f2)" />
-      {/* Inner flame */}
-      <path d="M32 26 Q28 32 28 40 Q28 50 32 54 Q36 50 36 40 Q36 32 32 26Z" fill="url(#ht-f3)" />
-      {/* Heat shimmer lines */}
-      <path d="M20 6 Q18 3 20 2 Q22 3 20 6" stroke="#FEF08A" strokeWidth="1.5" strokeLinecap="round" fill="none" opacity="0.7" />
-      <path d="M44 10 Q42 7 44 6 Q46 7 44 10" stroke="#FEF08A" strokeWidth="1.5" strokeLinecap="round" fill="none" opacity="0.7" />
-      <path d="M10 22 Q8 19 10 18 Q12 19 10 22" stroke="#FCD34D" strokeWidth="1.2" strokeLinecap="round" fill="none" opacity="0.6" />
-      <path d="M54 18 Q52 15 54 14 Q56 15 54 18" stroke="#FCD34D" strokeWidth="1.2" strokeLinecap="round" fill="none" opacity="0.6" />
+      {/* Choker band */}
+      <rect x="8" y="20" width="48" height="14" rx="7" fill="url(#ht-band)" />
+      {/* Band shine */}
+      <rect x="8" y="20" width="48" height="5" rx="4" fill="white" opacity="0.07" />
+      {/* Silver studs */}
+      <circle cx="16" cy="27" r="2.5" fill="url(#ht-metal)" />
+      <circle cx="48" cy="27" r="2.5" fill="url(#ht-metal)" />
+      {/* Center band attachment */}
+      <rect x="29" y="19" width="6" height="6" rx="1.5" fill="#6B7280" />
+      {/* Chain link */}
+      <ellipse cx="32" cy="29" rx="2" ry="1.5" stroke="#9CA3AF" strokeWidth="1.5" fill="none" />
+      {/* Chain from band to O-ring */}
+      <line x1="32" y1="25" x2="32" y2="34" stroke="#9CA3AF" strokeWidth="2" />
+      {/* O-ring */}
+      <circle cx="32" cy="41" r="7" stroke="url(#ht-metal)" strokeWidth="3" fill="none" />
+      {/* Ring shine */}
+      <path d="M26 37 Q28 34 30 35" stroke="white" strokeWidth="1.2" strokeLinecap="round" opacity="0.4" />
+      {/* Chain from O-ring to heart */}
+      <line x1="32" y1="48" x2="32" y2="52" stroke="#9CA3AF" strokeWidth="1.5" />
+      {/* Heart pendant */}
+      <path d="M28 53 C28 51 29.5 49 31 50.5 C32.5 49 34 51 34 53 C34 55 31 58 31 58 C31 58 28 55 28 53Z" fill="url(#ht-heart)" />
     </svg>
   );
 }
@@ -581,33 +618,38 @@ function Frisky({ className }: { className?: string }) {
   return (
     <svg viewBox="0 0 64 64" className={className} fill="none">
       <defs>
-        <linearGradient id="fk-lips" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor="#FB7185" />
-          <stop offset="100%" stopColor="#BE123C" />
+        <linearGradient id="fk-leg" x1="0" y1="0" x2="1" y2="0">
+          <stop offset="0%" stopColor="#FDDCCA" />
+          <stop offset="100%" stopColor="#FBB89A" />
         </linearGradient>
-        <linearGradient id="fk-inner" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor="#FDA4AF" />
-          <stop offset="100%" stopColor="#FB7185" />
+        <linearGradient id="fk-stk" x1="0" y1="0" x2="1" y2="0">
+          <stop offset="0%" stopColor="#1F2937" />
+          <stop offset="100%" stopColor="#374151" />
+        </linearGradient>
+        <linearGradient id="fk-lace" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor="#FCE7F3" />
+          <stop offset="100%" stopColor="#F472B6" />
         </linearGradient>
       </defs>
-      {/* Sparkles */}
-      <path d="M8 12 L9 8 L10 12 L14 13 L10 14 L9 18 L8 14 L4 13Z" fill="#FCD34D" />
-      <path d="M52 10 L53 7 L54 10 L57 11 L54 12 L53 15 L52 12 L49 11Z" fill="#FCD34D" />
-      <circle cx="56" cy="24" r="1.5" fill="#FDA4AF" />
-      <circle cx="8"  cy="28" r="1.2" fill="#FDA4AF" />
-      {/* Upper lip (cupid bow) */}
-      <path d="M12 28 Q18 20 26 24 Q32 20 38 24 Q46 20 52 28 Q46 32 32 30 Q18 32 12 28Z" fill="url(#fk-lips)" />
-      {/* Lower lip */}
-      <path d="M12 28 Q18 36 32 38 Q46 36 52 28 Q46 32 32 30 Q18 32 12 28Z" fill="url(#fk-lips)" />
-      {/* Inner mouth */}
-      <path d="M18 28 Q25 25 32 27 Q39 25 46 28 Q42 33 32 34 Q22 33 18 28Z" fill="#9F1239" />
-      {/* Teeth */}
-      <rect x="22" y="27" width="20" height="5" rx="2.5" fill="white" opacity="0.9" />
-      {/* Lip shine */}
-      <ellipse cx="24" cy="25" rx="5" ry="2" fill="white" opacity="0.3" transform="rotate(-10 24 25)" />
-      <ellipse cx="32" cy="35" rx="6" ry="1.5" fill="white" opacity="0.2" />
-      {/* Kiss mark */}
-      <path d="M48 42 C48 40 49 38 50.5 39.5 C52 38 53 40 53 42 C53 44 50.5 46 50.5 46 C50.5 46 48 44 48 42Z" fill="#FB7185" opacity="0.8" />
+      {/* Bare leg above stocking */}
+      <path d="M22 4 Q20 14 20 22 L30 22 Q32 14 34 4 Z" fill="url(#fk-leg)" />
+      {/* Stocking leg */}
+      <path d="M20 22 Q18 42 19 64 L29 64 Q31 42 32 22 Z" fill="url(#fk-stk)" />
+      {/* Lace top band */}
+      <path d="M18 18 Q25 14 32 18 L32 27 Q25 22 18 27 Z" fill="url(#fk-lace)" />
+      {/* Lace scallop edge */}
+      <path d="M18 27 Q20 24 22 27 Q24 24 26 27 Q28 24 30 27 Q31 24 32 27" stroke="white" strokeWidth="1.5" fill="none" strokeLinecap="round" opacity="0.65" />
+      {/* Stocking shine */}
+      <path d="M21 30 Q20 46 21 60" stroke="white" strokeWidth="1.5" strokeLinecap="round" opacity="0.12" />
+      {/* Bow on lace band */}
+      <path d="M22 21 L26 19 L24 23 Z" fill="#E11D48" />
+      <path d="M30 21 L26 19 L28 23 Z" fill="#E11D48" />
+      <circle cx="26" cy="19" r="2.5" fill="#E11D48" />
+      {/* Garter strap going diagonally up */}
+      <path d="M26 18 Q32 10 40 8" stroke="#F472B6" strokeWidth="2.5" strokeLinecap="round" />
+      {/* Garter metal clip */}
+      <rect x="38" y="5" width="6" height="8" rx="2" fill="#9CA3AF" />
+      <circle cx="41" cy="9" r="1.5" fill="#6B7280" />
     </svg>
   );
 }
@@ -616,33 +658,56 @@ function Naughty({ className }: { className?: string }) {
   return (
     <svg viewBox="0 0 64 64" className={className} fill="none">
       <defs>
-        <radialGradient id="nt-face" cx="40%" cy="35%" r="65%">
-          <stop offset="0%" stopColor="#E9D5FF" />
-          <stop offset="100%" stopColor="#7C3AED" />
+        <radialGradient id="nt-fluff" cx="50%" cy="40%" r="60%">
+          <stop offset="0%" stopColor="#FCE7F3" />
+          <stop offset="100%" stopColor="#F9A8D4" />
         </radialGradient>
+        <linearGradient id="nt-metal" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor="#E5E7EB" />
+          <stop offset="100%" stopColor="#9CA3AF" />
+        </linearGradient>
+        <linearGradient id="nt-heart" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor="#FB7185" />
+          <stop offset="100%" stopColor="#E11D48" />
+        </linearGradient>
       </defs>
-      {/* Devil horns */}
-      <path d="M18 18 Q14 6 20 4 Q22 8 20 14Z"  fill="#DC2626" />
-      <path d="M46 18 Q50 6 44 4 Q42 8 44 14Z" fill="#DC2626" />
-      {/* Horn tips */}
-      <circle cx="20" cy="5"  r="2.5" fill="#FCA5A5" />
-      <circle cx="44" cy="5"  r="2.5" fill="#FCA5A5" />
-      {/* Face */}
-      <circle cx="32" cy="36" r="20" fill="url(#nt-face)" />
-      <ellipse cx="27" cy="42" rx="3.5" ry="2" fill="#A855F7" opacity="0.45" />
-      <ellipse cx="37" cy="42" rx="3.5" ry="2" fill="#A855F7" opacity="0.45" />
-      {/* Mischievous eyes */}
-      <path d="M23 32 Q27 28 31 32" stroke="#3B0764" strokeWidth="2.2" strokeLinecap="round" fill="none" />
-      <path d="M33 32 Q37 28 41 32" stroke="#3B0764" strokeWidth="2.2" strokeLinecap="round" fill="none" />
-      <circle cx="27" cy="33" r="1.8" fill="#3B0764" />
-      <circle cx="37" cy="33" r="1.8" fill="#3B0764" />
-      <circle cx="27.8" cy="32.3" r="0.7" fill="white" />
-      <circle cx="37.8" cy="32.3" r="0.7" fill="white" />
-      {/* Smirk */}
-      <path d="M26 42 Q34 48 40 42" stroke="#3B0764" strokeWidth="2" strokeLinecap="round" fill="none" />
-      <path d="M26 42 Q28 44 30 42" stroke="#3B0764" strokeWidth="1.5" strokeLinecap="round" fill="none" />
-      {/* Little tail */}
-      <path d="M44 54 Q52 50 54 56 Q52 60 48 58 Q50 54 46 56 Q42 58 44 54Z" fill="#7C3AED" />
+      {/* Left cuff base */}
+      <circle cx="16" cy="28" r="11" fill="url(#nt-fluff)" />
+      {/* Left fuzzy bumps */}
+      <circle cx="7"  cy="22" r="4"   fill="#FDA4AF" opacity="0.65" />
+      <circle cx="5"  cy="29" r="4"   fill="#FDA4AF" opacity="0.65" />
+      <circle cx="8"  cy="36" r="3.5" fill="#FDA4AF" opacity="0.65" />
+      <circle cx="24" cy="22" r="4"   fill="#FDA4AF" opacity="0.65" />
+      <circle cx="27" cy="29" r="4"   fill="#FDA4AF" opacity="0.65" />
+      <circle cx="24" cy="36" r="3.5" fill="#FDA4AF" opacity="0.65" />
+      <circle cx="13" cy="18" r="3.5" fill="#FDA4AF" opacity="0.65" />
+      <circle cx="19" cy="18" r="3.5" fill="#FDA4AF" opacity="0.65" />
+      <circle cx="13" cy="38" r="3.5" fill="#FDA4AF" opacity="0.65" />
+      <circle cx="19" cy="38" r="3.5" fill="#FDA4AF" opacity="0.65" />
+      {/* Left metal ring */}
+      <circle cx="16" cy="28" r="5.5" stroke="url(#nt-metal)" strokeWidth="2.5" fill="white" />
+      {/* Chain */}
+      <path d="M22 28 Q32 23 42 28" stroke="url(#nt-metal)" strokeWidth="2" fill="none" strokeLinecap="round" />
+      <ellipse cx="27" cy="25.5" rx="3" ry="2" stroke="url(#nt-metal)" strokeWidth="1.5" fill="none" transform="rotate(-20 27 25.5)" />
+      <ellipse cx="37" cy="25.5" rx="3" ry="2" stroke="url(#nt-metal)" strokeWidth="1.5" fill="none" transform="rotate(20 37 25.5)" />
+      {/* Right cuff base */}
+      <circle cx="48" cy="28" r="11" fill="url(#nt-fluff)" />
+      {/* Right fuzzy bumps */}
+      <circle cx="39" cy="22" r="4"   fill="#FDA4AF" opacity="0.65" />
+      <circle cx="37" cy="29" r="4"   fill="#FDA4AF" opacity="0.65" />
+      <circle cx="40" cy="36" r="3.5" fill="#FDA4AF" opacity="0.65" />
+      <circle cx="56" cy="22" r="4"   fill="#FDA4AF" opacity="0.65" />
+      <circle cx="59" cy="29" r="4"   fill="#FDA4AF" opacity="0.65" />
+      <circle cx="56" cy="36" r="3.5" fill="#FDA4AF" opacity="0.65" />
+      <circle cx="45" cy="18" r="3.5" fill="#FDA4AF" opacity="0.65" />
+      <circle cx="51" cy="18" r="3.5" fill="#FDA4AF" opacity="0.65" />
+      <circle cx="45" cy="38" r="3.5" fill="#FDA4AF" opacity="0.65" />
+      <circle cx="51" cy="38" r="3.5" fill="#FDA4AF" opacity="0.65" />
+      {/* Right metal ring */}
+      <circle cx="48" cy="28" r="5.5" stroke="url(#nt-metal)" strokeWidth="2.5" fill="white" />
+      {/* Heart charm */}
+      <line x1="32" y1="32" x2="32" y2="37" stroke="#9CA3AF" strokeWidth="1.5" />
+      <path d="M28 39 C28 37 29.5 35 31 36.5 C32.5 35 34 37 34 39 C34 41 31 44 31 44 C31 44 28 41 28 39Z" fill="url(#nt-heart)" />
     </svg>
   );
 }
