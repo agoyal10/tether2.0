@@ -122,7 +122,6 @@ export default async function DashboardContent() {
                 <div className="flex flex-col items-center justify-center gap-2 rounded-3xl border-2 border-dashed border-gray-100 p-4 text-center">
                   <span className="text-2xl">💤</span>
                   <p className="text-xs text-gray-400">No check-in yet</p>
-                  <NudgeButton partnerName={partnerName} />
                 </div>
               )}
 
@@ -142,6 +141,9 @@ export default async function DashboardContent() {
                   <p className="text-xs font-medium text-lavender-dark">Check in now</p>
                 </Link>
               )}
+            </div>
+            <div className="mt-3 flex justify-center">
+              <NudgeButton partnerName={partnerName} />
             </div>
           </section>
 
