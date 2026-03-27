@@ -49,7 +49,28 @@ export default function CheckinPage() {
     setLoading(false);
   }
 
-  const modeLabel = mode === "naughty" ? "😈 Naughty" : mode === "love" ? "💕 Love" : "😇 Sweet";
+  const modeLabel = mode === "naughty" ? "Naughty" : mode === "love" ? "Love" : "Sweet";
+  const modeIcon =
+    mode === "naughty" ? (
+      // Devil horns icon
+      <svg viewBox="0 0 20 20" className="h-4 w-4" fill="currentColor">
+        <path d="M6 8 Q4 2 7 1 Q8 4 7 7Z" />
+        <path d="M14 8 Q16 2 13 1 Q12 4 13 7Z" />
+        <circle cx="10" cy="13" r="5" />
+        <path d="M7.5 12.5 Q10 11 12.5 12.5" stroke="white" strokeWidth="1" fill="none" strokeLinecap="round" />
+      </svg>
+    ) : mode === "love" ? (
+      // Heart icon
+      <svg viewBox="0 0 20 20" className="h-4 w-4" fill="currentColor">
+        <path d="M10 17 C10 17 2 11 2 6.5 C2 4 4 2 6.5 3 C8 3.5 9 5 10 5 C11 5 12 3.5 13.5 3 C16 2 18 4 18 6.5 C18 11 10 17 10 17Z" />
+      </svg>
+    ) : (
+      // Halo / sun icon
+      <svg viewBox="0 0 20 20" className="h-4 w-4" fill="currentColor">
+        <circle cx="10" cy="11" r="5" />
+        <ellipse cx="10" cy="4" rx="5" ry="1.5" fill="none" stroke="currentColor" strokeWidth="1.5" />
+      </svg>
+    );
   const modeBg =
     mode === "naughty" ? "bg-blush text-white shadow-card" :
     mode === "love" ? "bg-lavender text-white shadow-card" :
@@ -67,7 +88,7 @@ export default function CheckinPage() {
           onClick={toggleMode}
           className={`flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold transition-all ${modeBg}`}
         >
-          {modeLabel}
+          {modeIcon}{modeLabel}
         </button>
       </div>
       <div className={`rounded-4xl p-6 shadow-card transition-colors ${cardBg}`}>
