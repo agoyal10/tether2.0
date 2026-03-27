@@ -544,23 +544,34 @@ function Burning({ className }: { className?: string }) {
   return (
     <svg viewBox="0 0 64 64" className={className} fill="none">
       <defs>
-        <linearGradient id="bn-ul" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor="#DC2626" />
-          <stop offset="100%" stopColor="#991B1B" />
+        <linearGradient id="bn-lip" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor="#F43F5E" />
+          <stop offset="100%" stopColor="#9F1239" />
         </linearGradient>
-        <linearGradient id="bn-ll" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor="#EF4444" />
-          <stop offset="100%" stopColor="#B91C1C" />
+        <linearGradient id="bn-tongue" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor="#FCA5A5" />
+          <stop offset="100%" stopColor="#F87171" />
         </linearGradient>
       </defs>
-      {/* Upper lip — wide M / cupid bow shape */}
-      <path d="M7 34 C7 26 14 20 20 21 C25 22 29 28 32 28 C35 28 39 22 44 21 C50 20 57 26 57 34 Q44 38 32 38 Q20 38 7 34Z" fill="url(#bn-ul)" />
-      {/* Lower lip — full dome */}
-      <path d="M7 34 Q20 38 32 38 Q44 38 57 34 C54 50 10 50 7 34Z" fill="url(#bn-ll)" />
-      {/* Gloss highlight on lower lip */}
-      <ellipse cx="32" cy="43" rx="12" ry="3" fill="white" opacity="0.28" />
-      {/* Mouth line */}
-      <path d="M12 34 Q32 37 52 34" stroke="#7F1D1D" strokeWidth="1.2" fill="none" opacity="0.5" strokeLinecap="round" />
+      {/* Lower lip — drawn first (back) */}
+      <path d="M8 40 Q20 46 32 47 Q44 46 56 40 C53 58 11 58 8 40Z" fill="url(#bn-lip)" />
+      {/* Mouth interior */}
+      <path d="M10 30 Q32 25 54 30 L54 42 Q32 47 10 42 Z" fill="#2D0A0A" />
+      {/* Teeth */}
+      <rect x="12" y="29" width="40" height="11" rx="3" fill="white" opacity="0.93" />
+      <line x1="22" y1="29" x2="22" y2="40" stroke="#E5E7EB" strokeWidth="0.8" opacity="0.5" />
+      <line x1="32" y1="29" x2="32" y2="40" stroke="#E5E7EB" strokeWidth="0.8" opacity="0.5" />
+      <line x1="42" y1="29" x2="42" y2="40" stroke="#E5E7EB" strokeWidth="0.8" opacity="0.5" />
+      {/* Tongue licking up over upper lip */}
+      <path d="M23 33 C23 26 27 19 32 18 C37 19 41 26 41 33 C38 31 35 29 32 29 C29 29 26 31 23 33Z" fill="url(#bn-tongue)" />
+      {/* Tongue center groove */}
+      <path d="M32 18 Q32 24 32 32" stroke="#FDA4AF" strokeWidth="1.2" opacity="0.5" strokeLinecap="round" />
+      {/* Upper lip — on top so tongue tucks under it */}
+      <path d="M8 30 C8 21 14 13 21 14 C26 15 30 21 32 21 C34 21 38 15 43 14 C50 13 56 21 56 30 Q44 35 32 35 Q20 35 8 30Z" fill="url(#bn-lip)" />
+      {/* Gloss on upper lip */}
+      <ellipse cx="22" cy="20" rx="6" ry="3" fill="white" opacity="0.22" transform="rotate(-15 22 20)" />
+      {/* Gloss on lower lip */}
+      <ellipse cx="32" cy="50" rx="13" ry="3" fill="white" opacity="0.28" />
     </svg>
   );
 }
@@ -650,16 +661,16 @@ function Naughty({ className }: { className?: string }) {
           <stop offset="100%" stopColor="#DB2777" />
         </linearGradient>
       </defs>
-      {/* Left cuff — thick ring stroke only, no filled donuts */}
-      <circle cx="16" cy="32" r="12" stroke="url(#nt-cf)" strokeWidth="7" fill="none" />
+      {/* Left cuff — rounded rect / shackle shape, clearly a cuff not a circle */}
+      <rect x="2" y="20" width="26" height="24" rx="12" stroke="url(#nt-cf)" strokeWidth="6" fill="none" />
       {/* Right cuff */}
-      <circle cx="48" cy="32" r="12" stroke="url(#nt-cf)" strokeWidth="7" fill="none" />
-      {/* Connecting chain — two oval links */}
-      <ellipse cx="30" cy="32" rx="3.5" ry="2.5" stroke="#BE185D" strokeWidth="2" fill="none" />
-      <ellipse cx="34" cy="32" rx="3.5" ry="2.5" stroke="#BE185D" strokeWidth="2" fill="none" />
-      {/* Shine arc on each cuff */}
-      <path d="M8  24 Q10 20 13 21" stroke="white" strokeWidth="2" strokeLinecap="round" opacity="0.45" />
-      <path d="M40 24 Q42 20 45 21" stroke="white" strokeWidth="2" strokeLinecap="round" opacity="0.45" />
+      <rect x="36" y="20" width="26" height="24" rx="12" stroke="url(#nt-cf)" strokeWidth="6" fill="none" />
+      {/* Chain link between them */}
+      <line x1="28" y1="32" x2="36" y2="32" stroke="#BE185D" strokeWidth="5" strokeLinecap="round" />
+      {/* Shine on left cuff */}
+      <path d="M5 24 Q9 19 14 20" stroke="white" strokeWidth="2" strokeLinecap="round" opacity="0.4" />
+      {/* Shine on right cuff */}
+      <path d="M39 24 Q43 19 48 20" stroke="white" strokeWidth="2" strokeLinecap="round" opacity="0.4" />
     </svg>
   );
 }
