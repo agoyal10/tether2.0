@@ -3,6 +3,7 @@ import MainWrapper from "@/components/MainWrapper";
 import { KeyboardProvider } from "@/components/KeyboardProvider";
 import { NaughtyModeProvider } from "@/components/NaughtyModeProvider";
 import PushSetup from "@/components/PushSetup";
+import FlowerOverlay from "@/components/FlowerOverlay";
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -16,6 +17,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       </MainWrapper>
       <NavBar />
       <PushSetup />
+      <FlowerOverlay />
     </div>
     </NaughtyModeProvider>
     </KeyboardProvider>

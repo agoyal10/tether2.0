@@ -131,6 +131,12 @@ export default function PartnerPage() {
     setLoading(false);
   }
 
+  async function sendFlowers() {
+    const res = await fetch("/api/flowers/send", { method: "POST" });
+    if (res.ok) toast.success("Flowers sent! 🌸");
+    else toast.error("Couldn't send flowers");
+  }
+
   async function disconnect() {
     if (!connection) return;
     await fetch("/api/push/disconnect", { method: "POST" });
@@ -157,6 +163,13 @@ export default function PartnerPage() {
               <p className="text-sm text-lavender-dark">Connected 💞</p>
             </div>
           </div>
+
+          <button
+            onClick={sendFlowers}
+            className="w-full rounded-3xl bg-blush py-3 text-sm font-semibold text-white hover:bg-blush-dark transition-all"
+          >
+            Send flowers 🌸
+          </button>
 
           <NudgePartnerButton partnerName={partner.display_name} />
 
