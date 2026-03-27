@@ -4,6 +4,7 @@ import Link from "next/link";
 import { formatDistanceToNow } from "date-fns";
 import { cn } from "@/lib/utils";
 import { MOOD_CONFIGS, NAUGHTY_MOOD_CONFIGS, LOVE_MOOD_CONFIGS, KATAKNI_CONFIG, type MoodLog, type MoodConfig } from "@/types";
+import MoodIcon from "@/components/MoodIcon";
 
 const ALL_CONFIGS = [...MOOD_CONFIGS, ...NAUGHTY_MOOD_CONFIGS, ...LOVE_MOOD_CONFIGS, KATAKNI_CONFIG];
 
@@ -42,7 +43,7 @@ export function MiniCard({
           // eslint-disable-next-line @next/next/no-img-element
           <img src={config.image} alt={config.label} className="h-8 w-8 object-contain" />
         ) : (
-          <span className="text-3xl">{config.emoji}</span>
+          <MoodIcon level={config.level} emoji={config.emoji} className="h-8 w-8" />
         )}
         <div>
           <p className={cn("text-sm font-bold", config.textColor)}>{config.label}</p>
@@ -81,7 +82,7 @@ export function HistoryChip({ log, unread = 0 }: { log: MoodLog; unread?: number
         // eslint-disable-next-line @next/next/no-img-element
         <img src={config.image} alt={config.label} className="h-7 w-7 object-contain" />
       ) : (
-        <span className="text-2xl">{config.emoji}</span>
+        <MoodIcon level={config.level} emoji={config.emoji} className="h-7 w-7" />
       )}
       <span className={cn("text-[10px] font-semibold", config.textColor)}>{config.label}</span>
       <span className="text-[9px] text-gray-400">

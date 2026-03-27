@@ -4,6 +4,7 @@ import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { MOOD_CONFIGS, NAUGHTY_MOOD_CONFIGS, LOVE_MOOD_CONFIGS, KATAKNI_CONFIG, type MoodLevel } from "@/types";
+import MoodIcon from "@/components/MoodIcon";
 import type { CheckinMode } from "@/components/NaughtyModeProvider";
 
 interface MoodScaleProps {
@@ -55,7 +56,7 @@ export default function MoodScale({ onSubmit, isLoading = false, naughtyMode = f
           // eslint-disable-next-line @next/next/no-img-element
           <img src={selectedConfig.image} alt={selectedConfig.label} className="h-16 w-16 object-contain" />
         ) : (
-          <span className="text-6xl">{selectedConfig.emoji}</span>
+          <MoodIcon level={selectedConfig.level} emoji={selectedConfig.emoji} className="h-16 w-16" />
         )}
         <p className="text-xl font-semibold text-gray-700">Check-in sent!</p>
         <p className="text-sm text-gray-400">
@@ -108,7 +109,7 @@ export default function MoodScale({ onSubmit, isLoading = false, naughtyMode = f
                 // eslint-disable-next-line @next/next/no-img-element
                 <img src={config.image} alt={config.label} className={cn("h-7 w-7 object-contain transition-all", isSelected ? "scale-110" : "")} />
               ) : (
-                <span className={cn("text-2xl transition-all", isSelected ? "scale-110" : "")}>{config.emoji}</span>
+                <MoodIcon level={config.level} emoji={config.emoji} className={cn("h-7 w-7 transition-all", isSelected ? "scale-110" : "")} />
               )}
               <span
                 className={cn(

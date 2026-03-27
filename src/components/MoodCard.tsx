@@ -5,6 +5,7 @@ import { motion } from "framer-motion";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
 import { MOOD_CONFIGS, NAUGHTY_MOOD_CONFIGS, LOVE_MOOD_CONFIGS, KATAKNI_CONFIG, type MoodLog } from "@/types";
+import MoodIcon from "@/components/MoodIcon";
 
 const ALL_CONFIGS = [...MOOD_CONFIGS, ...NAUGHTY_MOOD_CONFIGS, ...LOVE_MOOD_CONFIGS, KATAKNI_CONFIG];
 
@@ -35,7 +36,7 @@ export default function MoodCard({ log, isPartner = false, unreadCount = 0, hide
             // eslint-disable-next-line @next/next/no-img-element
             <img src={config.image} alt={config.label} className="h-10 w-10 object-contain" />
           ) : (
-            <span className="text-4xl">{config.emoji}</span>
+            <MoodIcon level={config.level} emoji={config.emoji} className="h-10 w-10" />
           )}
           <div>
             <p className={cn("font-semibold", config.textColor)}>{config.label}</p>
