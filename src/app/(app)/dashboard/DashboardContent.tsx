@@ -5,6 +5,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { getCachedProfile } from "@/lib/profile-cache";
 import DashboardRefresher from "@/components/DashboardRefresher";
 import { MiniCard, HistoryChip } from "@/components/DashboardCards";
+import NudgeButton from "@/components/NudgeButton";
 import type { MoodLog } from "@/types";
 
 export default async function DashboardContent() {
@@ -121,6 +122,7 @@ export default async function DashboardContent() {
                 <div className="flex flex-col items-center justify-center gap-2 rounded-3xl border-2 border-dashed border-gray-100 p-4 text-center">
                   <span className="text-2xl">💤</span>
                   <p className="text-xs text-gray-400">No check-in yet</p>
+                  <NudgeButton partnerName={partnerName} />
                 </div>
               )}
 
