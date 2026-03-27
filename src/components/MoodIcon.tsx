@@ -544,24 +544,23 @@ function Burning({ className }: { className?: string }) {
   return (
     <svg viewBox="0 0 64 64" className={className} fill="none">
       <defs>
-        <linearGradient id="bn-g" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor="#FBCFE8" />
-          <stop offset="100%" stopColor="#DB2777" />
+        <linearGradient id="bn-ep" x1="0" y1="1" x2="1" y2="0">
+          <stop offset="0%"  stopColor="#3B0764" />
+          <stop offset="50%" stopColor="#6D28D9" />
+          <stop offset="100%" stopColor="#8B5CF6" />
         </linearGradient>
       </defs>
-      {/* Base */}
-      <ellipse cx="32" cy="56" rx="12" ry="5" fill="#9D174D" />
-      {/* Shaft */}
-      <rect x="23" y="20" width="18" height="38" rx="3" fill="url(#bn-g)" />
-      {/* Head — lighter dome, clearly distinct */}
-      <ellipse cx="32" cy="18" rx="9" ry="10" fill="#FCE7F3" />
-      <ellipse cx="32" cy="15" rx="9" ry="7"  fill="#F9A8D4" />
-      {/* Ridge separating head from shaft */}
-      <ellipse cx="32" cy="26" rx="10" ry="2.5" fill="#9D174D" opacity="0.35" />
+      {/* Eggplant body */}
+      <ellipse cx="32" cy="42" rx="18" ry="22" fill="url(#bn-ep)" />
+      {/* Crown bump at top */}
+      <ellipse cx="32" cy="22" rx="10" ry="7" fill="#5B21B6" />
+      {/* Stem */}
+      <rect x="30" y="7" width="4" height="13" rx="2" fill="#15803D" />
+      {/* Two leaves */}
+      <ellipse cx="41" cy="11" rx="8" ry="2.8" fill="#16A34A" transform="rotate(-35 41 11)" />
+      <ellipse cx="23" cy="11" rx="8" ry="2.8" fill="#16A34A" transform="rotate(35 23 11)" />
       {/* Shine */}
-      <path d="M27 11 Q29 7 31 9" stroke="white" strokeWidth="2.5" strokeLinecap="round" opacity="0.65" />
-      {/* Bold vibration lines */}
-      <path d="M45 24 Q50 28 45 32 Q50 36 45 40" stroke="#FDA4AF" strokeWidth="3" strokeLinecap="round" fill="none" />
+      <ellipse cx="22" cy="30" rx="4" ry="9" fill="white" opacity="0.2" transform="rotate(-10 22 30)" />
     </svg>
   );
 }
@@ -570,20 +569,22 @@ function Heated({ className }: { className?: string }) {
   return (
     <svg viewBox="0 0 64 64" className={className} fill="none">
       <defs>
-        <linearGradient id="ht-crop" x1="0" y1="0" x2="1" y2="1">
-          <stop offset="0%"  stopColor="#6B7280" />
-          <stop offset="45%" stopColor="#7C3AED" />
-          <stop offset="100%" stopColor="#1F2937" />
-        </linearGradient>
+        <radialGradient id="ht-peach" cx="38%" cy="32%" r="65%">
+          <stop offset="0%"   stopColor="#FED7AA" />
+          <stop offset="55%"  stopColor="#FB923C" />
+          <stop offset="100%" stopColor="#C2410C" />
+        </radialGradient>
       </defs>
-      {/* Thick diagonal crop — fills icon corner to corner, bold and clear */}
-      <line x1="10" y1="10" x2="54" y2="54" stroke="url(#ht-crop)" strokeWidth="10" strokeLinecap="round" />
-      {/* Wrist loop at handle end — large enough to read */}
-      <circle cx="10" cy="10" r="7" stroke="#9CA3AF" strokeWidth="3" fill="none" />
-      {/* Leather tip — wide flat shape */}
-      <ellipse cx="54" cy="54" rx="8" ry="4.5" fill="#111827" transform="rotate(45 54 54)" />
-      {/* Heart on tip */}
-      <path d="M57 45 C57 43 58.5 41 60.5 43 C62.5 41 64 43 64 45 C64 47 60.5 50 60.5 50 C60.5 50 57 47 57 45Z" fill="#FB7185" />
+      {/* Peach body — round and full */}
+      <circle cx="32" cy="36" r="23" fill="url(#ht-peach)" />
+      {/* Crease line — makes it unmistakably a peach/butt */}
+      <path d="M32 13 Q26 36 32 59" stroke="#9A3412" strokeWidth="3" fill="none" opacity="0.45" strokeLinecap="round" />
+      {/* Stem */}
+      <path d="M32 13 Q35 6 38 4" stroke="#92400E" strokeWidth="3.5" strokeLinecap="round" fill="none" />
+      {/* Leaf */}
+      <ellipse cx="41" cy="7" rx="10" ry="3.5" fill="#16A34A" transform="rotate(-25 41 7)" />
+      {/* Shine */}
+      <ellipse cx="44" cy="24" rx="5" ry="8" fill="white" opacity="0.2" transform="rotate(20 44 24)" />
     </svg>
   );
 }
@@ -639,25 +640,24 @@ function Naughty({ className }: { className?: string }) {
   return (
     <svg viewBox="0 0 64 64" className={className} fill="none">
       <defs>
-        <linearGradient id="nt-g" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor="#F9A8D4" />
-          <stop offset="100%" stopColor="#BE185D" />
-        </linearGradient>
+        <radialGradient id="nt-ch" cx="32%" cy="28%" r="65%">
+          <stop offset="0%"   stopColor="#FCA5A5" />
+          <stop offset="50%"  stopColor="#DC2626" />
+          <stop offset="100%" stopColor="#7F1D1D" />
+        </radialGradient>
       </defs>
-      {/* Base — wide dark flare, very clear */}
-      <ellipse cx="32" cy="57" rx="13" ry="5.5" fill="#831843" />
-      {/* Shaft */}
-      <rect x="24" y="22" width="16" height="37" rx="4" fill="url(#nt-g)" />
-      {/* Head — much lighter, clearly distinct dome */}
-      <ellipse cx="32" cy="20" rx="11" ry="13" fill="#FCE7F3" />
-      <ellipse cx="32" cy="16" rx="11" ry="9"  fill="#FBCFE8" />
-      {/* Bold ridge separating head from shaft */}
-      <ellipse cx="32" cy="29" rx="11" ry="3" fill="#9D174D" opacity="0.45" />
-      {/* Shine */}
-      <path d="M25 11 Q27 6 30 8" stroke="white" strokeWidth="3" strokeLinecap="round" opacity="0.65" />
-      {/* Stars — bold enough to show at small size */}
-      <path d="M7 14 L8 10 L9 14 L13 15 L9 16 L8 20 L7 16 L3 15Z"  fill="#FCD34D" />
-      <path d="M53 6 L54 3 L55 6 L58 7 L55 8 L54 11 L53 8 L50 7Z"  fill="#FCD34D" />
+      {/* Stems curving up to junction */}
+      <path d="M19 38 Q18 22 32 14" stroke="#15803D" strokeWidth="3.5" strokeLinecap="round" fill="none" />
+      <path d="M45 36 Q46 20 32 14" stroke="#15803D" strokeWidth="3.5" strokeLinecap="round" fill="none" />
+      {/* Leaf at the junction */}
+      <ellipse cx="40" cy="9" rx="10" ry="3.5" fill="#16A34A" transform="rotate(-20 40 9)" />
+      {/* Left cherry */}
+      <circle cx="19" cy="48" r="13" fill="url(#nt-ch)" />
+      {/* Right cherry */}
+      <circle cx="45" cy="46" r="13" fill="url(#nt-ch)" />
+      {/* Shine on each cherry */}
+      <ellipse cx="13" cy="40" rx="4" ry="5" fill="white" opacity="0.28" transform="rotate(-20 13 40)" />
+      <ellipse cx="39" cy="38" rx="4" ry="5" fill="white" opacity="0.28" transform="rotate(-20 39 38)" />
     </svg>
   );
 }
