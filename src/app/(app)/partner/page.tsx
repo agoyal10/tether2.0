@@ -182,7 +182,7 @@ export default function PartnerPage() {
                 <div className="flex gap-2">
                   <button
                     onClick={() => setConfirmDisconnect(false)}
-                    className="flex-1 rounded-2xl border border-gray-200 py-2.5 text-sm font-medium text-gray-500 hover:bg-gray-50 transition-all"
+                    className="flex-1 rounded-2xl border border-gray-400 py-2.5 text-sm font-semibold text-gray-200 hover:bg-white/10 transition-all"
                   >
                     Cancel
                   </button>
