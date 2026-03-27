@@ -544,42 +544,24 @@ function Burning({ className }: { className?: string }) {
   return (
     <svg viewBox="0 0 64 64" className={className} fill="none">
       <defs>
-        <linearGradient id="bn-toy" x1="0" y1="0" x2="1" y2="0">
-          <stop offset="0%" stopColor="#FCE7F3" />
-          <stop offset="45%" stopColor="#F472B6" />
+        <linearGradient id="bn-g" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor="#FBCFE8" />
           <stop offset="100%" stopColor="#DB2777" />
         </linearGradient>
-        <linearGradient id="bn-dome" x1="0" y1="0" x2="1" y2="0">
-          <stop offset="0%" stopColor="#FDF2F8" />
-          <stop offset="100%" stopColor="#F9A8D4" />
-        </linearGradient>
-        <linearGradient id="bn-base" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor="#F472B6" />
-          <stop offset="100%" stopColor="#9D174D" />
-        </linearGradient>
       </defs>
-      {/* Vibrator body — tilted ~15° */}
-      <g transform="rotate(-15, 32, 36)">
-        {/* Shaft */}
-        <path d="M24 52 C22 52 22 54 32 57 C42 54 42 52 40 52 L40 22 C40 12 36 7 32 7 C28 7 24 12 24 22 Z" fill="url(#bn-toy)" />
-        {/* Dome / head */}
-        <ellipse cx="32" cy="18" rx="8" ry="10" fill="url(#bn-dome)" />
-        {/* Ridge between head and shaft */}
-        <ellipse cx="32" cy="26" rx="8" ry="2.5" fill="#BE185D" opacity="0.35" />
-        {/* Base flare */}
-        <ellipse cx="32" cy="53" rx="10" ry="4" fill="url(#bn-base)" />
-        <ellipse cx="32" cy="55" rx="7"  ry="2.5" fill="#831843" opacity="0.5" />
-        {/* Shine */}
-        <path d="M26 14 Q28 9 30 11" stroke="white" strokeWidth="2.5" strokeLinecap="round" opacity="0.5" />
-        <ellipse cx="27" cy="34" rx="2.5" ry="9" fill="white" opacity="0.12" />
-      </g>
-      {/* Vibration lines — outside rotation */}
-      <path d="M48 20 Q52 22 48 25 Q52 28 48 31" stroke="#FDA4AF" strokeWidth="2" strokeLinecap="round" fill="none" />
-      <path d="M52 24 Q55 26 52 29" stroke="#FBCFE8" strokeWidth="1.5" strokeLinecap="round" fill="none" />
-      {/* Hearts floating off */}
-      <path d="M10 16 C10 14.5 11.2 13 12.7 14.5 C14.2 13 15.4 14.5 15.4 16 C15.4 17.5 12.7 19.5 12.7 19.5 C12.7 19.5 10 17.5 10 16Z" fill="#FB7185" />
-      <path d="M7 26 C7 25 7.8 24 8.8 25 C9.8 24 10.6 25 10.6 26 C10.6 27 8.8 28 8.8 28 C8.8 28 7 27 7 26Z" fill="#FDA4AF" />
-      <circle cx="13" cy="23" r="1" fill="#FDE68A" />
+      {/* Base */}
+      <ellipse cx="32" cy="56" rx="12" ry="5" fill="#9D174D" />
+      {/* Shaft */}
+      <rect x="23" y="20" width="18" height="38" rx="3" fill="url(#bn-g)" />
+      {/* Head — lighter dome, clearly distinct */}
+      <ellipse cx="32" cy="18" rx="9" ry="10" fill="#FCE7F3" />
+      <ellipse cx="32" cy="15" rx="9" ry="7"  fill="#F9A8D4" />
+      {/* Ridge separating head from shaft */}
+      <ellipse cx="32" cy="26" rx="10" ry="2.5" fill="#9D174D" opacity="0.35" />
+      {/* Shine */}
+      <path d="M27 11 Q29 7 31 9" stroke="white" strokeWidth="2.5" strokeLinecap="round" opacity="0.65" />
+      {/* Bold vibration lines */}
+      <path d="M45 24 Q50 28 45 32 Q50 36 45 40" stroke="#FDA4AF" strokeWidth="3" strokeLinecap="round" fill="none" />
     </svg>
   );
 }
@@ -588,39 +570,20 @@ function Heated({ className }: { className?: string }) {
   return (
     <svg viewBox="0 0 64 64" className={className} fill="none">
       <defs>
-        <linearGradient id="ht-handle" x1="0" y1="0" x2="1" y2="1">
-          <stop offset="0%" stopColor="#4B5563" />
-          <stop offset="100%" stopColor="#111827" />
-        </linearGradient>
-        <linearGradient id="ht-grip" x1="0" y1="0" x2="1" y2="1">
-          <stop offset="0%" stopColor="#7C3AED" />
-          <stop offset="100%" stopColor="#3B0764" />
-        </linearGradient>
-        <linearGradient id="ht-tip" x1="0" y1="0" x2="1" y2="1">
-          <stop offset="0%" stopColor="#1F2937" />
-          <stop offset="100%" stopColor="#030712" />
+        <linearGradient id="ht-crop" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0%"  stopColor="#6B7280" />
+          <stop offset="45%" stopColor="#7C3AED" />
+          <stop offset="100%" stopColor="#1F2937" />
         </linearGradient>
       </defs>
-      {/* Crop shaft — diagonal top-left to bottom-right */}
-      <line x1="10" y1="8" x2="50" y2="56" stroke="url(#ht-handle)" strokeWidth="3.5" strokeLinecap="round" />
-      {/* Wrist loop at handle end */}
-      <ellipse cx="9" cy="7" rx="5" ry="3.5" stroke="#6B7280" strokeWidth="2" fill="none" transform="rotate(-40 9 7)" />
-      {/* Wrapped grip — middle section, alternating bands */}
-      <line x1="22" y1="22" x2="26" y2="28" stroke="url(#ht-grip)" strokeWidth="6.5" strokeLinecap="round" />
-      <line x1="28" y1="31" x2="32" y2="37" stroke="url(#ht-grip)" strokeWidth="6.5" strokeLinecap="round" />
-      {/* Grip divider seams */}
-      <line x1="27" y1="29" x2="29" y2="32" stroke="#0F0720" strokeWidth="2" strokeLinecap="round" />
-      {/* Grip shine */}
-      <line x1="23" y1="23" x2="25" y2="26" stroke="white" strokeWidth="1" strokeLinecap="round" opacity="0.2" />
-      <line x1="29" y1="32" x2="31" y2="35" stroke="white" strokeWidth="1" strokeLinecap="round" opacity="0.2" />
-      {/* Leather popper tip */}
-      <ellipse cx="51" cy="57" rx="5.5" ry="3" fill="url(#ht-tip)" transform="rotate(52 51 57)" />
-      <ellipse cx="51" cy="57" rx="3.5" ry="1.8" fill="#374151" opacity="0.5" transform="rotate(52 51 57)" />
-      {/* Heart accent near tip */}
-      <path d="M55 46 C55 44.5 56.2 43 57.7 44.5 C59.2 43 60.4 44.5 60.4 46 C60.4 47.5 57.7 49.5 57.7 49.5 C57.7 49.5 55 47.5 55 46Z" fill="#FB7185" />
-      {/* Small motion lines suggesting a swing */}
-      <path d="M42 52 Q44 50 45 52" stroke="#FDA4AF" strokeWidth="1.2" strokeLinecap="round" fill="none" opacity="0.6" />
-      <path d="M44 55 Q46 53 47 55" stroke="#FBCFE8" strokeWidth="1" strokeLinecap="round" fill="none" opacity="0.5" />
+      {/* Thick diagonal crop — fills icon corner to corner, bold and clear */}
+      <line x1="10" y1="10" x2="54" y2="54" stroke="url(#ht-crop)" strokeWidth="10" strokeLinecap="round" />
+      {/* Wrist loop at handle end — large enough to read */}
+      <circle cx="10" cy="10" r="7" stroke="#9CA3AF" strokeWidth="3" fill="none" />
+      {/* Leather tip — wide flat shape */}
+      <ellipse cx="54" cy="54" rx="8" ry="4.5" fill="#111827" transform="rotate(45 54 54)" />
+      {/* Heart on tip */}
+      <path d="M57 45 C57 43 58.5 41 60.5 43 C62.5 41 64 43 64 45 C64 47 60.5 50 60.5 50 C60.5 50 57 47 57 45Z" fill="#FB7185" />
     </svg>
   );
 }
@@ -676,38 +639,25 @@ function Naughty({ className }: { className?: string }) {
   return (
     <svg viewBox="0 0 64 64" className={className} fill="none">
       <defs>
-        <linearGradient id="nt-toy" x1="0" y1="0" x2="1" y2="0">
-          <stop offset="0%" stopColor="#FDF2F8" />
-          <stop offset="40%" stopColor="#F472B6" />
+        <linearGradient id="nt-g" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor="#F9A8D4" />
           <stop offset="100%" stopColor="#BE185D" />
         </linearGradient>
-        <linearGradient id="nt-base" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor="#F472B6" />
-          <stop offset="100%" stopColor="#831843" />
-        </linearGradient>
-        <linearGradient id="nt-glow" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor="white" stopOpacity="0.55" />
-          <stop offset="100%" stopColor="white" stopOpacity="0" />
-        </linearGradient>
       </defs>
-      {/* Main body — smooth rounded shaft + flared base */}
-      <path d="M24 52 C22 52 22 55 32 57 C42 55 42 52 40 52 L40 22 C40 12 36 7 32 7 C28 7 24 12 24 22 Z" fill="url(#nt-toy)" />
-      {/* Dome / head */}
-      <ellipse cx="32" cy="19" rx="8" ry="11" fill="#F9A8D4" />
-      <ellipse cx="32" cy="15" rx="8" ry="7"  fill="url(#nt-toy)" />
-      {/* Coronal ridge */}
-      <ellipse cx="32" cy="27" rx="8" ry="2.5" fill="#9D174D" opacity="0.3" />
-      {/* Base flare */}
-      <ellipse cx="32" cy="53" rx="10" ry="4.5" fill="url(#nt-base)" />
-      <ellipse cx="32" cy="56" rx="7"  ry="2.5" fill="#500724" opacity="0.45" />
-      {/* Highlight / shine */}
-      <path d="M26 13 Q28 8 30 10" stroke="white" strokeWidth="2.5" strokeLinecap="round" opacity="0.55" />
-      <ellipse cx="27" cy="34" rx="2.5" ry="10" fill="url(#nt-glow)" />
-      {/* Stars */}
-      <path d="M8 12 L9 8 L10 12 L14 13 L10 14 L9 18 L8 14 L4 13Z"   fill="#FCD34D" opacity="0.85" />
-      <path d="M52 8 L53 5 L54 8 L57 9 L54 10 L53 13 L52 10 L49 9Z"  fill="#FCD34D" opacity="0.85" />
-      <circle cx="54" cy="22" r="1.5" fill="#FDA4AF" />
-      <circle cx="10" cy="26" r="1.2" fill="#FDA4AF" />
+      {/* Base — wide dark flare, very clear */}
+      <ellipse cx="32" cy="57" rx="13" ry="5.5" fill="#831843" />
+      {/* Shaft */}
+      <rect x="24" y="22" width="16" height="37" rx="4" fill="url(#nt-g)" />
+      {/* Head — much lighter, clearly distinct dome */}
+      <ellipse cx="32" cy="20" rx="11" ry="13" fill="#FCE7F3" />
+      <ellipse cx="32" cy="16" rx="11" ry="9"  fill="#FBCFE8" />
+      {/* Bold ridge separating head from shaft */}
+      <ellipse cx="32" cy="29" rx="11" ry="3" fill="#9D174D" opacity="0.45" />
+      {/* Shine */}
+      <path d="M25 11 Q27 6 30 8" stroke="white" strokeWidth="3" strokeLinecap="round" opacity="0.65" />
+      {/* Stars — bold enough to show at small size */}
+      <path d="M7 14 L8 10 L9 14 L13 15 L9 16 L8 20 L7 16 L3 15Z"  fill="#FCD34D" />
+      <path d="M53 6 L54 3 L55 6 L58 7 L55 8 L54 11 L53 8 L50 7Z"  fill="#FCD34D" />
     </svg>
   );
 }
