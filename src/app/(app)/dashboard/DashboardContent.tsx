@@ -5,7 +5,6 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { getCachedProfile } from "@/lib/profile-cache";
 import DashboardRefresher from "@/components/DashboardRefresher";
 import { MiniCard, HistoryChip } from "@/components/DashboardCards";
-import NudgeButton from "@/components/NudgeButton";
 import type { MoodLog } from "@/types";
 
 export default async function DashboardContent() {
@@ -142,9 +141,7 @@ export default async function DashboardContent() {
                 </Link>
               )}
             </div>
-            <div className="mt-3 flex justify-center">
-              <NudgeButton partnerName={partnerName} />
-            </div>
+
           </section>
 
           {/* ── History strips ── */}

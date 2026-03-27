@@ -8,6 +8,33 @@ import toast from "react-hot-toast";
 import { createClient } from "@/lib/supabase/client";
 import type { Connection, Profile } from "@/types";
 
+function NudgePartnerButton({ partnerName }: { partnerName: string }) {
+  const [sent, setSent] = useState(false);
+  const [loading, setLoading] = useState(false);
+  async function nudge() {
+    if (sent || loading) return;
+    setLoading(true);
+    const res = await fetch("/api/push/nudge", { method: "POST" });
+    setLoading(false);
+    if (res.ok) {
+      setSent(true);
+      toast.success(`Nudged ${partnerName}!`);
+      setTimeout(() => setSent(false), 5 * 60 * 1000);
+    } else {
+      toast.error("Couldn't send nudge");
+    }
+  }
+  return (
+    <button
+      onClick={nudge}
+      disabled={sent || loading}
+      className="w-full rounded-3xl bg-lavender py-3 text-sm font-semibold text-white hover:bg-lavender-dark disabled:opacity-60 transition-all"
+    >
+      {loading ? "Sending…" : sent ? "Nudge sent ✓" : `Ask ${partnerName} to check in 💌`}
+    </button>
+  );
+}
+
 export default function PartnerPage() {
   const router = useRouter();
   const supabase = createClient();
@@ -130,6 +157,8 @@ export default function PartnerPage() {
               <p className="text-sm text-lavender-dark">Connected 💞</p>
             </div>
           </div>
+
+          <NudgePartnerButton partnerName={partner.display_name} />
 
           <button
             onClick={disconnect}
