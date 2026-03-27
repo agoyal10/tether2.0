@@ -116,7 +116,6 @@ export const LOVE_MOOD_CONFIGS: MoodConfig[] = [
 export const KATAKNI_CONFIG: MoodConfig = {
   level: "katakni",
   emoji: "😤",
-  image: "/sticker-angry.png",
   label: "Katakni",
   color: "bg-red-50",
   textColor: "text-red-600",

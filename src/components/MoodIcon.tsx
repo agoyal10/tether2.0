@@ -411,6 +411,74 @@ function Tender({ className }: { className?: string }) {
   );
 }
 
+// ─── Special ──────────────────────────────────────────────────────────────────
+
+function Katakni({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 64 64" className={className} fill="none">
+      <defs>
+        <radialGradient id="kt-face" cx="40%" cy="35%" r="65%">
+          <stop offset="0%"   stopColor="#FCA5A5" />
+          <stop offset="100%" stopColor="#DC2626" />
+        </radialGradient>
+        <radialGradient id="kt-steam" cx="50%" cy="50%" r="50%">
+          <stop offset="0%"   stopColor="#F3F4F6" />
+          <stop offset="100%" stopColor="#D1D5DB" />
+        </radialGradient>
+      </defs>
+
+      {/* Steam puffs — left */}
+      <circle cx="10" cy="30" r="5.5" fill="url(#kt-steam)" />
+      <circle cx="5"  cy="24" r="4"   fill="url(#kt-steam)" />
+      <circle cx="14" cy="22" r="4.5" fill="url(#kt-steam)" />
+      <circle cx="7"  cy="18" r="3"   fill="url(#kt-steam)" />
+      <circle cx="14" cy="16" r="3.5" fill="url(#kt-steam)" />
+
+      {/* Steam puffs — right */}
+      <circle cx="54" cy="30" r="5.5" fill="url(#kt-steam)" />
+      <circle cx="59" cy="24" r="4"   fill="url(#kt-steam)" />
+      <circle cx="50" cy="22" r="4.5" fill="url(#kt-steam)" />
+      <circle cx="57" cy="18" r="3"   fill="url(#kt-steam)" />
+      <circle cx="50" cy="16" r="3.5" fill="url(#kt-steam)" />
+
+      {/* Face */}
+      <circle cx="32" cy="36" r="20" fill="url(#kt-face)" />
+      {/* Face highlight */}
+      <ellipse cx="26" cy="28" rx="5" ry="3" fill="white" opacity="0.2" transform="rotate(-20 26 28)" />
+
+      {/* Angry flushed cheeks */}
+      <ellipse cx="19" cy="42" rx="5" ry="3" fill="#991B1B" opacity="0.4" />
+      <ellipse cx="45" cy="42" rx="5" ry="3" fill="#991B1B" opacity="0.4" />
+
+      {/* Angry eyebrows — sharp V shape */}
+      <path d="M20 28 L28 32" stroke="#7F1D1D" strokeWidth="3"   strokeLinecap="round" />
+      <path d="M36 32 L44 28" stroke="#7F1D1D" strokeWidth="3"   strokeLinecap="round" />
+
+      {/* Squinting eyes */}
+      <ellipse cx="26" cy="34" rx="4"   ry="3"   fill="#7F1D1D" />
+      <ellipse cx="38" cy="34" rx="4"   ry="3"   fill="#7F1D1D" />
+      {/* Eye shine */}
+      <circle cx="27.5" cy="33" r="1.2" fill="white" opacity="0.7" />
+      <circle cx="39.5" cy="33" r="1.2" fill="white" opacity="0.7" />
+      {/* Angry lower lid lines */}
+      <path d="M22 36 Q26 38 30 36" stroke="#7F1D1D" strokeWidth="1.5" strokeLinecap="round" fill="none" />
+      <path d="M34 36 Q38 38 42 36" stroke="#7F1D1D" strokeWidth="1.5" strokeLinecap="round" fill="none" />
+
+      {/* Gritted teeth frown */}
+      <path d="M23 44 Q32 40 41 44" stroke="#7F1D1D" strokeWidth="2" strokeLinecap="round" fill="none" />
+      {/* Teeth marks */}
+      <path d="M25 43 Q32 39 39 43" stroke="#7F1D1D" strokeWidth="5" strokeLinecap="round" fill="none" />
+      <path d="M25 43 Q32 39 39 43" stroke="white"  strokeWidth="3.5" strokeLinecap="round" fill="none" />
+      <line x1="29" y1="40.5" x2="29" y2="44" stroke="#7F1D1D" strokeWidth="1" />
+      <line x1="32" y1="39.5" x2="32" y2="43" stroke="#7F1D1D" strokeWidth="1" />
+      <line x1="35" y1="40.5" x2="35" y2="44" stroke="#7F1D1D" strokeWidth="1" />
+
+      {/* Forehead vein */}
+      <path d="M30 22 Q32 18 34 22 Q33 24 32 22 Q31 24 30 22Z" fill="#7F1D1D" opacity="0.6" />
+    </svg>
+  );
+}
+
 // ─── Naughty moods ────────────────────────────────────────────────────────────
 
 function Soaked({ className }: { className?: string }) {
@@ -592,6 +660,8 @@ const ICONS: Partial<Record<string, (p: { className?: string }) => React.ReactEl
   connected:  (p) => <Connected  {...p} />,
   longing:    (p) => <Longing    {...p} />,
   tender:     (p) => <Tender     {...p} />,
+  // Special
+  katakni:    (p) => <Katakni    {...p} />,
   // Naughty
   soaked:     (p) => <Soaked     {...p} />,
   burning:    (p) => <Burning    {...p} />,
