@@ -542,22 +542,20 @@ function Soaked({ className }: { className?: string }) {
 
 function Burning({ className }: { className?: string }) {
   return (
-    <svg viewBox="0 0 64 64" className={className} fill="none">
+    <svg viewBox="0 0 512 512" className={className} fill="none">
       <defs>
-        <linearGradient id="bn-f" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%"  stopColor="#FEF08A" />
-          <stop offset="45%" stopColor="#F97316" />
-          <stop offset="100%" stopColor="#DC2626" />
-        </linearGradient>
-        <linearGradient id="bn-fi" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%"  stopColor="#FEF9C3" />
-          <stop offset="100%" stopColor="#FCD34D" />
+        <linearGradient id="bn-lips" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor="#FB7185" />
+          <stop offset="100%" stopColor="#9F1239" />
         </linearGradient>
       </defs>
-      {/* Outer flame */}
-      <path d="M32 61 C14 61 6 47 6 36 C6 24 16 16 22 10 C20 20 26 24 30 22 C26 14 34 4 36 2 C46 14 46 24 44 30 C50 22 54 30 54 36 C54 47 50 61 32 61Z" fill="url(#bn-f)" />
-      {/* Inner flame — bright yellow core */}
-      <path d="M32 54 C22 54 18 44 18 38 C18 30 26 24 30 28 C32 22 38 26 40 32 C44 28 46 34 46 38 C46 48 42 54 32 54Z" fill="url(#bn-fi)" />
+      <path fill="url(#bn-lips)" d="M497.134,165.979c-77.641,26.641-162.047-70.516-241.156-13.172C176.915,95.479,92.509,192.62,14.868,165.979
+        c-17.422-5.984-21.797-1.047-0.766,37.906c55.563,102.844,137.813,173.75,241.875,173.75c104.141,0,186.328-70.875,241.906-173.75
+        C518.946,164.917,514.54,160.01,497.134,165.979z M201.306,147.682c4.828,0.922,8.281,5.516,7.656,10.469
+        c-0.609,4.953-5.25,8.344-10.328,7.391c-5.109-0.953-8.484-5.859-7.625-10.797C191.868,149.838,196.446,146.76,201.306,147.682z
+        M317.603,306.885c-21.297,3.156-38.859-0.625-39.109-6.281c-0.234-5.656,16.266-10.969,36.719-14
+        c20.453-3.047,37.719-2.75,38.797,2.781S338.884,303.729,317.603,306.885z M255.978,273.713c-39.734,0-97.547-9.766-134.766-42.078
+        c0,0,77.734-8.438,134.766-8.438c57.063,0,134.766,8.438,134.766,8.438C353.54,263.932,295.728,273.713,255.978,273.713z"/>
     </svg>
   );
 }
