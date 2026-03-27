@@ -544,19 +544,23 @@ function Burning({ className }: { className?: string }) {
   return (
     <svg viewBox="0 0 64 64" className={className} fill="none">
       <defs>
+        <linearGradient id="bn-ul" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor="#DC2626" />
+          <stop offset="100%" stopColor="#991B1B" />
+        </linearGradient>
         <linearGradient id="bn-ll" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor="#FB7185" />
-          <stop offset="100%" stopColor="#9F1239" />
+          <stop offset="0%" stopColor="#EF4444" />
+          <stop offset="100%" stopColor="#B91C1C" />
         </linearGradient>
       </defs>
-      {/* Upper lip — cupid bow */}
-      <path d="M8 30 Q14 18 23 23 Q28 16 32 21 Q36 16 41 23 Q50 18 56 30 Q46 37 32 37 Q18 37 8 30Z" fill="#BE123C" />
-      {/* Lower lip — full and rounded */}
-      <path d="M8 30 Q11 52 32 54 Q53 52 56 30 Q46 37 32 37 Q18 37 8 30Z" fill="url(#bn-ll)" />
-      {/* Shine on lower lip */}
-      <ellipse cx="32" cy="43" rx="10" ry="3.5" fill="white" opacity="0.2" />
-      {/* Shine on upper lip left lobe */}
-      <ellipse cx="21" cy="25" rx="4" ry="2" fill="white" opacity="0.18" transform="rotate(-25 21 25)" />
+      {/* Upper lip — wide M / cupid bow shape */}
+      <path d="M7 34 C7 26 14 20 20 21 C25 22 29 28 32 28 C35 28 39 22 44 21 C50 20 57 26 57 34 Q44 38 32 38 Q20 38 7 34Z" fill="url(#bn-ul)" />
+      {/* Lower lip — full dome */}
+      <path d="M7 34 Q20 38 32 38 Q44 38 57 34 C54 50 10 50 7 34Z" fill="url(#bn-ll)" />
+      {/* Gloss highlight on lower lip */}
+      <ellipse cx="32" cy="43" rx="12" ry="3" fill="white" opacity="0.28" />
+      {/* Mouth line */}
+      <path d="M12 34 Q32 37 52 34" stroke="#7F1D1D" strokeWidth="1.2" fill="none" opacity="0.5" strokeLinecap="round" />
     </svg>
   );
 }
@@ -642,23 +646,20 @@ function Naughty({ className }: { className?: string }) {
     <svg viewBox="0 0 64 64" className={className} fill="none">
       <defs>
         <linearGradient id="nt-cf" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor="#FBCFE8" />
-          <stop offset="100%" stopColor="#EC4899" />
+          <stop offset="0%" stopColor="#F9A8D4" />
+          <stop offset="100%" stopColor="#DB2777" />
         </linearGradient>
       </defs>
-      {/* Left cuff — donut shape */}
-      <circle cx="15" cy="32" r="13" fill="url(#nt-cf)" />
-      <circle cx="15" cy="32" r="7.5" fill="white" />
-      <circle cx="15" cy="32" r="4"   fill="url(#nt-cf)" />
+      {/* Left cuff — thick ring stroke only, no filled donuts */}
+      <circle cx="16" cy="32" r="12" stroke="url(#nt-cf)" strokeWidth="7" fill="none" />
       {/* Right cuff */}
-      <circle cx="49" cy="32" r="13" fill="url(#nt-cf)" />
-      <circle cx="49" cy="32" r="7.5" fill="white" />
-      <circle cx="49" cy="32" r="4"   fill="url(#nt-cf)" />
-      {/* Connecting bar */}
-      <rect x="28" y="29" width="8" height="6" rx="3" fill="#BE185D" />
-      {/* Shine on each cuff */}
-      <ellipse cx="10" cy="24" rx="3.5" ry="5" fill="white" opacity="0.3" transform="rotate(-20 10 24)" />
-      <ellipse cx="44" cy="24" rx="3.5" ry="5" fill="white" opacity="0.3" transform="rotate(-20 44 24)" />
+      <circle cx="48" cy="32" r="12" stroke="url(#nt-cf)" strokeWidth="7" fill="none" />
+      {/* Connecting chain — two oval links */}
+      <ellipse cx="30" cy="32" rx="3.5" ry="2.5" stroke="#BE185D" strokeWidth="2" fill="none" />
+      <ellipse cx="34" cy="32" rx="3.5" ry="2.5" stroke="#BE185D" strokeWidth="2" fill="none" />
+      {/* Shine arc on each cuff */}
+      <path d="M8  24 Q10 20 13 21" stroke="white" strokeWidth="2" strokeLinecap="round" opacity="0.45" />
+      <path d="M40 24 Q42 20 45 21" stroke="white" strokeWidth="2" strokeLinecap="round" opacity="0.45" />
     </svg>
   );
 }
