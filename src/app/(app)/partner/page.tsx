@@ -4,9 +4,12 @@ export const dynamic = "force-dynamic";
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import toast from "react-hot-toast";
 import { createClient } from "@/lib/supabase/client";
 import type { Connection, Profile } from "@/types";
+
+interface MediaPreviewItem { id: string; url: string; isVideo: boolean; }
 
 function NudgePartnerButton({ partnerName }: { partnerName: string }) {
   const [sent, setSent] = useState(false);
@@ -54,6 +57,7 @@ export default function PartnerPage() {
   const [loading, setLoading] = useState(false);
   const [copied, setCopied] = useState(false);
   const [confirmDisconnect, setConfirmDisconnect] = useState(false);
+  const [mediaPreviews, setMediaPreviews] = useState<MediaPreviewItem[]>([]);
 
   useEffect(() => {
     supabase.auth.getUser().then(async ({ data: { user } }) => {
@@ -76,6 +80,32 @@ export default function PartnerPage() {
         const { data: partnerProfile } = await supabase
           .from("profiles").select("*").eq("id", partnerId).single<Profile>();
         if (partnerProfile) { setPartner(partnerProfile); localStorage.setItem("tether_partner", JSON.stringify(partnerProfile)); }
+
+        // Fetch last 9 shared media
+        const { data: msgs } = await supabase
+          .from("messages")
+          .select("id, media_path")
+          .in("sender_id", [user.id, partnerId])
+          .not("media_path", "is", null)
+          .order("created_at", { ascending: false })
+          .limit(9);
+
+        if (msgs?.length) {
+          const paths = msgs.map((m) => m.media_path as string);
+          const res = await fetch("/api/media/sign", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ paths }),
+          });
+          const { urls } = await res.json();
+          setMediaPreviews(
+            msgs.filter((m) => urls[m.media_path]).map((m) => ({
+              id: m.id,
+              url: urls[m.media_path],
+              isVideo: /\.(mp4|mov|webm|avi)$/i.test(m.media_path),
+            }))
+          );
+        }
       } else {
         localStorage.removeItem("tether_connection");
         localStorage.removeItem("tether_partner");
@@ -177,6 +207,32 @@ export default function PartnerPage() {
           </button>
 
           <NudgePartnerButton partnerName={partner.display_name} />
+
+          {mediaPreviews.length > 0 && (
+            <div className="flex flex-col gap-2">
+              <div className="flex items-center justify-between">
+                <p className="text-xs font-semibold uppercase tracking-widest text-gray-400">Shared Media</p>
+                <Link href="/media" className="text-xs font-semibold text-lavender hover:text-lavender-dark">See all →</Link>
+              </div>
+              <div className="grid grid-cols-3 gap-1">
+                {mediaPreviews.map((item) => (
+                  <Link key={item.id} href="/media" className="relative aspect-square overflow-hidden rounded-xl bg-gray-100 dark:bg-gray-800 block">
+                    {item.isVideo ? (
+                      <>
+                        <video src={item.url} className="h-full w-full object-cover" />
+                        <div className="absolute inset-0 flex items-center justify-center">
+                          <svg viewBox="0 0 24 24" className="h-6 w-6 fill-white drop-shadow"><path d="M8 5v14l11-7z"/></svg>
+                        </div>
+                      </>
+                    ) : (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img src={item.url} alt="" className="h-full w-full object-cover" />
+                    )}
+                  </Link>
+                ))}
+              </div>
+            </div>
+          )}
 
           <div className="mt-8">
             {confirmDisconnect ? (
