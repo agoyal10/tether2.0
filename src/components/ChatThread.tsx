@@ -210,16 +210,24 @@ export default function ChatThread({ moodLogId, currentUserId, initialMessages }
     url: string;
   };
 
+  const [musicError, setMusicError] = useState<string | null>(null);
+
   useEffect(() => {
     if (!showMusic) return;
     const controller = new AbortController();
     const delay = setTimeout(async () => {
-      if (!musicQuery.trim()) { setMusicResults([]); return; }
+      if (!musicQuery.trim()) { setMusicResults([]); setMusicError(null); return; }
       setMusicLoading(true);
+      setMusicError(null);
       try {
         const res = await fetch(`/api/spotify/search?q=${encodeURIComponent(musicQuery)}`, { signal: controller.signal });
-        const { tracks } = await res.json();
-        setMusicResults(tracks ?? []);
+        const json = await res.json();
+        if (!res.ok) {
+          setMusicError(json.error ?? "Search failed");
+          setMusicResults([]);
+        } else {
+          setMusicResults(json.tracks ?? []);
+        }
       } catch { /* aborted */ }
       setMusicLoading(false);
     }, 400);
@@ -888,6 +896,8 @@ export default function ChatThread({ moodLogId, currentUserId, initialMessages }
                   <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
                 </svg>
               </div>
+            ) : musicError ? (
+              <p className="py-6 text-center text-xs text-red-400">{musicError}</p>
             ) : !musicQuery.trim() ? (
               <p className="py-6 text-center text-xs text-gray-400">Search for a song to share</p>
             ) : musicResults.length === 0 ? (
