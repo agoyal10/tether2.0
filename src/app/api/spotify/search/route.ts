@@ -43,7 +43,7 @@ export async function GET(req: NextRequest) {
   try {
     const token = await getAccessToken();
     const res = await fetch(
-      `https://api.spotify.com/v1/search?q=${encodeURIComponent(q)}&type=track&limit=12`,
+      `https://api.spotify.com/v1/search?q=${encodeURIComponent(q)}&type=track`,
       { headers: { Authorization: `Bearer ${token}` }, cache: "no-store" }
     );
 
