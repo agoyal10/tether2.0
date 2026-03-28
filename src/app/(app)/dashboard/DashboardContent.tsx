@@ -4,6 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getCachedProfile } from "@/lib/profile-cache";
 import DashboardRefresher from "@/components/DashboardRefresher";
+import ConnectionRequestWatcher from "@/components/ConnectionRequestWatcher";
 import { MiniCard, HistoryChip } from "@/components/DashboardCards";
 import PendingConnectionBanner from "@/components/PendingConnectionBanner";
 import WeeklyInsightCard from "@/components/WeeklyInsightCard";
@@ -110,6 +111,7 @@ export default async function DashboardContent() {
 
   return (
     <>
+      <ConnectionRequestWatcher userId={user.id} />
       {partnerId && <DashboardRefresher partnerId={partnerId} />}
 
       {/* Greeting */}
