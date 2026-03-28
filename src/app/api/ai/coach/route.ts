@@ -20,14 +20,16 @@ export async function GET() {
 
   const { data: conn } = await admin
     .from("connections")
-    .select("id")
+    .select("id, user_a_id, user_b_id")
     .or(`user_a_id.eq.${user.id},user_b_id.eq.${user.id}`)
     .eq("status", "active")
     .single();
 
   if (!conn) return NextResponse.json({ messages: [], remaining: 0 });
 
-  const [{ data: messages }, { count }] = await Promise.all([
+  const partnerId = conn.user_a_id === user.id ? conn.user_b_id : conn.user_a_id;
+
+  const [{ data: messages }, { count }, { data: myProfile }, { data: partnerProfile }] = await Promise.all([
     admin
       .from("coach_messages")
       .select("id, role, content, sender_user_id, created_at")
@@ -39,13 +41,23 @@ export async function GET() {
       .select("id", { count: "exact", head: true })
       .eq("connection_id", conn.id)
       .gte("created_at", new Date(new Date().setHours(0, 0, 0, 0)).toISOString()),
+    admin.from("profiles").select("display_name").eq("id", user.id).single<{ display_name: string }>(),
+    admin.from("profiles").select("display_name").eq("id", partnerId).single<{ display_name: string }>(),
   ]);
 
   const limitStr = await getConfig(admin, "ai_coach_daily_limit");
   const limit = parseInt(limitStr ?? "20", 10);
   const remaining = Math.max(0, limit - (count ?? 0));
 
-  return NextResponse.json({ messages: messages ?? [], remaining, userId: user.id });
+  return NextResponse.json({
+    messages: messages ?? [],
+    remaining,
+    userId: user.id,
+    partnerId,
+    connectionId: conn.id,
+    myName: myProfile?.display_name ?? "You",
+    partnerName: partnerProfile?.display_name ?? "Partner",
+  });
 }
 
 // POST — send a message
