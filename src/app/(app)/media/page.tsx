@@ -112,7 +112,7 @@ export default function MediaPage() {
       toast.success(`Deleted ${data.deleted} item${data.deleted === 1 ? "" : "s"}`);
       cancelSelect();
     } catch {
-      toast.error("Couldn't delete — you can only delete your own media");
+      toast.error("Couldn't delete media");
     } finally {
       setDeleting(false);
     }
