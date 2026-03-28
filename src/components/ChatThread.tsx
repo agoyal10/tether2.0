@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import toast from "react-hot-toast";
 import { motion, AnimatePresence } from "framer-motion";
 import { formatDistanceToNow } from "date-fns";
 import { cn } from "@/lib/utils";
@@ -402,24 +403,29 @@ export default function ChatThread({ moodLogId, currentUserId, initialMessages }
     setShowAttachMenu(false);
 
     setUploading(true);
-    const formData = new FormData();
-    formData.append("file", file);
+    const uploadToast = toast.loading("Uploading…");
 
-    const res = await fetch("/api/media/upload", { method: "POST", body: formData });
-    const data = await res.json();
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
 
-    if (!res.ok) {
-      alert(data.error ?? "Upload failed");
+      const res = await fetch("/api/media/upload", { method: "POST", body: formData });
+      const data = await res.json();
+
+      if (!res.ok) {
+        toast.error(data.error ?? "Upload failed", { id: uploadToast });
+        return;
+      }
+
+      const type = file.type.startsWith("video/") ? "video" : "image";
+      setPendingMedia({ path: data.path, type });
+      await fetchSignedUrlsForPaths([data.path]);
+      toast.dismiss(uploadToast);
+    } catch {
+      toast.error("Upload failed — check your connection", { id: uploadToast });
+    } finally {
       setUploading(false);
-      return;
     }
-
-    const type = file.type.startsWith("video/") ? "video" : "image";
-    setPendingMedia({ path: data.path, type });
-
-    // Get a signed URL for the preview
-    await fetchSignedUrlsForPaths([data.path]);
-    setUploading(false);
   }
 
   async function broadcastMessage(msg: Message) {
@@ -837,7 +843,6 @@ export default function ChatThread({ moodLogId, currentUserId, initialMessages }
           <div className="grid grid-cols-4 gap-2">
             {/* Photo */}
             <button
-              onMouseDown={(e) => e.preventDefault()}
               onClick={() => fileInputRef.current?.click()}
               disabled={uploading}
               className="flex flex-col items-center gap-1.5 rounded-2xl bg-gray-50 py-3 text-gray-500 hover:bg-lavender/10 hover:text-lavender transition-all dark:bg-gray-800 dark:text-gray-400 disabled:opacity-40"
