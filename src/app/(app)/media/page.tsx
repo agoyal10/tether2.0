@@ -24,6 +24,10 @@ export default function MediaPage() {
   const [filter, setFilter] = useState<"all" | "photos" | "videos">("all");
   const [selecting, setSelecting] = useState(false);
   const touchStartX = useRef<number | null>(null);
+  const [imgScale, setImgScale] = useState(1);
+  const [imgTranslate, setImgTranslate] = useState({ x: 0, y: 0 });
+  const pinchRef = useRef<{ startDist: number; startScale: number } | null>(null);
+  const panRef = useRef<{ startX: number; startY: number; startTx: number; startTy: number } | null>(null);
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [deleting, setDeleting] = useState(false);
 
@@ -121,6 +125,58 @@ export default function MediaPage() {
   const filtered = items.filter((i) =>
     filter === "all" ? true : filter === "videos" ? i.isVideo : !i.isVideo
   );
+
+  // Reset zoom when switching photos
+  useEffect(() => {
+    setImgScale(1);
+    setImgTranslate({ x: 0, y: 0 });
+  }, [lightboxIndex]);
+
+  function handleImgTouchStart(e: React.TouchEvent) {
+    if (e.touches.length === 2) {
+      const dist = Math.hypot(
+        e.touches[1].clientX - e.touches[0].clientX,
+        e.touches[1].clientY - e.touches[0].clientY
+      );
+      pinchRef.current = { startDist: dist, startScale: imgScale };
+      panRef.current = null;
+      touchStartX.current = null;
+    } else if (e.touches.length === 1) {
+      touchStartX.current = e.touches[0].clientX;
+      panRef.current = { startX: e.touches[0].clientX, startY: e.touches[0].clientY, startTx: imgTranslate.x, startTy: imgTranslate.y };
+      pinchRef.current = null;
+    }
+  }
+
+  function handleImgTouchMove(e: React.TouchEvent) {
+    if (e.touches.length === 2 && pinchRef.current) {
+      const dist = Math.hypot(
+        e.touches[1].clientX - e.touches[0].clientX,
+        e.touches[1].clientY - e.touches[0].clientY
+      );
+      const newScale = Math.min(5, Math.max(1, pinchRef.current.startScale * (dist / pinchRef.current.startDist)));
+      setImgScale(newScale);
+      if (newScale <= 1) setImgTranslate({ x: 0, y: 0 });
+    } else if (e.touches.length === 1 && panRef.current && imgScale > 1) {
+      const dx = e.touches[0].clientX - panRef.current.startX;
+      const dy = e.touches[0].clientY - panRef.current.startY;
+      setImgTranslate({ x: panRef.current.startTx + dx, y: panRef.current.startTy + dy });
+    }
+  }
+
+  function handleImgTouchEnd(e: React.TouchEvent, hasPrev: boolean, hasNext: boolean, index: number) {
+    pinchRef.current = null;
+    panRef.current = null;
+    // Snap back if over-pinched below 1x
+    setImgScale((prev) => { if (prev < 1) { setImgTranslate({ x: 0, y: 0 }); return 1; } return prev; });
+    // Swipe navigation only when not zoomed
+    if (imgScale <= 1 && touchStartX.current !== null) {
+      const dx = e.changedTouches[0].clientX - touchStartX.current;
+      if (dx < -50 && hasNext) setLightboxIndex(index + 1);
+      else if (dx > 50 && hasPrev) setLightboxIndex(index - 1);
+    }
+    touchStartX.current = null;
+  }
 
   return (
     <div className="flex flex-col gap-4">
@@ -237,15 +293,7 @@ export default function MediaPage() {
         return (
           <div
             className="fixed inset-0 z-50 flex items-center justify-center bg-black/90"
-            onClick={() => setLightboxIndex(null)}
-            onTouchStart={(e) => { touchStartX.current = e.touches[0].clientX; }}
-            onTouchEnd={(e) => {
-              if (touchStartX.current === null) return;
-              const dx = e.changedTouches[0].clientX - touchStartX.current;
-              touchStartX.current = null;
-              if (dx < -50 && hasNext) setLightboxIndex(lightboxIndex + 1);
-              else if (dx > 50 && hasPrev) setLightboxIndex(lightboxIndex - 1);
-            }}
+            onClick={() => { if (imgScale <= 1) setLightboxIndex(null); }}
           >
             {item.isVideo ? (
               <video
@@ -262,7 +310,16 @@ export default function MediaPage() {
                 src={item.url}
                 alt=""
                 className="max-h-screen max-w-full object-contain"
+                style={{
+                  transform: `translate(${imgTranslate.x}px, ${imgTranslate.y}px) scale(${imgScale})`,
+                  transition: pinchRef.current || panRef.current ? "none" : "transform 0.15s ease",
+                  touchAction: "none",
+                  cursor: imgScale > 1 ? "grab" : "default",
+                }}
                 onClick={(e) => e.stopPropagation()}
+                onTouchStart={handleImgTouchStart}
+                onTouchMove={handleImgTouchMove}
+                onTouchEnd={(e) => handleImgTouchEnd(e, hasPrev, hasNext, lightboxIndex)}
               />
             )}
 
