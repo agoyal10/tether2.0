@@ -441,14 +441,33 @@ export default function ChatThread({ moodLogId, currentUserId, initialMessages }
             {CUSTOM_STICKERS.map((s) => (
               <button
                 key={s.src}
+                onMouseDown={(e) => e.preventDefault()}
                 onClick={async () => {
                   setShowEmojis(false);
-                  await supabase.from("messages").insert({
+
+                  // Optimistically show the sticker immediately
+                  const optimisticId = `optimistic-${Date.now()}`;
+                  const optimistic: Message = {
+                    id: optimisticId,
                     mood_log_id: moodLogId,
                     sender_id: currentUserId,
                     content: s.src,
                     media_path: null,
-                  });
+                    created_at: new Date().toISOString(),
+                  };
+                  setMessages((prev) => [...prev, optimistic]);
+
+                  const { data: inserted } = await supabase.from("messages").insert({
+                    mood_log_id: moodLogId,
+                    sender_id: currentUserId,
+                    content: s.src,
+                    media_path: null,
+                  }).select().single();
+
+                  if (inserted) {
+                    setMessages((prev) => prev.map((m) => m.id === optimisticId ? { ...inserted } : m));
+                    broadcastMessage(inserted);
+                  }
                 }}
                 className="p-1 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-all"
               >
@@ -459,9 +478,9 @@ export default function ChatThread({ moodLogId, currentUserId, initialMessages }
             {EMOJIS.map((e) => (
               <button
                 key={e}
+                onMouseDown={(e) => e.preventDefault()}
                 onClick={() => {
                   setContent((prev) => prev + e);
-                  textareaRef.current?.focus();
                 }}
                 className="text-xl leading-none p-1 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-all"
               >
