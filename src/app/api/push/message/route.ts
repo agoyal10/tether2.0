@@ -40,9 +40,28 @@ export async function POST(req: NextRequest) {
   if (!subs || subs.length === 0) return NextResponse.json({ ok: true });
 
   const senderName = profile?.display_name ?? "Your partner";
+
+  let body: string;
+  if (content.startsWith("spotify:")) {
+    try {
+      const track = JSON.parse(content.slice(8));
+      body = `🎵 ${track.name} — ${track.artist}`;
+    } catch { body = "🎵 Sent a song"; }
+  } else if (content.startsWith("location:")) {
+    body = "📍 Shared their location";
+  } else if (content.startsWith("location-request:")) {
+    body = "📍 Wants to know your location";
+  } else if (content.startsWith("giphy:")) {
+    body = "🎞️ Sent a GIF";
+  } else if (content.startsWith("/sticker-")) {
+    body = "🪄 Sent a sticker";
+  } else {
+    body = content.length > 80 ? content.slice(0, 80) + "…" : content;
+  }
+
   const payload = JSON.stringify({
     title: `${senderName} 💬`,
-    body: content.length > 80 ? content.slice(0, 80) + "…" : content,
+    body,
     url: `/chat/${moodLogId}`,
   });
 
