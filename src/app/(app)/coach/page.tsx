@@ -113,22 +113,6 @@ export default function CoachPage() {
       if (res.status === 429) { toast.error("Daily limit reached — come back tomorrow"); setRemaining(0); return; }
       if (!res.ok) throw new Error(data.error ?? "Failed");
 
-      // Realtime will deliver both the user message and assistant reply.
-      // If realtime isn't set up, add assistant reply manually as fallback.
-      if (data.reply) {
-        setMessages((prev) => {
-          const alreadyHasReply = prev.some((m) => m.role === "assistant" && m.content === data.reply);
-          if (alreadyHasReply) return prev;
-          return [...prev, {
-            id: `local-${Date.now()}`,
-            role: "assistant",
-            content: data.reply,
-            sender_user_id: null,
-            created_at: new Date().toISOString(),
-          }];
-        });
-      }
-
       setRemaining(data.remaining ?? 0);
     } catch {
       toast.error("Couldn't send message");

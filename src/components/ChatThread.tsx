@@ -37,6 +37,7 @@ export default function ChatThread({ moodLogId, currentUserId, initialMessages }
   const [isPartnerTyping, setIsPartnerTyping] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const messagesContentRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const isInitialMount = useRef(true);
@@ -387,8 +388,8 @@ export default function ChatThread({ moodLogId, currentUserId, initialMessages }
     const observer = new ResizeObserver(() => {
       if (active) container.scrollTop = container.scrollHeight;
     });
-    // Observe the inner scroll content
-    const inner = container.firstElementChild;
+    // Observe the wrapper div containing all messages
+    const inner = messagesContentRef.current ?? container.firstElementChild;
     if (inner) observer.observe(inner);
 
     return () => {
@@ -614,7 +615,8 @@ export default function ChatThread({ moodLogId, currentUserId, initialMessages }
         </div>
       )}
       {/* Message list */}
-      <div ref={scrollContainerRef} className="flex-1 overflow-y-auto px-4 py-4 space-y-3 dark:bg-gray-900">
+      <div ref={scrollContainerRef} className="flex-1 overflow-y-auto px-4 py-4 dark:bg-gray-900">
+        <div ref={messagesContentRef} className="flex flex-col gap-3">
         <AnimatePresence initial={false}>
           {messages.map((msg) => {
             const isMine = msg.sender_id === currentUserId;
@@ -749,6 +751,7 @@ export default function ChatThread({ moodLogId, currentUserId, initialMessages }
           )}
         </AnimatePresence>
         <div ref={bottomRef} />
+        </div>
       </div>
 
       {/* Media preview */}
