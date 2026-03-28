@@ -5,6 +5,9 @@ import { createAdminClient } from "@/lib/supabase/admin";
 
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
+const FREE_DAILY_LIMIT = 5;
+const PREMIUM_DAILY_LIMIT = 20;
+
 export async function POST(req: NextRequest) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
@@ -19,6 +22,31 @@ export async function POST(req: NextRequest) {
     .select("model_emoji, is_premium")
     .eq("id", user.id)
     .single<{ model_emoji: string; is_premium: boolean }>();
+
+  const isPremium = profile?.is_premium ?? false;
+  const dailyLimit = isPremium ? PREMIUM_DAILY_LIMIT : FREE_DAILY_LIMIT;
+  const today = new Date().toISOString().slice(0, 10); // YYYY-MM-DD
+
+  // Check + increment usage atomically via upsert
+  const { data: usage } = await admin
+    .from("emoji_usage")
+    .select("count")
+    .eq("user_id", user.id)
+    .eq("date", today)
+    .single();
+
+  const currentCount = usage?.count ?? 0;
+  if (currentCount >= dailyLimit) {
+    return NextResponse.json(
+      { error: "Daily limit reached", limit: dailyLimit, remaining: 0 },
+      { status: 429 }
+    );
+  }
+
+  await admin.from("emoji_usage").upsert(
+    { user_id: user.id, date: today, count: currentCount + 1 },
+    { onConflict: "user_id,date" }
+  );
 
   // Non-premium always uses sonnet for emoji (it's the default locked value)
   const modelPref = profile?.model_emoji ?? "sonnet";
@@ -46,5 +74,5 @@ Example (happy sunny mood):
   const svgMatch = raw.match(/<svg[\s\S]*?<\/svg>/i);
   const svg = svgMatch ? svgMatch[0] : raw;
 
-  return NextResponse.json({ svg });
+  return NextResponse.json({ svg, remaining: dailyLimit - (currentCount + 1) });
 }

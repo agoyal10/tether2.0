@@ -21,6 +21,8 @@ export default function MoodScale({ onSubmit, isLoading = false, naughtyMode = f
   const [emojiSvg, setEmojiSvg] = useState<string | null>(null);
   const [generatingEmoji, setGeneratingEmoji] = useState(false);
   const [emojiPrompt, setEmojiPrompt] = useState("");
+  const [emojiRemaining, setEmojiRemaining] = useState<number | null>(null);
+  const [emojiLimitHit, setEmojiLimitHit] = useState(false);
 
   const resolvedMode = mode ?? (naughtyMode ? "naughty" : "sweet");
   const configs =
@@ -54,7 +56,12 @@ export default function MoodScale({ onSubmit, isLoading = false, naughtyMode = f
         body: JSON.stringify({ mood: selected, note: emojiPrompt.trim() || undefined }),
       });
       const data = await res.json();
-      if (data.svg) setEmojiSvg(data.svg);
+      if (res.status === 429) {
+        setEmojiLimitHit(true);
+      } else if (data.svg) {
+        setEmojiSvg(data.svg);
+        setEmojiRemaining(data.remaining ?? null);
+      }
     } catch {}
     setGeneratingEmoji(false);
   }
@@ -183,30 +190,34 @@ export default function MoodScale({ onSubmit, isLoading = false, naughtyMode = f
           className="w-full resize-none rounded-2xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-700 placeholder:text-gray-300 focus:border-lavender focus:bg-white focus:outline-none focus:ring-2 focus:ring-lavender/30 transition-all dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100 dark:placeholder:text-gray-600 dark:focus:bg-gray-700"
         />
         <div className="flex flex-col gap-2 mt-1">
-          <div className="flex items-center gap-2">
-            <input
-              type="text"
-              value={emojiPrompt}
-              onChange={(e) => setEmojiPrompt(e.target.value.slice(0, 100))}
-              placeholder="Describe your emoji… (optional)"
-              disabled={!selected}
-              className="flex-1 rounded-2xl border border-gray-200 bg-gray-50 px-3 py-1.5 text-xs text-gray-700 placeholder:text-gray-300 focus:border-lavender focus:bg-white focus:outline-none focus:ring-2 focus:ring-lavender/30 transition-all dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100 dark:placeholder:text-gray-600 disabled:opacity-40"
-            />
-            <button
-              type="button"
-              onClick={generateEmoji}
-              disabled={!selected || generatingEmoji}
-              className="flex items-center gap-1.5 rounded-2xl bg-lavender/10 px-3 py-1.5 text-xs font-semibold text-lavender hover:bg-lavender/20 disabled:opacity-40 transition-all shrink-0"
-            >
-              {generatingEmoji ? (
-                <svg className="h-3.5 w-3.5 animate-spin" viewBox="0 0 24 24" fill="none">
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
-                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"/>
-                </svg>
-              ) : "✨"}
-              {generatingEmoji ? "Generating…" : "Generate"}
-            </button>
-          </div>
+          {emojiLimitHit ? (
+            <p className="text-xs text-blush-dark font-medium">Daily emoji limit reached — resets tomorrow.</p>
+          ) : (
+            <div className="flex items-center gap-2">
+              <input
+                type="text"
+                value={emojiPrompt}
+                onChange={(e) => setEmojiPrompt(e.target.value.slice(0, 100))}
+                placeholder="Describe your emoji… (optional)"
+                disabled={!selected}
+                className="flex-1 rounded-2xl border border-gray-200 bg-gray-50 px-3 py-1.5 text-xs text-gray-700 placeholder:text-gray-300 focus:border-lavender focus:bg-white focus:outline-none focus:ring-2 focus:ring-lavender/30 transition-all dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100 dark:placeholder:text-gray-600 disabled:opacity-40"
+              />
+              <button
+                type="button"
+                onClick={generateEmoji}
+                disabled={!selected || generatingEmoji}
+                className="flex items-center gap-1.5 rounded-2xl bg-lavender/10 px-3 py-1.5 text-xs font-semibold text-lavender hover:bg-lavender/20 disabled:opacity-40 transition-all shrink-0"
+              >
+                {generatingEmoji ? (
+                  <svg className="h-3.5 w-3.5 animate-spin" viewBox="0 0 24 24" fill="none">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"/>
+                  </svg>
+                ) : "✨"}
+                {generatingEmoji ? "Generating…" : "Generate"}
+              </button>
+            </div>
+          )}
           {emojiSvg && (
             <div className="flex items-center gap-1.5">
               <div className="h-8 w-8" dangerouslySetInnerHTML={{ __html: emojiSvg }} />
@@ -215,6 +226,9 @@ export default function MoodScale({ onSubmit, isLoading = false, naughtyMode = f
                 onClick={() => setEmojiSvg(null)}
                 className="text-gray-300 hover:text-gray-500 text-sm leading-none"
               >×</button>
+              {emojiRemaining !== null && emojiRemaining <= 2 && (
+                <span className="text-xs text-gray-400">{emojiRemaining} left today</span>
+              )}
             </div>
           )}
         </div>
