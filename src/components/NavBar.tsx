@@ -121,7 +121,7 @@ export default function NavBar() {
   const NAV_ITEMS = [
     { href: "/dashboard", label: "Home",     badge: unread > 0, disabled: false },
     { href: "/checkin",   label: "Check-in", badge: false,      disabled: !hasPartner },
-    { href: "/recap",     label: "Recap",    badge: false,      disabled: !hasPartner },
+    { href: "/partner",   label: "Partner",  badge: false,      disabled: false },
     { href: "/coach",     label: "Coach",    badge: false,      disabled: !hasPartner },
     { href: "/settings",  label: "Settings", badge: false,      disabled: false },
   ];
