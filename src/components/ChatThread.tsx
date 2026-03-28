@@ -374,20 +374,27 @@ export default function ChatThread({ moodLogId, currentUserId, initialMessages }
   }, [moodLogId]);
 
 
-  // Scroll to bottom on first render (also after images load)
+  // Scroll to bottom on first render, then keep scrolling as images load and expand content
   useLayoutEffect(() => {
     const container = scrollContainerRef.current;
-    if (container) container.scrollTop = container.scrollHeight;
-  }, []);
-
-  useEffect(() => {
-    const container = scrollContainerRef.current;
     if (!container) return;
-    // Fallback: re-scroll after images/videos may have loaded and expanded content
-    const timer = setTimeout(() => {
-      container.scrollTop = container.scrollHeight;
-    }, 500);
-    return () => clearTimeout(timer);
+    container.scrollTop = container.scrollHeight;
+
+    // ResizeObserver: re-scroll whenever content height grows (images loading in)
+    // Stop after 5 seconds so we don't fight the user scrolling up
+    let active = true;
+    const timer = setTimeout(() => { active = false; }, 5000);
+    const observer = new ResizeObserver(() => {
+      if (active) container.scrollTop = container.scrollHeight;
+    });
+    // Observe the inner scroll content
+    const inner = container.firstElementChild;
+    if (inner) observer.observe(inner);
+
+    return () => {
+      clearTimeout(timer);
+      observer.disconnect();
+    };
   }, []);
 
   // Smooth scroll for new messages or typing indicator
