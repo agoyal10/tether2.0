@@ -5,6 +5,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { getCachedProfile } from "@/lib/profile-cache";
 import DashboardRefresher from "@/components/DashboardRefresher";
 import { MiniCard, HistoryChip } from "@/components/DashboardCards";
+import PendingConnectionBanner from "@/components/PendingConnectionBanner";
 import type { MoodLog } from "@/types";
 
 export default async function DashboardContent() {
@@ -12,14 +13,20 @@ export default async function DashboardContent() {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect("/login");
 
-  // Fetch profile (cached) and connection in parallel
-  const [profile, { data: connection }] = await Promise.all([
+  // Fetch profile, active connection, and pending requests in parallel
+  const [profile, { data: connection }, { data: pendingConns }] = await Promise.all([
     getCachedProfile(user.id),
     supabase.from("connections")
       .select("*")
       .or(`user_a_id.eq.${user.id},user_b_id.eq.${user.id}`)
       .eq("status", "active")
       .maybeSingle(),
+    // Pending connections where current user is the inviter (not the requester)
+    supabase.from("connections")
+      .select("id, requester_id")
+      .or(`user_a_id.eq.${user.id},user_b_id.eq.${user.id}`)
+      .eq("status", "pending")
+      .neq("requester_id", user.id),
   ]);
 
   const partnerId = connection
@@ -27,6 +34,22 @@ export default async function DashboardContent() {
     : null;
 
   const admin = createAdminClient();
+
+  // Resolve requester names for pending connection requests
+  const pendingRequests: { id: string; requesterName: string }[] = [];
+  if (pendingConns?.length) {
+    const requesterIds = pendingConns.map((c) => c.requester_id).filter(Boolean) as string[];
+    const { data: requesterProfiles } = await admin
+      .from("profiles")
+      .select("id, display_name")
+      .in("id", requesterIds);
+    const nameMap = Object.fromEntries((requesterProfiles ?? []).map((p) => [p.id, p.display_name]));
+    for (const conn of pendingConns) {
+      if (conn.requester_id) {
+        pendingRequests.push({ id: conn.id, requesterName: nameMap[conn.requester_id] ?? "Someone" });
+      }
+    }
+  }
 
   // Fetch partner logs and own logs in parallel
   const [partnerLogsResult, myLogsResult] = await Promise.all([
@@ -92,6 +115,11 @@ export default async function DashboardContent() {
         <p className="text-sm text-gray-400">Welcome back,</p>
         <h1 className="text-2xl font-bold text-gray-800">{myName} 💞</h1>
       </div>
+
+      {/* Pending connection requests (shown to the inviter) */}
+      {pendingRequests.length > 0 && (
+        <PendingConnectionBanner requests={pendingRequests} />
+      )}
 
       {!connection ? (
         /* No partner yet */

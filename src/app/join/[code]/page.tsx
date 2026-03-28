@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { sendPushToUser } from "@/lib/push";
 
 const pageClass = "flex min-h-screen items-center justify-center bg-gradient-to-br from-gray-950 via-gray-900 to-gray-950 px-6";
 
@@ -29,12 +30,12 @@ export default async function JoinPage({ params }: { params: Promise<{ code: str
     );
   }
 
-  // Check if inviter already has a partner — link expires once connected
+  // Check if inviter already has an active or pending connection — link is unavailable
   const { data: inviterConn } = await admin
     .from("connections")
-    .select("id")
+    .select("id, status")
     .or(`user_a_id.eq.${inviter.id},user_b_id.eq.${inviter.id}`)
-    .eq("status", "active")
+    .in("status", ["active", "pending"])
     .maybeSingle();
 
   if (inviterConn) {
@@ -42,8 +43,14 @@ export default async function JoinPage({ params }: { params: Promise<{ code: str
       <main className={pageClass}>
         <div className="text-center">
           <span className="text-5xl">💞</span>
-          <h1 className="mt-4 text-xl font-bold text-gray-100">Already connected</h1>
-          <p className="mt-2 text-sm text-gray-400">{inviter.display_name} is already in a couple.</p>
+          <h1 className="mt-4 text-xl font-bold text-gray-100">
+            {inviterConn.status === "active" ? "Already connected" : "Link not available"}
+          </h1>
+          <p className="mt-2 text-sm text-gray-400">
+            {inviterConn.status === "active"
+              ? `${inviter.display_name} is already in a couple.`
+              : `${inviter.display_name} already has a pending connection request.`}
+          </p>
         </div>
       </main>
     );
@@ -69,23 +76,61 @@ export default async function JoinPage({ params }: { params: Promise<{ code: str
       );
     }
 
-    // Check if visitor already has a partner
+    // Check if visitor already has an active or pending connection
     const { data: existing } = await supabase
       .from("connections")
-      .select("id")
+      .select("id, status")
       .or(`user_a_id.eq.${user.id},user_b_id.eq.${user.id}`)
-      .eq("status", "active")
+      .in("status", ["active", "pending"])
       .maybeSingle();
+
+    if (existing?.status === "active") redirect("/dashboard");
 
     if (!existing) {
       const [a, b] = [user.id, inviter.id].sort();
       await admin.from("connections").upsert(
-        { user_a_id: a, user_b_id: b, status: "active" },
+        { user_a_id: a, user_b_id: b, status: "pending", requester_id: user.id },
         { onConflict: "user_a_id,user_b_id" }
       );
+
+      // Get requester's name to include in notification
+      const { data: requesterProfile } = await admin
+        .from("profiles")
+        .select("display_name")
+        .eq("id", user.id)
+        .single();
+
+      // Notify inviter
+      await sendPushToUser(inviter.id, {
+        title: "New connection request 💌",
+        body: `${requesterProfile?.display_name ?? "Someone"} wants to connect with you`,
+        url: "/dashboard",
+      }).catch(() => {});
     }
 
-    redirect("/dashboard");
+    // Show waiting screen (don't redirect — connection is pending approval)
+    return (
+      <main className={pageClass}>
+        <div className="w-full max-w-sm text-center">
+          <span className="text-6xl">💌</span>
+          <h1 className="mt-4 text-2xl font-bold text-gray-100">Request sent!</h1>
+          <p className="mt-3 text-gray-400">
+            Waiting for{" "}
+            <span className="font-semibold text-lavender">{inviter.display_name}</span>{" "}
+            to accept your connection request.
+          </p>
+          <p className="mt-2 text-sm text-gray-500">
+            They&apos;ll get a notification and need to approve before you&apos;re connected.
+          </p>
+          <Link
+            href="/dashboard"
+            className="mt-8 inline-block rounded-3xl bg-lavender px-6 py-3 text-sm font-semibold text-white"
+          >
+            Go to Dashboard
+          </Link>
+        </div>
+      </main>
+    );
   }
 
   // Not logged in — show landing page
