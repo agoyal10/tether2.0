@@ -62,7 +62,8 @@ export async function GET(req: NextRequest) {
 
     return NextResponse.json({ tracks });
   } catch (err) {
-    console.error("[spotify/search]", err);
-    return NextResponse.json({ error: "Search failed" }, { status: 500 });
+    const msg = err instanceof Error ? err.message : String(err);
+    console.error("[spotify/search]", msg);
+    return NextResponse.json({ error: msg }, { status: 500 });
   }
 }
