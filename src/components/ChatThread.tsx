@@ -985,11 +985,11 @@ export default function ChatThread({ moodLogId, currentUserId, initialMessages }
             placeholder="Write a message…"
             rows={1}
             className="flex-1 resize-none bg-transparent text-sm text-gray-700 placeholder:text-gray-300 focus:outline-none dark:text-gray-100 dark:placeholder:text-gray-600 overflow-y-auto"
-            style={{ maxHeight: "120px", height: "auto" }}
+            style={{ maxHeight: "64px", height: "auto" }}
             onInput={(e) => {
               const el = e.currentTarget;
               el.style.height = "auto";
-              el.style.height = Math.min(el.scrollHeight, 120) + "px";
+              el.style.height = Math.min(el.scrollHeight, 64) + "px";
             }}
           />
           <button
