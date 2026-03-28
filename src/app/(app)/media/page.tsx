@@ -2,7 +2,7 @@
 
 export const dynamic = "force-dynamic";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import toast from "react-hot-toast";
@@ -20,9 +20,10 @@ export default function MediaPage() {
   const supabase = createClient();
   const [items, setItems] = useState<MediaItem[]>([]);
   const [loading, setLoading] = useState(true);
-  const [lightbox, setLightbox] = useState<MediaItem | null>(null);
+  const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
   const [filter, setFilter] = useState<"all" | "photos" | "videos">("all");
   const [selecting, setSelecting] = useState(false);
+  const touchStartX = useRef<number | null>(null);
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [deleting, setDeleting] = useState(false);
 
@@ -177,7 +178,7 @@ export default function MediaPage() {
           {filtered.map((item) => (
             <button
               key={item.id}
-              onClick={() => selecting ? toggleSelect(item.id) : setLightbox(item)}
+              onClick={() => selecting ? toggleSelect(item.id) : setLightboxIndex(filtered.indexOf(item))}
               className="relative aspect-square overflow-hidden rounded-lg bg-gray-100 dark:bg-gray-800"
             >
               {item.isVideo ? (
@@ -229,40 +230,87 @@ export default function MediaPage() {
       )}
 
       {/* Lightbox */}
-      {lightbox && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/90"
-          onClick={() => setLightbox(null)}
-        >
-          {lightbox.isVideo ? (
-            <video
-              src={lightbox.url}
-              controls
-              autoPlay
-              playsInline
-              className="max-h-full max-w-full"
-              onClick={(e) => e.stopPropagation()}
-            />
-          ) : (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
-              src={lightbox.url}
-              alt=""
-              className="max-h-screen max-w-full object-contain"
-              onClick={(e) => e.stopPropagation()}
-            />
-          )}
-          <div className="absolute flex items-center gap-2" style={{ top: "calc(env(safe-area-inset-top, 0px) + 12px)", right: "12px" }}>
-            <button
-              className="flex h-7 items-center justify-center rounded-full bg-white/20 backdrop-blur-sm text-white px-2.5 text-[11px] font-semibold"
-              onClick={(e) => { e.stopPropagation(); openForSave(lightbox.url); }}
-            >
-              Open
-            </button>
-            <button className="flex h-7 w-7 items-center justify-center rounded-full bg-white/20 backdrop-blur-sm text-white text-base font-bold" onClick={() => setLightbox(null)}>×</button>
+      {lightboxIndex !== null && filtered[lightboxIndex] && (() => {
+        const item = filtered[lightboxIndex];
+        const hasPrev = lightboxIndex > 0;
+        const hasNext = lightboxIndex < filtered.length - 1;
+        return (
+          <div
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/90"
+            onClick={() => setLightboxIndex(null)}
+            onTouchStart={(e) => { touchStartX.current = e.touches[0].clientX; }}
+            onTouchEnd={(e) => {
+              if (touchStartX.current === null) return;
+              const dx = e.changedTouches[0].clientX - touchStartX.current;
+              touchStartX.current = null;
+              if (dx < -50 && hasNext) setLightboxIndex(lightboxIndex + 1);
+              else if (dx > 50 && hasPrev) setLightboxIndex(lightboxIndex - 1);
+            }}
+          >
+            {item.isVideo ? (
+              <video
+                src={item.url}
+                controls
+                autoPlay
+                playsInline
+                className="max-h-full max-w-full"
+                onClick={(e) => e.stopPropagation()}
+              />
+            ) : (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={item.url}
+                alt=""
+                className="max-h-screen max-w-full object-contain"
+                onClick={(e) => e.stopPropagation()}
+              />
+            )}
+
+            {/* Top-right buttons */}
+            <div className="absolute flex items-center gap-2" style={{ top: "calc(env(safe-area-inset-top, 0px) + 12px)", right: "12px" }}>
+              <button
+                className="flex h-7 items-center justify-center rounded-full bg-white/20 backdrop-blur-sm text-white px-2.5 text-[11px] font-semibold"
+                onClick={(e) => { e.stopPropagation(); openForSave(item.url); }}
+              >
+                Open
+              </button>
+              <button
+                className="flex h-7 w-7 items-center justify-center rounded-full bg-white/20 backdrop-blur-sm text-white text-base font-bold"
+                onClick={() => setLightboxIndex(null)}
+              >×</button>
+            </div>
+
+            {/* Prev / Next arrows */}
+            {hasPrev && (
+              <button
+                className="absolute left-3 flex h-9 w-9 items-center justify-center rounded-full bg-white/20 backdrop-blur-sm text-white"
+                style={{ top: "50%", transform: "translateY(-50%)" }}
+                onClick={(e) => { e.stopPropagation(); setLightboxIndex(lightboxIndex - 1); }}
+              >
+                <svg viewBox="0 0 24 24" className="h-5 w-5 fill-none stroke-current" strokeWidth={2.5}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
+                </svg>
+              </button>
+            )}
+            {hasNext && (
+              <button
+                className="absolute right-3 flex h-9 w-9 items-center justify-center rounded-full bg-white/20 backdrop-blur-sm text-white"
+                style={{ top: "50%", transform: "translateY(-50%)" }}
+                onClick={(e) => { e.stopPropagation(); setLightboxIndex(lightboxIndex + 1); }}
+              >
+                <svg viewBox="0 0 24 24" className="h-5 w-5 fill-none stroke-current" strokeWidth={2.5}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+                </svg>
+              </button>
+            )}
+
+            {/* Counter */}
+            <p className="absolute bottom-4 left-1/2 -translate-x-1/2 text-xs text-white/60">
+              {lightboxIndex + 1} / {filtered.length}
+            </p>
           </div>
-        </div>
-      )}
+        );
+      })()}
     </div>
   );
 }
