@@ -242,8 +242,11 @@ export default function RecapPage() {
       .finally(() => { setInsightLoading(false); setTrendsLoading(false); });
   }, []);
 
+  const loading = insightLoading || trendsLoading;
+
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-5">
+      {/* Header */}
       <div className="flex items-center gap-3">
         <button onClick={() => router.back()} className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200">
           <svg viewBox="0 0 24 24" className="h-5 w-5 fill-none stroke-current" strokeWidth={2}>
@@ -256,27 +259,11 @@ export default function RecapPage() {
         </div>
       </div>
 
-      {/* Weekly insight */}
-      {(weeklyInsight || weeklyInsufficient) && (
-        <section className="flex flex-col gap-2">
-          <p className="text-xs font-semibold uppercase tracking-widest text-gray-400">This Week</p>
-          <div className="rounded-3xl bg-gradient-to-br from-lavender-light to-blush-light dark:from-lavender/20 dark:to-blush/10 p-5">
-            {weeklyInsight ? (
-              <p className="text-sm leading-relaxed text-gray-700 dark:text-gray-200">{weeklyInsight}</p>
-            ) : (
-              <div className="flex items-center gap-3">
-                <span className="text-lg">📅</span>
-                <p className="text-xs text-lavender-dark/70">Keep checking in together — your weekly insight will appear here.</p>
-              </div>
-            )}
-          </div>
-        </section>
-      )}
+      {/* Single flowing card */}
+      <div className="rounded-3xl bg-gray-50 dark:bg-gray-800/60 overflow-hidden">
 
-      {/* Mood trends chart */}
-      <section className="flex flex-col gap-2">
-        <p className="text-xs font-semibold uppercase tracking-widest text-gray-400">Mood Trends</p>
-        <div className="rounded-3xl bg-gray-50 dark:bg-gray-800/60 p-5">
+        {/* Chart */}
+        <div className="p-5 pb-4">
           {trendsLoading ? (
             <div className="flex flex-col gap-3">
               <div className="h-28 rounded-2xl bg-gray-100 dark:bg-gray-700 animate-pulse" />
@@ -294,40 +281,48 @@ export default function RecapPage() {
             </div>
           )}
         </div>
-      </section>
 
-      {/* Monthly AI insight */}
-      <section className="flex flex-col gap-2">
-        <p className="text-xs font-semibold uppercase tracking-widest text-gray-400">Your Month Together</p>
-        <div className="rounded-3xl bg-gradient-to-br from-lavender-light to-blush-light dark:from-lavender/20 dark:to-blush/10 p-6">
-          {insightLoading ? (
-            <div className="flex flex-col gap-3">
-              <div className="h-3 w-full rounded-full bg-white/50 animate-pulse" />
-              <div className="h-3 w-5/6 rounded-full bg-white/50 animate-pulse" />
-              <div className="h-3 w-full rounded-full bg-white/50 animate-pulse" />
-              <div className="h-3 w-4/6 rounded-full bg-white/50 animate-pulse" />
-              <div className="h-3 w-5/6 rounded-full bg-white/50 animate-pulse" />
-            </div>
-          ) : insight ? (
-            <p className="text-sm leading-relaxed text-gray-700 dark:text-gray-200">{insight}</p>
-          ) : insufficient ? (
-            <div className="text-center py-6">
-              <span className="text-3xl">📅</span>
-              <p className="mt-3 text-sm font-medium text-gray-600 dark:text-gray-300">Not enough check-ins yet</p>
-              <p className="mt-1 text-xs text-gray-400">Keep checking in together — your monthly recap will appear once you both have a few more.</p>
-            </div>
-          ) : insightError ? (
-            <div className="text-center py-6">
-              <span className="text-3xl">😕</span>
-              <p className="mt-3 text-sm text-gray-400">Couldn&apos;t load recap right now. Try again later.</p>
-            </div>
-          ) : null}
-        </div>
-      </section>
+        {/* Weekly insight */}
+        {!loading && (
+          <div className="border-t border-gray-100 dark:border-gray-700/60 px-5 py-4">
+            <p className="text-[10px] font-semibold uppercase tracking-widest text-gray-400 mb-2">This week</p>
+            {weeklyInsight ? (
+              <p className="text-sm leading-relaxed text-gray-700 dark:text-gray-300">{weeklyInsight}</p>
+            ) : (
+              <p className="text-sm text-gray-400 italic">Keep checking in — your weekly insight will appear here.</p>
+            )}
+          </div>
+        )}
 
-      {insight && (
-        <p className="text-center text-xs text-gray-300">Generated with care by AI · {monthName}</p>
-      )}
+        {/* Divider between insights */}
+        {!loading && (weeklyInsight || weeklyInsufficient) && (insight || insufficient) && (
+          <div className="mx-5 border-t border-dashed border-gray-200 dark:border-gray-700" />
+        )}
+
+        {/* Monthly insight */}
+        {!loading && (
+          <div className="px-5 py-4">
+            <p className="text-[10px] font-semibold uppercase tracking-widest text-gray-400 mb-2">This month</p>
+            {insightLoading ? null : insight ? (
+              <p className="text-sm leading-relaxed text-gray-700 dark:text-gray-300">{insight}</p>
+            ) : insufficient ? (
+              <p className="text-sm text-gray-400 italic">Not enough check-ins yet — keep going together.</p>
+            ) : insightError ? (
+              <p className="text-sm text-gray-400 italic">Couldn&apos;t load right now. Try again later.</p>
+            ) : null}
+          </div>
+        )}
+
+        {loading && (
+          <div className="px-5 pb-5 flex flex-col gap-2">
+            <div className="h-3 w-full rounded-full bg-gray-100 dark:bg-gray-700 animate-pulse" />
+            <div className="h-3 w-5/6 rounded-full bg-gray-100 dark:bg-gray-700 animate-pulse" />
+            <div className="h-3 w-4/6 rounded-full bg-gray-100 dark:bg-gray-700 animate-pulse" />
+          </div>
+        )}
+      </div>
+
+      <p className="text-center text-xs text-gray-300">Generated with care by AI</p>
     </div>
   );
 }
