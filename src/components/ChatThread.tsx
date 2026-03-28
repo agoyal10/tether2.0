@@ -859,7 +859,8 @@ export default function ChatThread({ moodLogId, currentUserId, initialMessages }
               onClick={() => { setShowAttachMenu(false); setShowGiphy(true); setShowEmojis(false); }}
               className="flex flex-col items-center gap-1.5 rounded-2xl bg-gray-50 py-3 text-gray-500 hover:bg-lavender/10 hover:text-lavender transition-all dark:bg-gray-800 dark:text-gray-400"
             >
-              <span className="text-base font-bold tracking-tight">GIF</span>
+              <svg viewBox="0 0 24 24" className="h-5 w-5 fill-current"><path d="M11.5 9H13v6h-1.5V9zm-4 0H10c.8 0 1.5.7 1.5 1.5v1c0 .6-.4 1.2-1 1.4l1 2.1H10l-.9-2H9V15H7.5V9h-1zm1.5 3h1v-1.5H9V12zm8-3h-3v6h1.5v-2H18v-1.5h-1.5v-1H18V9z"/><path d="M19 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V5a2 2 0 0 0-2-2zm0 16H5V5h14v14z"/></svg>
+              <span className="text-[11px] font-medium">GIF</span>
             </button>
             {/* Location */}
             <button
