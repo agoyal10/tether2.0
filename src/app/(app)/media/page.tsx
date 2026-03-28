@@ -146,19 +146,25 @@ export default function MediaPage() {
             />
           ) : (
             // eslint-disable-next-line @next/next/no-img-element
+            // eslint-disable-next-line @next/next/no-img-element
             <img
               src={lightbox.url}
               alt=""
-              className="max-h-full max-w-full object-contain"
+              className="max-h-screen max-w-full object-contain"
               onClick={(e) => e.stopPropagation()}
             />
           )}
-          <button
-            className="absolute top-4 right-4 flex h-7 w-7 items-center justify-center rounded-full bg-white/20 backdrop-blur-sm text-white text-base font-bold"
-            onClick={() => setLightbox(null)}
-          >
-            ×
-          </button>
+          <div className="absolute top-4 right-4 flex items-center gap-2">
+            <a
+              href={lightbox.url}
+              download
+              className="flex h-7 w-7 items-center justify-center rounded-full bg-white/20 backdrop-blur-sm text-white"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <svg viewBox="0 0 24 24" className="h-4 w-4 fill-current"><path d="M12 16l-5-5h3V4h4v7h3l-5 5zm-7 4h14v-2H5v2z"/></svg>
+            </a>
+            <button className="flex h-7 w-7 items-center justify-center rounded-full bg-white/20 backdrop-blur-sm text-white text-base font-bold" onClick={() => setLightbox(null)}>×</button>
+          </div>
         </div>
       )}
     </div>

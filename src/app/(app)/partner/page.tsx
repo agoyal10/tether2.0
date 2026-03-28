@@ -59,6 +59,7 @@ export default function PartnerPage() {
   const [confirmDisconnect, setConfirmDisconnect] = useState(false);
   const [mediaPreviews, setMediaPreviews] = useState<MediaPreviewItem[]>([]);
   const [mediaLoading, setMediaLoading] = useState(true);
+  const [lightbox, setLightbox] = useState<MediaPreviewItem | null>(null);
 
   useEffect(() => {
     supabase.auth.getUser().then(async ({ data: { user } }) => {
@@ -188,6 +189,17 @@ export default function PartnerPage() {
 
   return (
     <div className="flex flex-col gap-6">
+      {lightbox && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/90" onClick={() => setLightbox(null)}>
+          {lightbox.isVideo ? (
+            <video src={lightbox.url} controls autoPlay playsInline className="max-h-full max-w-full" onClick={(e) => e.stopPropagation()} />
+          ) : (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={lightbox.url} alt="" className="max-h-screen max-w-full object-contain" onClick={(e) => e.stopPropagation()} />
+          )}
+          <button className="absolute top-4 right-4 flex h-7 w-7 items-center justify-center rounded-full bg-white/20 backdrop-blur-sm text-white text-base font-bold" onClick={() => setLightbox(null)}>×</button>
+        </div>
+      )}
       <h1 className="text-2xl font-bold text-gray-800 dark:text-gray-100">Partner</h1>
 
       {partner ? (
@@ -227,7 +239,7 @@ export default function PartnerPage() {
             ) : mediaPreviews.length > 0 ? (
               <div className="grid grid-cols-3 gap-1">
                 {mediaPreviews.map((item) => (
-                  <Link key={item.id} href="/media" className="relative aspect-square overflow-hidden rounded-xl bg-gray-100 dark:bg-gray-800 block">
+                  <button key={item.id} onClick={() => setLightbox(item)} className="relative aspect-square overflow-hidden rounded-xl bg-gray-100 dark:bg-gray-800 block">
                     {item.isVideo ? (
                       <>
                         <video src={item.url} className="h-full w-full object-cover" />
@@ -239,7 +251,7 @@ export default function PartnerPage() {
                       // eslint-disable-next-line @next/next/no-img-element
                       <img src={item.url} alt="" className="h-full w-full object-cover" />
                     )}
-                  </Link>
+                  </button>
                 ))}
               </div>
             ) : (
