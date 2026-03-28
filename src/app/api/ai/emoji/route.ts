@@ -5,6 +5,17 @@ import { createAdminClient } from "@/lib/supabase/admin";
 
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
+// Strip any scripts, event handlers, or external references from SVG
+function sanitizeSvg(svg: string): string {
+  return svg
+    .replace(/<script[\s\S]*?<\/script>/gi, "")       // remove <script> blocks
+    .replace(/\bon\w+\s*=/gi, "data-removed=")         // remove event handlers (onclick= etc)
+    .replace(/javascript\s*:/gi, "")                   // remove javascript: URIs
+    .replace(/<use[^>]*href\s*=\s*["'][^"']*["'][^>]*>/gi, "") // remove <use> with external refs
+    .replace(/xlink:href\s*=\s*["'][^"']*["']/gi, "") // remove xlink:href
+    .trim();
+}
+
 const FREE_DAILY_LIMIT = 5;
 const PREMIUM_DAILY_LIMIT = 20;
 
@@ -75,7 +86,7 @@ Example (happy sunny mood):
 
   const raw = (message.content[0] as { type: string; text: string }).text.trim();
   const svgMatch = raw.match(/<svg[\s\S]*?<\/svg>/i);
-  const svg = svgMatch ? svgMatch[0] : raw;
+  const svg = sanitizeSvg(svgMatch ? svgMatch[0] : raw);
 
   return NextResponse.json({ svg, remaining: dailyLimit - (currentCount + 1) });
 }
