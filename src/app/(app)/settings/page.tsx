@@ -148,8 +148,13 @@ export default function SettingsPage() {
                 </button>
               </div>
             ) : (
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 flex-wrap">
                 <p className="font-semibold text-gray-800 dark:text-gray-100 truncate">{profile?.display_name}</p>
+                {profile?.is_premium ? (
+                  <span className="text-[10px] font-bold bg-gradient-to-r from-lavender to-blush-dark text-white px-2 py-0.5 rounded-full shrink-0">Premium</span>
+                ) : (
+                  <span className="text-[10px] font-semibold bg-gray-100 dark:bg-gray-700 text-gray-400 px-2 py-0.5 rounded-full shrink-0">Free</span>
+                )}
                 <button onClick={() => setEditingName(true)} className="text-xs text-lavender hover:underline shrink-0">
                   Edit
                 </button>
