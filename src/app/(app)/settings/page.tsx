@@ -2,7 +2,7 @@
 
 export const dynamic = "force-dynamic";
 
-import { useEffect, useLayoutEffect, useState } from "react";
+import { useEffect, useLayoutEffect, useState, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import toast from "react-hot-toast";
 import { createClient } from "@/lib/supabase/client";
@@ -11,6 +11,10 @@ import ThemeToggle from "@/components/ThemeToggle";
 import type { Profile } from "@/types";
 
 export default function SettingsPage() {
+  return <Suspense><SettingsInner /></Suspense>;
+}
+
+function SettingsInner() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const supabase = createClient();
