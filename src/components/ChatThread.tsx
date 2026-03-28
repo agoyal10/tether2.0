@@ -508,10 +508,8 @@ export default function ChatThread({ moodLogId, currentUserId, initialMessages }
       );
     }
     return (
-      <a href={url} target="_blank" rel="noopener noreferrer">
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src={url} alt="Shared photo" className="mt-1 max-w-[240px] rounded-2xl object-cover" />
-      </a>
+      // eslint-disable-next-line @next/next/no-img-element
+      <img src={url} alt="Shared photo" className="mt-1 max-w-[240px] rounded-2xl object-cover" />
     );
   }
 
