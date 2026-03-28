@@ -1,13 +1,17 @@
 // Service Worker for Web Push notifications
 self.addEventListener("push", (event) => {
-  const data = event.data?.json() ?? {};
+  let data = {};
+  try {
+    data = event.data?.json() ?? {};
+  } catch {
+    data = { title: "Tether", body: event.data?.text() ?? "" };
+  }
+
   event.waitUntil(
     self.registration.showNotification(data.title ?? "Tether", {
-      body: data.body,
+      body: data.body ?? "",
       icon: "/icon-192.png",
-      badge: "/badge-72.png",
-      data: { url: data.url },
-      vibrate: [100, 50, 100],
+      data: { url: data.url ?? "/dashboard" },
     })
   );
 });
