@@ -104,12 +104,25 @@ export default function NavBar() {
         <path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z" />
       </svg>
     ),
+    "/coach": (active) => (
+      <svg viewBox="0 0 24 24" className="h-6 w-6" fill={active ? "currentColor" : "none"} stroke="currentColor" strokeWidth={active ? 0 : 1.8} strokeLinecap="round" strokeLinejoin="round">
+        {active ? (
+          <path d="M12 2a10 10 0 100 20A10 10 0 0012 2zm1 15h-2v-2h2v2zm2.07-7.75l-.9.92C13.45 12.9 13 13.5 13 15h-2v-.5c0-1.1.45-2.1 1.17-2.83l1.24-1.26c.37-.36.59-.86.59-1.41 0-1.1-.9-2-2-2s-2 .9-2 2H8c0-2.21 1.79-4 4-4s4 1.79 4 4c0 .88-.36 1.68-.93 2.25z" />
+        ) : (
+          <>
+            <circle cx="12" cy="12" r="10" />
+            <path d="M12 17v-2M12 7c1.1 0 2 .9 2 2 0 .55-.22 1.05-.59 1.41l-1.24 1.26C11.45 12.1 11 13.1 11 14.5" strokeLinecap="round" />
+          </>
+        )}
+      </svg>
+    ),
   };
 
   const NAV_ITEMS = [
     { href: "/dashboard", label: "Home",     badge: unread > 0, disabled: false },
     { href: "/checkin",   label: "Check-in", badge: false,      disabled: !hasPartner },
     { href: "/partner",   label: "Partner",  badge: false,      disabled: false },
+    { href: "/coach",     label: "Coach",    badge: false,      disabled: !hasPartner },
     { href: "/settings",  label: "Settings", badge: false,      disabled: false },
   ];
 
@@ -124,7 +137,7 @@ export default function NavBar() {
             return (
               <div
                 key={item.href}
-                className="relative flex flex-col items-center gap-0.5 rounded-2xl px-4 py-2 text-xs font-medium text-gray-300 dark:text-gray-600 cursor-not-allowed select-none"
+                className="relative flex flex-col items-center gap-0.5 rounded-2xl px-2 py-2 text-xs font-medium text-gray-300 dark:text-gray-600 cursor-not-allowed select-none"
                 title="Connect a partner first"
               >
                 <span className="opacity-40">{NAV_ICONS[item.href]?.(false)}</span>
@@ -137,7 +150,7 @@ export default function NavBar() {
               key={item.href}
               href={item.href}
               className={cn(
-                "relative flex flex-col items-center gap-0.5 rounded-2xl px-4 py-2 text-xs font-medium transition-all",
+                "relative flex flex-col items-center gap-0.5 rounded-2xl px-2 py-2 text-xs font-medium transition-all",
                 active ? "bg-lavender-light text-lavender-dark dark:bg-lavender/20 dark:text-lavender" : "text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
               )}
             >
