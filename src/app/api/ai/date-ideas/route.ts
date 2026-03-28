@@ -68,7 +68,8 @@ Respond with a JSON array of exactly 3 strings, nothing else. Example format:
     messages: [{ role: "user", content: prompt }],
   });
 
-  const raw = (message.content[0] as { type: string; text: string }).text.trim();
+  const raw = (message.content[0] as { type: string; text: string }).text.trim()
+    .replace(/^```(?:json)?\s*/i, "").replace(/\s*```$/, "").trim();
 
   let ideas: string[];
   try {
@@ -76,7 +77,7 @@ Respond with a JSON array of exactly 3 strings, nothing else. Example format:
     if (!Array.isArray(ideas) || ideas.length !== 3) throw new Error("bad format");
   } catch {
     // Fallback: extract lines if JSON parse fails
-    ideas = raw.split("\n").filter((l) => l.trim().length > 0).slice(0, 3);
+    ideas = raw.split("\n").filter((l) => l.trim().length > 0 && !l.trim().startsWith("[") && !l.trim().startsWith("]")).slice(0, 3);
   }
 
   // Cache for the day
