@@ -80,7 +80,7 @@ export default function CheckinPage() {
         mood_log_id: log.id,
         sender_id: user.id,
         content: `spotify:${JSON.stringify(selectedSong)}`,
-      }).catch(() => {});
+      });
     }
 
     // Notify partner via push (best-effort)
