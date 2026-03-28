@@ -67,6 +67,13 @@ export default function MoodCard({ log, isPartner = false, unreadCount = 0, hide
         </p>
       )}
 
+      {/* Gratitude */}
+      {log.gratitude && (
+        <p className="mt-2 rounded-2xl bg-yellow-50/80 px-4 py-2 text-sm text-yellow-700">
+          💛 {log.gratitude}
+        </p>
+      )}
+
       {/* CTA */}
       {!hideLink && (
         <Link

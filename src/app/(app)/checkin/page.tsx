@@ -57,14 +57,14 @@ export default function CheckinPage() {
     setSongResults([]);
   }
 
-  async function handleSubmit(mood: MoodLevel, note: string, emojiSvg?: string) {
+  async function handleSubmit(mood: MoodLevel, note: string, emojiSvg?: string, gratitude?: string) {
     setLoading(true);
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) { router.push("/login"); return; }
 
     const { data: log, error } = await supabase
       .from("mood_logs")
-      .insert({ user_id: user.id, mood, note: note || null, emoji_svg: emojiSvg || null })
+      .insert({ user_id: user.id, mood, note: note || null, emoji_svg: emojiSvg || null, gratitude: gratitude || null })
       .select()
       .single();
 

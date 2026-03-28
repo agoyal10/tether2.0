@@ -117,8 +117,8 @@ export async function POST(req: NextRequest) {
 
   // Fetch context in parallel
   const [{ data: myProfile }, { data: partnerProfile }, { data: myLogs }, { data: partnerLogs }] = await Promise.all([
-    admin.from("profiles").select("display_name").eq("id", user.id).single<{ display_name: string }>(),
-    admin.from("profiles").select("display_name").eq("id", partnerId).single<{ display_name: string }>(),
+    admin.from("profiles").select("display_name, love_language").eq("id", user.id).single<{ display_name: string; love_language: string | null }>(),
+    admin.from("profiles").select("display_name, love_language").eq("id", partnerId).single<{ display_name: string; love_language: string | null }>(),
     admin.from("mood_logs").select("mood, note, created_at").eq("user_id", user.id).order("created_at", { ascending: false }).limit(5),
     admin.from("mood_logs").select("mood, note, created_at").eq("user_id", partnerId).order("created_at", { ascending: false }).limit(5),
   ]);
@@ -130,15 +130,27 @@ export async function POST(req: NextRequest) {
     !(logs?.length) ? "No recent check-ins"
       : logs.map((l) => `- ${new Date(l.created_at).toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" })}: ${l.mood}${l.note ? ` ("${l.note}")` : ""}`).join("\n");
 
+  const LOVE_LANGUAGE_LABELS: Record<string, string> = {
+    words: "Words of Affirmation",
+    acts: "Acts of Service",
+    gifts: "Receiving Gifts",
+    time: "Quality Time",
+    touch: "Physical Touch",
+  };
+  const myLL = myProfile?.love_language ? LOVE_LANGUAGE_LABELS[myProfile.love_language] ?? myProfile.love_language : null;
+  const partnerLL = partnerProfile?.love_language ? LOVE_LANGUAGE_LABELS[partnerProfile.love_language] ?? partnerProfile.love_language : null;
+
   const systemPrompt = `You are a warm, empathetic relationship coach for a couple using Tether, a private couples app. You have context about their recent emotional check-ins.
 
 ${myName}'s recent moods:
 ${formatLogs(myLogs)}
+${myLL ? `${myName}'s love language: ${myLL}` : ""}
 
 ${partnerName}'s recent moods:
 ${formatLogs(partnerLogs)}
+${partnerLL ? `${partnerName}'s love language: ${partnerLL}` : ""}
 
-You are speaking with ${myName} right now. Be warm, personal, and concise (2-4 sentences unless more depth is genuinely needed). Never be clinical or judgmental. Focus on their relationship dynamic and emotional wellbeing.`;
+You are speaking with ${myName} right now. Be warm, personal, and concise (2-4 sentences unless more depth is genuinely needed). Never be clinical or judgmental. When relevant, consider their love languages in your advice. Focus on their relationship dynamic and emotional wellbeing.`;
 
   // Last 10 messages as conversation history
   const { data: history } = await admin

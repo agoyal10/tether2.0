@@ -204,6 +204,7 @@ export interface MoodLog {
   user_id: string;
   mood: MoodLevel;
   note: string | null;
+  gratitude: string | null;
   emoji_svg: string | null;
   is_resolved: boolean;
   created_at: string;

@@ -3,12 +3,13 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
+import { haptic } from "@/lib/haptics";
 import { MOOD_CONFIGS, NAUGHTY_MOOD_CONFIGS, LOVE_MOOD_CONFIGS, KATAKNI_CONFIG, type MoodLevel } from "@/types";
 import MoodIcon from "@/components/MoodIcon";
 import type { CheckinMode } from "@/components/NaughtyModeProvider";
 
 interface MoodScaleProps {
-  onSubmit: (mood: MoodLevel, note: string, emojiSvg?: string) => Promise<void>;
+  onSubmit: (mood: MoodLevel, note: string, emojiSvg?: string, gratitude?: string) => Promise<void>;
   isLoading?: boolean;
   naughtyMode?: boolean;
   mode?: CheckinMode;
@@ -17,6 +18,7 @@ interface MoodScaleProps {
 export default function MoodScale({ onSubmit, isLoading = false, naughtyMode = false, mode }: MoodScaleProps) {
   const [selected, setSelected] = useState<MoodLevel | null>(null);
   const [note, setNote] = useState("");
+  const [gratitude, setGratitude] = useState("");
   const [submitted, setSubmitted] = useState(false);
   const [emojiSvg, setEmojiSvg] = useState<string | null>(null);
   const [generatingEmoji, setGeneratingEmoji] = useState(false);
@@ -48,6 +50,7 @@ export default function MoodScale({ onSubmit, isLoading = false, naughtyMode = f
 
   async function generateEmoji() {
     if (!selected) return;
+    haptic(20);
     setGeneratingEmoji(true);
     try {
       const res = await fetch("/api/ai/emoji", {
@@ -68,8 +71,9 @@ export default function MoodScale({ onSubmit, isLoading = false, naughtyMode = f
 
   async function handleSubmit() {
     if (!selected) return;
+    haptic([30, 20, 60]);
     try {
-      await onSubmit(selected, note.trim(), emojiSvg ?? undefined);
+      await onSubmit(selected, note.trim(), emojiSvg ?? undefined, gratitude.trim() || undefined);
       setSubmitted(true);
     } catch {
       // parent handles error toast; stay on form so user can retry
@@ -179,7 +183,7 @@ export default function MoodScale({ onSubmit, isLoading = false, naughtyMode = f
 
       {/* Optional Note */}
       <div className="flex flex-col gap-1.5">
-        <label htmlFor="mood-note" className="text-sm font-medium text-gray-600">
+        <label htmlFor="mood-note" className="text-sm font-medium text-gray-600 dark:text-gray-300">
           Add a note{" "}
           <span className="font-normal text-gray-400">(optional)</span>
         </label>
@@ -188,9 +192,31 @@ export default function MoodScale({ onSubmit, isLoading = false, naughtyMode = f
           value={note}
           onChange={(e) => setNote(e.target.value.slice(0, 280))}
           placeholder="What's on your mind?"
-          rows={3}
+          rows={2}
           className="w-full resize-none rounded-2xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-700 placeholder:text-gray-300 focus:border-lavender focus:bg-white focus:outline-none focus:ring-2 focus:ring-lavender/30 transition-all dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100 dark:placeholder:text-gray-600 dark:focus:bg-gray-700"
         />
+      </div>
+
+      {/* Gratitude prompt — sweet mode only */}
+      {resolvedMode === "sweet" && (
+        <div className="flex flex-col gap-1.5">
+          <label htmlFor="gratitude" className="text-sm font-medium text-gray-600 dark:text-gray-300">
+            💛 One thing you appreciate about your partner{" "}
+            <span className="font-normal text-gray-400">(optional)</span>
+          </label>
+          <textarea
+            id="gratitude"
+            value={gratitude}
+            onChange={(e) => setGratitude(e.target.value.slice(0, 280))}
+            placeholder="They always make me feel…"
+            rows={2}
+            className="w-full resize-none rounded-2xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-700 placeholder:text-gray-300 focus:border-lavender focus:bg-white focus:outline-none focus:ring-2 focus:ring-lavender/30 transition-all dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100 dark:placeholder:text-gray-600 dark:focus:bg-gray-700"
+          />
+        </div>
+      )}
+
+      {/* Emoji generation */}
+      <div className="flex flex-col gap-1.5">
         <div className="flex flex-col gap-2 mt-1">
           {emojiLimitHit ? (
             <p className="text-xs text-blush-dark font-medium">Daily emoji limit reached — resets tomorrow.</p>
@@ -234,7 +260,6 @@ export default function MoodScale({ onSubmit, isLoading = false, naughtyMode = f
             </div>
           )}
         </div>
-        <span className="self-end text-xs text-gray-300">{note.length}/280</span>
       </div>
 
       {/* Submit */}

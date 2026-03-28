@@ -13,7 +13,7 @@ import type { Profile } from "@/types";
 export default function SettingsPage() {
   const router = useRouter();
   const supabase = createClient();
-  type FullProfile = Profile & { reminder_enabled: boolean; reminder_hour: number; reminder_timezone: string; is_premium: boolean; model_general: string; model_emoji: string };
+  type FullProfile = Profile & { reminder_enabled: boolean; reminder_hour: number; reminder_timezone: string; is_premium: boolean; model_general: string; model_emoji: string; love_language: string | null };
 
   const [profile, setProfile] = useState<FullProfile | null>(null);
   const [email, setEmail] = useState("");
@@ -23,6 +23,7 @@ export default function SettingsPage() {
   const [reminderEnabled, setReminderEnabled] = useState(false);
   const [savingReminder, setSavingReminder] = useState(false);
   const [savingModel, setSavingModel] = useState(false);
+  const [savingLoveLanguage, setSavingLoveLanguage] = useState(false);
 
   // Load from localStorage before first paint — skipped on server, runs sync on client
   useLayoutEffect(() => {
@@ -110,6 +111,18 @@ export default function SettingsPage() {
     localStorage.setItem("tether_profile", JSON.stringify(updated));
     toast.success("Saved!");
     setSavingModel(false);
+  }
+
+  async function saveLoveLanguage(lang: string) {
+    if (!profile) return;
+    setSavingLoveLanguage(true);
+    const newLang = profile.love_language === lang ? null : lang; // toggle off if same
+    await supabase.from("profiles").update({ love_language: newLang }).eq("id", profile.id);
+    const updated = { ...profile, love_language: newLang };
+    setProfile(updated);
+    localStorage.setItem("tether_profile", JSON.stringify(updated));
+    toast.success(newLang ? "Love language saved!" : "Cleared");
+    setSavingLoveLanguage(false);
   }
 
   async function logout() {
@@ -249,6 +262,34 @@ export default function SettingsPage() {
                     ? "bg-lavender text-white"
                     : "bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400"
                 } disabled:cursor-not-allowed disabled:opacity-60`}
+              >{label}</button>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Love Language */}
+      <section className="flex flex-col gap-3">
+        <p className="text-xs font-semibold uppercase tracking-widest text-gray-400">Love Language</p>
+        <div className="rounded-3xl bg-gray-50 dark:bg-gray-800 p-5 flex flex-col gap-3">
+          <p className="text-xs text-gray-400">Helps your AI coach give more personalised advice.</p>
+          <div className="flex flex-col gap-2">
+            {[
+              { value: "words", label: "💬 Words of Affirmation" },
+              { value: "acts", label: "🤝 Acts of Service" },
+              { value: "gifts", label: "🎁 Receiving Gifts" },
+              { value: "time", label: "⏱️ Quality Time" },
+              { value: "touch", label: "🤗 Physical Touch" },
+            ].map(({ value, label }) => (
+              <button
+                key={value}
+                onClick={() => saveLoveLanguage(value)}
+                disabled={savingLoveLanguage}
+                className={`w-full rounded-2xl py-2.5 px-4 text-sm font-medium text-left transition-all ${
+                  profile?.love_language === value
+                    ? "bg-lavender text-white"
+                    : "bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-lavender/10"
+                } disabled:opacity-60`}
               >{label}</button>
             ))}
           </div>

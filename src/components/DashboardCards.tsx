@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useState } from "react";
+import { haptic } from "@/lib/haptics";
 import { formatDistanceToNow } from "date-fns";
 import { cn } from "@/lib/utils";
 import { MOOD_CONFIGS, NAUGHTY_MOOD_CONFIGS, LOVE_MOOD_CONFIGS, KATAKNI_CONFIG, type MoodLog, type MoodConfig } from "@/types";
@@ -33,6 +34,7 @@ export function MiniCard({
   const isPartner = log.user_id !== currentUserId;
 
   async function react(emoji: string) {
+    haptic(20);
     setPickerOpen(false);
     const isToggleOff = myReaction?.emoji === emoji;
 
