@@ -860,7 +860,6 @@ export default function ChatThread({ moodLogId, currentUserId, initialMessages }
               className="flex flex-col items-center gap-1.5 rounded-2xl bg-gray-50 py-3 text-gray-500 hover:bg-lavender/10 hover:text-lavender transition-all dark:bg-gray-800 dark:text-gray-400"
             >
               <span className="text-base font-bold tracking-tight">GIF</span>
-              <span className="text-[11px] font-medium">GIF</span>
             </button>
             {/* Location */}
             <button
