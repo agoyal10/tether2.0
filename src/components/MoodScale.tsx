@@ -83,7 +83,9 @@ export default function MoodScale({ onSubmit, isLoading = false, naughtyMode = f
         animate={{ opacity: 1, scale: 1 }}
         className="flex flex-col items-center gap-4 py-10 text-center"
       >
-        {selectedConfig.image ? (
+        {emojiSvg ? (
+          <div className="h-16 w-16" dangerouslySetInnerHTML={{ __html: emojiSvg }} />
+        ) : selectedConfig.image ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img src={selectedConfig.image} alt={selectedConfig.label} className="h-16 w-16 object-contain" />
         ) : (
