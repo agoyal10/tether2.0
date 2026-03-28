@@ -197,23 +197,7 @@ export default function MoodScale({ onSubmit, isLoading = false, naughtyMode = f
         />
       </div>
 
-      {/* Gratitude prompt — sweet mode only */}
-      {resolvedMode === "sweet" && (
-        <div className="flex flex-col gap-1.5">
-          <label htmlFor="gratitude" className="text-sm font-medium text-gray-600 dark:text-gray-300">
-            💛 One thing you appreciate about your partner{" "}
-            <span className="font-normal text-gray-400">(optional)</span>
-          </label>
-          <textarea
-            id="gratitude"
-            value={gratitude}
-            onChange={(e) => setGratitude(e.target.value.slice(0, 280))}
-            placeholder="They always make me feel…"
-            rows={2}
-            className="w-full resize-none rounded-2xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-700 placeholder:text-gray-300 focus:border-lavender focus:bg-white focus:outline-none focus:ring-2 focus:ring-lavender/30 transition-all dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100 dark:placeholder:text-gray-600 dark:focus:bg-gray-700"
-          />
-        </div>
-      )}
+      {/* Gratitude prompt removed — future plan */}
 
       {/* Emoji generation */}
       <div className="flex flex-col gap-1.5">
