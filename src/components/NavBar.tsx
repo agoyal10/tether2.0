@@ -79,13 +79,13 @@ export default function NavBar() {
 
   const NAV_ICONS: Record<string, (active: boolean) => React.ReactNode> = {
     "/dashboard": (active) => (
-      <svg viewBox="0 0 24 24" className="h-6 w-6" fill={active ? "currentColor" : "none"} stroke="currentColor" strokeWidth={active ? 0 : 1.8} strokeLinecap="round" strokeLinejoin="round">
+      <svg viewBox="0 0 24 24" className="h-5 w-5" fill={active ? "currentColor" : "none"} stroke="currentColor" strokeWidth={active ? 0 : 1.8} strokeLinecap="round" strokeLinejoin="round">
         <path d="M3 9.5L12 3l9 6.5V20a1 1 0 01-1 1H5a1 1 0 01-1-1V9.5z" />
         <path d="M9 21V12h6v9" />
       </svg>
     ),
     "/checkin": (active) => (
-      <svg viewBox="0 0 24 24" className="h-6 w-6" fill={active ? "currentColor" : "none"} stroke="currentColor" strokeWidth={active ? 0 : 1.8} strokeLinecap="round" strokeLinejoin="round">
+      <svg viewBox="0 0 24 24" className="h-5 w-5" fill={active ? "currentColor" : "none"} stroke="currentColor" strokeWidth={active ? 0 : 1.8} strokeLinecap="round" strokeLinejoin="round">
         {active ? (
           <path d="M12 3C7.03 3 3 6.58 3 11c0 2.17.92 4.14 2.41 5.57L4 21l4.62-1.39C9.96 20.19 10.96 20.4 12 20.4c4.97 0 9-3.58 9-8s-4.03-8-9-8z" />
         ) : (
@@ -94,18 +94,18 @@ export default function NavBar() {
       </svg>
     ),
     "/partner": (active) => (
-      <svg viewBox="0 0 24 24" className="h-6 w-6" fill={active ? "currentColor" : "none"} stroke="currentColor" strokeWidth={active ? 0 : 1.8} strokeLinecap="round" strokeLinejoin="round">
+      <svg viewBox="0 0 24 24" className="h-5 w-5" fill={active ? "currentColor" : "none"} stroke="currentColor" strokeWidth={active ? 0 : 1.8} strokeLinecap="round" strokeLinejoin="round">
         <path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z" />
       </svg>
     ),
     "/coach": (active) => (
-      <svg viewBox="0 0 24 24" className="h-6 w-6" fill="none" stroke="currentColor" strokeWidth={active ? 2.2 : 1.8} strokeLinecap="round" strokeLinejoin="round">
+      <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth={active ? 2.2 : 1.8} strokeLinecap="round" strokeLinejoin="round">
         <circle cx="12" cy="12" r="10" />
         <path d="M12 17v-2M12 7c1.1 0 2 .9 2 2 0 .55-.22 1.05-.59 1.41l-1.24 1.26C11.45 12.1 11 13.1 11 14.5" />
       </svg>
     ),
     "/recap": (active) => (
-      <svg viewBox="0 0 24 24" className="h-6 w-6" fill="none" stroke="currentColor" strokeWidth={active ? 2.2 : 1.8} strokeLinecap="round" strokeLinejoin="round">
+      <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth={active ? 2.2 : 1.8} strokeLinecap="round" strokeLinejoin="round">
         <path d="M3 3v18h18" />
         <path d="M7 16l4-4 4 4 4-6" strokeLinecap="round" strokeLinejoin="round" />
       </svg>
@@ -122,6 +122,7 @@ export default function NavBar() {
     { href: "/dashboard", label: "Home",     badge: unread > 0, disabled: false },
     { href: "/checkin",   label: "Check-in", badge: false,      disabled: !hasPartner },
     { href: "/partner",   label: "Partner",  badge: false,      disabled: false },
+    { href: "/recap",     label: "Recap",    badge: false,      disabled: !hasPartner },
     { href: "/coach",     label: "Coach",    badge: false,      disabled: !hasPartner },
     { href: "/settings",  label: "Settings", badge: false,      disabled: false },
   ];
@@ -137,7 +138,7 @@ export default function NavBar() {
             return (
               <div
                 key={item.href}
-                className="relative flex flex-col items-center gap-0.5 rounded-2xl px-2 py-2 text-xs font-medium text-gray-300 dark:text-gray-600 cursor-not-allowed select-none"
+                className="relative flex flex-col items-center gap-0.5 rounded-2xl px-1.5 py-2 text-[10px] font-medium text-gray-300 dark:text-gray-600 cursor-not-allowed select-none"
                 title="Connect a partner first"
               >
                 <span className="opacity-40">{NAV_ICONS[item.href]?.(false)}</span>
@@ -150,7 +151,7 @@ export default function NavBar() {
               key={item.href}
               href={item.href}
               className={cn(
-                "relative flex flex-col items-center gap-0.5 rounded-2xl px-2 py-2 text-xs font-medium transition-all",
+                "relative flex flex-col items-center gap-0.5 rounded-2xl px-1.5 py-2 text-[10px] font-medium transition-all",
                 active ? "bg-lavender-light text-lavender-dark dark:bg-lavender/20 dark:text-lavender" : "text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
               )}
             >
