@@ -42,16 +42,7 @@ export async function GET(req: NextRequest) {
 
   const partnerId = conn.user_a_id === user.id ? conn.user_b_id : conn.user_a_id;
 
-  // Use Sonnet if either partner is premium+sonnet, otherwise Haiku
-  const { data: bothProfiles } = await admin
-    .from("profiles")
-    .select("is_premium, model_general")
-    .in("id", [user.id, partnerId]);
-
-  const eitherWantsSonnet = (bothProfiles ?? []).some(
-    (p) => p.is_premium && p.model_general === "sonnet"
-  );
-  const model = eitherWantsSonnet ? "claude-sonnet-4-6" : "claude-haiku-4-5-20251001";
+  const model = "claude-haiku-4-5-20251001";
 
   const [{ data: myProfile }, { data: partnerProfile }, { data: myLogs }, { data: partnerLogs }] = await Promise.all([
     admin.from("profiles").select("display_name").eq("id", user.id).single<{ display_name: string }>(),

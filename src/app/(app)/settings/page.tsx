@@ -210,11 +210,11 @@ export default function SettingsPage() {
           )}
         </div>
 
-        {/* Relationship features */}
+        {/* Coach */}
         <div className="rounded-3xl bg-gray-50 dark:bg-gray-800 p-5 flex flex-col gap-3">
           <div>
-            <p className="font-medium text-gray-800 dark:text-gray-100">Relationship features</p>
-            <p className="text-xs text-gray-400 mt-0.5">Coach · Insights · Date ideas</p>
+            <p className="font-medium text-gray-800 dark:text-gray-100">Relationship Coach</p>
+            <p className="text-xs text-gray-400 mt-0.5">AI coach conversations</p>
           </div>
           <div className="flex gap-2">
             {[{ value: "haiku", label: "Standard" }, { value: "sonnet", label: "Advanced" }].map(({ value, label }) => (
