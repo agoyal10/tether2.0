@@ -105,15 +105,9 @@ export default function NavBar() {
       </svg>
     ),
     "/coach": (active) => (
-      <svg viewBox="0 0 24 24" className="h-6 w-6" fill={active ? "currentColor" : "none"} stroke="currentColor" strokeWidth={active ? 0 : 1.8} strokeLinecap="round" strokeLinejoin="round">
-        {active ? (
-          <path d="M12 2a10 10 0 100 20A10 10 0 0012 2zm1 15h-2v-2h2v2zm2.07-7.75l-.9.92C13.45 12.9 13 13.5 13 15h-2v-.5c0-1.1.45-2.1 1.17-2.83l1.24-1.26c.37-.36.59-.86.59-1.41 0-1.1-.9-2-2-2s-2 .9-2 2H8c0-2.21 1.79-4 4-4s4 1.79 4 4c0 .88-.36 1.68-.93 2.25z" />
-        ) : (
-          <>
-            <circle cx="12" cy="12" r="10" />
-            <path d="M12 17v-2M12 7c1.1 0 2 .9 2 2 0 .55-.22 1.05-.59 1.41l-1.24 1.26C11.45 12.1 11 13.1 11 14.5" strokeLinecap="round" />
-          </>
-        )}
+      <svg viewBox="0 0 24 24" className="h-6 w-6" fill="none" stroke="currentColor" strokeWidth={active ? 2.2 : 1.8} strokeLinecap="round" strokeLinejoin="round">
+        <circle cx="12" cy="12" r="10" />
+        <path d="M12 17v-2M12 7c1.1 0 2 .9 2 2 0 .55-.22 1.05-.59 1.41l-1.24 1.26C11.45 12.1 11 13.1 11 14.5" />
       </svg>
     ),
   };
