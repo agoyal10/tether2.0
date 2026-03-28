@@ -460,34 +460,40 @@ export default function ChatThread({ moodLogId, currentUserId, initialMessages }
                 {msg.content?.startsWith("location:") ? (() => {
                   const [lat, lng] = msg.content.slice(9).split(",").map(Number);
                   const mapsUrl = `https://maps.google.com/maps?q=${lat},${lng}`;
+                  const senderName = msg.profile?.display_name;
+                  const label = isMine ? "Your location" : `${senderName}'s location`;
                   return (
                     <a href={mapsUrl} target="_blank" rel="noopener noreferrer" className="block">
                       <div className={cn("flex items-center gap-3 rounded-2xl px-4 py-3 max-w-[220px] shadow-soft", isMine ? "bg-lavender text-white" : "bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-100")}>
                         <span className="text-2xl shrink-0">📍</span>
                         <div>
-                          <p className="text-xs font-semibold">Location shared</p>
+                          <p className="text-xs font-semibold">{label}</p>
                           <p className={cn("text-[10px] mt-0.5", isMine ? "text-white/70" : "text-gray-400")}>Tap to open in Maps</p>
                         </div>
                       </div>
                     </a>
                   );
-                })() : msg.content?.startsWith("location-request:") ? (
-                  <div className={cn("rounded-2xl px-4 py-3 max-w-[220px] shadow-soft", isMine ? "bg-lavender text-white" : "bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-100")}>
-                    <div className="flex items-center gap-2 mb-2">
-                      <span className="text-xl">📍</span>
-                      <p className="text-xs font-semibold">{isMine ? "You requested their location" : "Wants to know where you are"}</p>
+                })() : msg.content?.startsWith("location-request:") ? (() => {
+                  const senderName = msg.profile?.display_name;
+                  const requestLabel = isMine ? "You requested their location" : `${senderName} wants to know your location`;
+                  return (
+                    <div className={cn("rounded-2xl px-4 py-3 max-w-[220px] shadow-soft", isMine ? "bg-lavender text-white" : "bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-100")}>
+                      <div className="flex items-center gap-2 mb-2">
+                        <span className="text-xl">📍</span>
+                        <p className="text-xs font-semibold">{requestLabel}</p>
+                      </div>
+                      {!isMine && (
+                        <button
+                          onClick={sendLocation}
+                          disabled={locating}
+                          className="w-full rounded-xl bg-lavender py-1.5 text-xs font-semibold text-white disabled:opacity-60"
+                        >
+                          {locating ? "Getting location…" : "Share my location"}
+                        </button>
+                      )}
                     </div>
-                    {!isMine && (
-                      <button
-                        onClick={sendLocation}
-                        disabled={locating}
-                        className="w-full rounded-xl bg-lavender py-1.5 text-xs font-semibold text-white disabled:opacity-60"
-                      >
-                        {locating ? "Getting location…" : "Share my location"}
-                      </button>
-                    )}
-                  </div>
-                ) : msg.content?.startsWith("giphy:") ? (
+                  );
+                })() : msg.content?.startsWith("giphy:") ? (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img src={msg.content.slice(6)} alt="GIF" className="mt-1 max-w-[200px] rounded-2xl" />
                 ) : msg.content?.startsWith("/sticker-") ? (
