@@ -223,7 +223,7 @@ export default function SettingsPage() {
                 onClick={() => saveModelGeneral(value)}
                 disabled={savingModel || !profile?.is_premium}
                 className={`flex-1 rounded-2xl py-2 text-xs font-semibold transition-all ${
-                  (profile?.model_general ?? "haiku") === value
+                  (profile?.is_premium ? (profile?.model_general ?? "haiku") : "haiku") === value
                     ? "bg-lavender text-white"
                     : "bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400"
                 } disabled:cursor-not-allowed disabled:opacity-60`}
@@ -245,7 +245,7 @@ export default function SettingsPage() {
                 onClick={() => saveModelEmoji(value)}
                 disabled={savingModel || !profile?.is_premium}
                 className={`flex-1 rounded-2xl py-2 text-xs font-semibold transition-all ${
-                  (profile?.model_emoji ?? "haiku") === value
+                  (profile?.is_premium ? (profile?.model_emoji ?? "haiku") : "haiku") === value
                     ? "bg-lavender text-white"
                     : "bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400"
                 } disabled:cursor-not-allowed disabled:opacity-60`}
