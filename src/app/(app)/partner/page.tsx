@@ -176,6 +176,24 @@ export default function PartnerPage() {
     else toast.error("Couldn't send flowers");
   }
 
+  async function saveMedia(url: string, isVideo: boolean) {
+    try {
+      const res = await fetch(url);
+      const blob = await res.blob();
+      const ext = isVideo ? "mp4" : "jpg";
+      const file = new File([blob], `tether-${Date.now()}.${ext}`, { type: blob.type });
+      if (navigator.share && navigator.canShare?.({ files: [file] })) {
+        await navigator.share({ files: [file] });
+      } else {
+        const blobUrl = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = blobUrl; a.download = file.name;
+        document.body.appendChild(a); a.click();
+        document.body.removeChild(a); URL.revokeObjectURL(blobUrl);
+      }
+    } catch { /* silent */ }
+  }
+
   async function disconnect() {
     if (!connection) return;
     await fetch("/api/push/disconnect", { method: "POST" });
@@ -197,7 +215,15 @@ export default function PartnerPage() {
             // eslint-disable-next-line @next/next/no-img-element
             <img src={lightbox.url} alt="" className="max-h-screen max-w-full object-contain" onClick={(e) => e.stopPropagation()} />
           )}
-          <button className="absolute top-4 right-4 flex h-7 w-7 items-center justify-center rounded-full bg-white/20 backdrop-blur-sm text-white text-base font-bold" onClick={() => setLightbox(null)}>×</button>
+          <div className="absolute flex items-center gap-2" style={{ top: "calc(env(safe-area-inset-top, 0px) + 12px)", right: "12px" }}>
+            <button
+              className="flex h-7 w-7 items-center justify-center rounded-full bg-white/20 backdrop-blur-sm text-white"
+              onClick={async (e) => { e.stopPropagation(); await saveMedia(lightbox.url, lightbox.isVideo); }}
+            >
+              <svg viewBox="0 0 24 24" className="h-4 w-4 fill-current"><path d="M12 16l-5-5h3V4h4v7h3l-5 5zm-7 4h14v-2H5v2z"/></svg>
+            </button>
+            <button className="flex h-7 w-7 items-center justify-center rounded-full bg-white/20 backdrop-blur-sm text-white text-base font-bold" onClick={() => setLightbox(null)}>×</button>
+          </div>
         </div>
       )}
       <h1 className="text-2xl font-bold text-gray-800 dark:text-gray-100">Partner</h1>

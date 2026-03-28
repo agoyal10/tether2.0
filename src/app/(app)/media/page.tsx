@@ -68,6 +68,24 @@ export default function MediaPage() {
     });
   }, [supabase, router]);
 
+  async function saveMedia(url: string, isVideo: boolean) {
+    try {
+      const res = await fetch(url);
+      const blob = await res.blob();
+      const ext = isVideo ? "mp4" : "jpg";
+      const file = new File([blob], `tether-${Date.now()}.${ext}`, { type: blob.type });
+      if (navigator.share && navigator.canShare?.({ files: [file] })) {
+        await navigator.share({ files: [file] });
+      } else {
+        const blobUrl = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = blobUrl; a.download = file.name;
+        document.body.appendChild(a); a.click();
+        document.body.removeChild(a); URL.revokeObjectURL(blobUrl);
+      }
+    } catch { /* silent */ }
+  }
+
   const filtered = items.filter((i) =>
     filter === "all" ? true : filter === "videos" ? i.isVideo : !i.isVideo
   );
@@ -154,15 +172,13 @@ export default function MediaPage() {
               onClick={(e) => e.stopPropagation()}
             />
           )}
-          <div className="absolute top-4 right-4 flex items-center gap-2">
-            <a
-              href={lightbox.url}
-              download
+          <div className="absolute flex items-center gap-2" style={{ top: "calc(env(safe-area-inset-top, 0px) + 12px)", right: "12px" }}>
+            <button
               className="flex h-7 w-7 items-center justify-center rounded-full bg-white/20 backdrop-blur-sm text-white"
-              onClick={(e) => e.stopPropagation()}
+              onClick={async (e) => { e.stopPropagation(); await saveMedia(lightbox.url, lightbox.isVideo); }}
             >
               <svg viewBox="0 0 24 24" className="h-4 w-4 fill-current"><path d="M12 16l-5-5h3V4h4v7h3l-5 5zm-7 4h14v-2H5v2z"/></svg>
-            </a>
+            </button>
             <button className="flex h-7 w-7 items-center justify-center rounded-full bg-white/20 backdrop-blur-sm text-white text-base font-bold" onClick={() => setLightbox(null)}>×</button>
           </div>
         </div>
