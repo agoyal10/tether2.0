@@ -7,8 +7,23 @@ const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
 
 export const metadata: Metadata = {
   title: "Tether",
-  description: "Emotional check-ins for couples",
+  description: "A private space for you and your partner — daily mood check-ins, shared chat, and relationship insights.",
   manifest: "/manifest.json",
+  metadataBase: new URL("https://tether.agoyal.dev"),
+  openGraph: {
+    title: "Tether 💞",
+    description: "A private space for you and your partner — daily mood check-ins, shared chat, and relationship insights.",
+    url: "https://tether.agoyal.dev",
+    siteName: "Tether",
+    images: [{ url: "/og-image.png", width: 1200, height: 630, alt: "Tether — for couples" }],
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Tether 💞",
+    description: "A private space for you and your partner — daily mood check-ins, shared chat, and relationship insights.",
+    images: ["/og-image.png"],
+  },
 };
 
 export const viewport: Viewport = {
