@@ -92,8 +92,9 @@ export function MiniCard({
         <p className="text-[10px] text-gray-400">{formatLastSeen(lastSeen)}</p>
       )}
 
-      {/* Reactions row */}
-      <div className="flex items-center gap-1 flex-wrap mt-0.5">
+      {/* Reactions row — only render when there's something to show */}
+      {(Object.keys(grouped).length > 0 || (isPartner && !myReaction)) && (
+      <div className="flex items-center gap-1 flex-wrap">
         {Object.entries(grouped).map(([emoji, count]) => (
           <button
             key={emoji}
@@ -131,6 +132,7 @@ export function MiniCard({
           </div>
         )}
       </div>
+      )}
     </div>
   );
 }
