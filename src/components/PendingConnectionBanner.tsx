@@ -55,7 +55,7 @@ export default function PendingConnectionBanner({ requests }: { requests: Pendin
                 <button
                   onClick={() => respond(req.id, "decline")}
                   disabled={loading !== null}
-                  className="flex-1 rounded-2xl border border-gray-200 py-2 text-xs font-semibold text-gray-500 disabled:opacity-60 transition-all dark:border-gray-700"
+                  className="flex-1 rounded-2xl border border-gray-200 py-2 text-xs font-semibold text-gray-500 dark:text-gray-300 dark:border-gray-600 disabled:opacity-60 transition-all"
                 >
                   {loading === `${req.id}-decline` ? "Declining…" : "Decline"}
                 </button>
