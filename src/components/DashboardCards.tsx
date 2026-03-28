@@ -115,7 +115,7 @@ export function MiniCard({
               onClick={() => setPickerOpen((v) => !v)}
               className="flex h-6 w-6 items-center justify-center rounded-full bg-white/40 text-sm hover:bg-white/60 transition-all"
             >
-              {myReaction ? myReaction.emoji : "+"}
+              +
             </button>
             {pickerOpen && (
               <div className="absolute bottom-8 left-0 z-10 flex gap-1 rounded-2xl bg-white dark:bg-gray-800 shadow-lg p-2 border border-gray-100 dark:border-gray-700">
