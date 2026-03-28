@@ -27,9 +27,9 @@ export function MiniCard({
   lastSeen?: string | null;
 }) {
   const config = ALL_CONFIGS.find((m) => m.level === log.mood) as MoodConfig;
-  const myReaction = optimisticReactions.find((r) => r.user_id === currentUserId);
   const [pickerOpen, setPickerOpen] = useState(false);
   const [optimisticReactions, setOptimisticReactions] = useState<Reaction[]>(reactions);
+  const myReaction = optimisticReactions.find((r) => r.user_id === currentUserId);
   const isPartner = log.user_id !== currentUserId;
 
   async function react(emoji: string) {
