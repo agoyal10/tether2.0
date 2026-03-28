@@ -18,9 +18,11 @@ interface CoachMessage {
 export default function CoachPage() {
   const router = useRouter();
   const supabase = createClient();
+
   const [messages, setMessages] = useState<CoachMessage[]>([]);
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
+  const [coachThinking, setCoachThinking] = useState(false); // either partner is waiting for coach
   const [input, setInput] = useState("");
   const [remaining, setRemaining] = useState<number | null>(null);
   const [disabled, setDisabled] = useState(false);
@@ -30,6 +32,7 @@ export default function CoachPage() {
   const [connectionId, setConnectionId] = useState<string | null>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const channelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
 
   useEffect(() => {
     fetch("/api/ai/coach")
@@ -47,24 +50,30 @@ export default function CoachPage() {
       .finally(() => setLoading(false));
   }, []);
 
-  // Real-time subscription — pick up messages sent by partner
+  // Set up realtime: postgres_changes for new messages + broadcast for coach thinking state
   useEffect(() => {
     if (!connectionId) return;
 
-    const channel = supabase
-      .channel(`coach-${connectionId}`)
+    const channel = supabase.channel(`coach-${connectionId}`);
+    channelRef.current = channel;
+
+    channel
+      // New messages inserted by either partner or the API
       .on(
         "postgres_changes",
         { event: "INSERT", schema: "public", table: "coach_messages", filter: `connection_id=eq.${connectionId}` },
         (payload) => {
           const msg = payload.new as CoachMessage;
           setMessages((prev) => {
-            // Avoid duplicates (our own optimistic messages + API response)
             if (prev.some((m) => m.id === msg.id)) return prev;
             return [...prev, msg];
           });
         }
       )
+      // Broadcast: one partner tells the other the coach is thinking
+      .on("broadcast", { event: "coach_thinking" }, ({ payload }) => {
+        setCoachThinking(payload.thinking as boolean);
+      })
       .subscribe();
 
     return () => { supabase.removeChannel(channel); };
@@ -72,26 +81,25 @@ export default function CoachPage() {
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages]);
+  }, [messages, coachThinking]);
+
+  function broadcastThinking(thinking: boolean) {
+    channelRef.current?.send({
+      type: "broadcast",
+      event: "coach_thinking",
+      payload: { thinking },
+    });
+  }
 
   async function send() {
     const text = input.trim();
-    if (!text || sending || remaining === 0) return;
+    if (!text || sending || coachThinking || remaining === 0) return;
 
     setSending(true);
+    setCoachThinking(true);
+    broadcastThinking(true);
     setInput("");
     if (textareaRef.current) textareaRef.current.style.height = "auto";
-
-    // Optimistic user message
-    const tempId = `temp-${Date.now()}`;
-    const optimistic: CoachMessage = {
-      id: tempId,
-      role: "user",
-      content: text,
-      sender_user_id: userId,
-      created_at: new Date().toISOString(),
-    };
-    setMessages((prev) => [...prev, optimistic]);
 
     try {
       const res = await fetch("/api/ai/coach", {
@@ -105,16 +113,30 @@ export default function CoachPage() {
       if (res.status === 429) { toast.error("Daily limit reached — come back tomorrow"); setRemaining(0); return; }
       if (!res.ok) throw new Error(data.error ?? "Failed");
 
-      // Real-time will pick up both the saved user msg + assistant reply.
-      // Just remove the optimistic placeholder.
-      setMessages((prev) => prev.filter((m) => m.id !== tempId));
+      // Realtime will deliver both the user message and assistant reply.
+      // If realtime isn't set up, add assistant reply manually as fallback.
+      if (data.reply) {
+        setMessages((prev) => {
+          const alreadyHasReply = prev.some((m) => m.role === "assistant" && m.content === data.reply);
+          if (alreadyHasReply) return prev;
+          return [...prev, {
+            id: `local-${Date.now()}`,
+            role: "assistant",
+            content: data.reply,
+            sender_user_id: null,
+            created_at: new Date().toISOString(),
+          }];
+        });
+      }
+
       setRemaining(data.remaining ?? 0);
     } catch {
       toast.error("Couldn't send message");
-      setMessages((prev) => prev.filter((m) => m.id !== tempId));
       setInput(text);
     } finally {
       setSending(false);
+      setCoachThinking(false);
+      broadcastThinking(false);
     }
   }
 
@@ -125,14 +147,10 @@ export default function CoachPage() {
     }
   }
 
-  function senderLabel(msg: CoachMessage): string | null {
-    if (msg.role === "assistant") return null;
-    if (msg.sender_user_id === userId) return myName;
-    return partnerName;
-  }
-
   const isMe = (msg: CoachMessage) => msg.role === "user" && msg.sender_user_id === userId;
-  const isPartner = (msg: CoachMessage) => msg.role === "user" && msg.sender_user_id !== userId;
+  const isPartnerMsg = (msg: CoachMessage) => msg.role === "user" && msg.sender_user_id !== userId;
+
+  const inputBlocked = coachThinking || sending || remaining === 0 || disabled;
 
   return (
     <div className="flex flex-col h-[calc(100dvh-8rem)]">
@@ -181,24 +199,20 @@ export default function CoachPage() {
         ) : (
           messages.map((msg) => (
             <div key={msg.id} className={`flex flex-col gap-0.5 ${isMe(msg) ? "items-end" : "items-start"}`}>
-              {/* Sender label */}
               <span className="text-[10px] text-gray-400 px-1">
-                {msg.role === "assistant" ? "Coach" : senderLabel(msg)}
+                {msg.role === "assistant" ? "Coach" : isMe(msg) ? myName : partnerName}
               </span>
-
               <div className={`flex items-end gap-2 ${isMe(msg) ? "flex-row-reverse" : "flex-row"}`}>
-                {/* Coach avatar */}
                 {msg.role === "assistant" && (
                   <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-lavender to-blush">
                     <svg viewBox="0 0 24 24" className="h-3.5 w-3.5 fill-white"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 17h-2v-2h2v2zm2.07-7.75l-.9.92C13.45 12.9 13 13.5 13 15h-2v-.5c0-1.1.45-2.1 1.17-2.83l1.24-1.26c.37-.36.59-.86.59-1.41 0-1.1-.9-2-2-2s-2 .9-2 2H8c0-2.21 1.79-4 4-4s4 1.79 4 4c0 .88-.36 1.68-.93 2.25z"/></svg>
                   </div>
                 )}
-
                 <div className={`max-w-[78%] rounded-2xl px-4 py-2.5 text-sm leading-relaxed ${
                   isMe(msg)
                     ? "bg-lavender text-white rounded-br-sm"
-                    : isPartner(msg)
-                    ? "bg-blush-light text-gray-800 dark:text-gray-800 rounded-bl-sm"
+                    : isPartnerMsg(msg)
+                    ? "bg-blush-light text-gray-800 rounded-bl-sm"
                     : "bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-100 rounded-bl-sm"
                 }`}>
                   {msg.content}
@@ -208,7 +222,8 @@ export default function CoachPage() {
           ))
         )}
 
-        {sending && (
+        {/* Coach thinking indicator — visible to both partners */}
+        {coachThinking && (
           <div className="flex flex-col items-start gap-0.5">
             <span className="text-[10px] text-gray-400 px-1">Coach</span>
             <div className="flex items-end gap-2">
@@ -232,6 +247,8 @@ export default function CoachPage() {
         <div className="shrink-0 pt-2 border-t border-gray-100 dark:border-gray-800">
           {remaining === 0 ? (
             <p className="text-center text-xs text-gray-400 py-3">Daily limit reached — come back tomorrow</p>
+          ) : coachThinking && !sending ? (
+            <p className="text-center text-xs text-gray-400 py-3">Coach is responding…</p>
           ) : (
             <div className="flex items-end gap-2">
               <textarea
@@ -245,13 +262,14 @@ export default function CoachPage() {
                   el.style.height = Math.min(el.scrollHeight, 96) + "px";
                 }}
                 placeholder="Ask your coach anything…"
+                disabled={inputBlocked}
                 rows={1}
                 style={{ resize: "none", maxHeight: "96px" }}
-                className="flex-1 rounded-2xl border border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100 px-4 py-2.5 text-sm focus:border-lavender focus:outline-none focus:ring-2 focus:ring-lavender/30 transition-all overflow-y-auto"
+                className="flex-1 rounded-2xl border border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100 px-4 py-2.5 text-sm focus:border-lavender focus:outline-none focus:ring-2 focus:ring-lavender/30 transition-all overflow-y-auto disabled:opacity-50"
               />
               <button
                 onClick={send}
-                disabled={!input.trim() || sending}
+                disabled={!input.trim() || inputBlocked}
                 className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-lavender text-white disabled:opacity-40 transition-all hover:bg-lavender-dark"
               >
                 <svg viewBox="0 0 24 24" className="h-4 w-4 fill-current">
