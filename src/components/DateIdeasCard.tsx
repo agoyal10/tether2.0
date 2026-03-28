@@ -29,7 +29,7 @@ export default function DateIdeasCard() {
     setRefreshing(false);
   }
 
-  if (loading || insufficient || !ideas) return null;
+  if (insufficient) return null;
 
   return (
     <section>
@@ -48,23 +48,27 @@ export default function DateIdeasCard() {
 
       <div className="rounded-3xl bg-gradient-to-br from-peach-light to-blush-light overflow-hidden">
         <button
-          onClick={() => setExpanded((v) => !v)}
+          onClick={() => !loading && setExpanded((v) => !v)}
           className="w-full flex items-center justify-between px-5 py-4"
         >
           <div className="flex items-center gap-2">
             <span className="text-lg">🌿</span>
             <p className="text-xs font-semibold text-peach-dark uppercase tracking-widest">For today</p>
           </div>
-          <svg
-            viewBox="0 0 24 24"
-            className={`h-4 w-4 fill-none stroke-current text-peach-dark transition-transform duration-200 ${expanded ? "rotate-180" : ""}`}
-            strokeWidth={2.5}
-          >
-            <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
-          </svg>
+          {loading ? (
+            <div className="h-3 w-16 rounded-full bg-peach/40 animate-pulse" />
+          ) : (
+            <svg
+              viewBox="0 0 24 24"
+              className={`h-4 w-4 fill-none stroke-current text-peach-dark transition-transform duration-200 ${expanded ? "rotate-180" : ""}`}
+              strokeWidth={2.5}
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+            </svg>
+          )}
         </button>
 
-        {expanded ? (
+        {expanded && ideas && (
           <div className="flex flex-col gap-2 px-5 pb-5">
             {ideas.map((idea, i) => (
               <div key={i} className="flex items-start gap-2.5">
@@ -75,7 +79,7 @@ export default function DateIdeasCard() {
               </div>
             ))}
           </div>
-        ) : null}
+        )}
       </div>
     </section>
   );

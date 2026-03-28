@@ -159,9 +159,19 @@ export default async function DashboardContent() {
       {partnerId && <DashboardRefresher partnerId={partnerId} />}
 
       {/* Greeting */}
-      <div>
-        <p className="text-sm text-gray-400">Welcome back,</p>
-        <h1 className="text-2xl font-bold text-gray-800 dark:text-gray-100">{myName} 💞</h1>
+      <div className="flex items-start justify-between">
+        <div>
+          <p className="text-sm text-gray-400">Welcome back,</p>
+          <h1 className="text-2xl font-bold text-gray-800 dark:text-gray-100">{myName} 💞</h1>
+        </div>
+        {partnerId && (
+          <Link href="/recap" className="flex items-center gap-1.5 rounded-2xl bg-lavender-light dark:bg-lavender/20 px-3 py-2 text-xs font-semibold text-lavender-dark dark:text-lavender">
+            <svg viewBox="0 0 24 24" className="h-3.5 w-3.5 fill-none stroke-current" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round">
+              <path d="M3 3v18h18" /><path d="M7 16l4-4 4 4 4-6" />
+            </svg>
+            Insights
+          </Link>
+        )}
       </div>
 
       {/* Pending connection requests */}
