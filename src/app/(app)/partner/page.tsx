@@ -51,11 +51,13 @@ export default function PartnerPage() {
   }
 
   const [profile, setProfile] = useState<Profile | null>(() => cached("tether_profile"));
-  const [partner, setPartner] = useState<Profile | null>(() => cached("tether_partner"));
-  const [connection, setConnection] = useState<Connection | null>(() => cached("tether_connection"));
+  const [partner, setPartner] = useState<Profile | null>(null);
+  const [connection, setConnection] = useState<Connection | null>(null);
+  const [pageLoading, setPageLoading] = useState(true);
   const [partnerCode, setPartnerCode] = useState("");
   const [loading, setLoading] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [requestSent, setRequestSent] = useState(false);
   const [confirmDisconnect, setConfirmDisconnect] = useState(false);
   const [mediaPreviews, setMediaPreviews] = useState<MediaPreviewItem[]>([]);
   const [mediaLoading, setMediaLoading] = useState(true);
@@ -114,6 +116,7 @@ export default function PartnerPage() {
         localStorage.removeItem("tether_partner");
         setMediaLoading(false);
       }
+      setPageLoading(false);
     });
   }, [supabase, router]);
 
@@ -157,15 +160,14 @@ export default function PartnerPage() {
 
     const [a, b] = [profile.id, found.id].sort();
     const { error } = await supabase.from("connections").upsert(
-      { user_a_id: a, user_b_id: b, status: "active" },
+      { user_a_id: a, user_b_id: b, status: "pending", requester_id: profile.id },
       { onConflict: "user_a_id,user_b_id" }
     );
 
     if (error) {
       toast.error("Could not connect. Please try again.");
     } else {
-      toast.success("Connected! 💞");
-      router.push("/dashboard");
+      setRequestSent(true);
     }
     setLoading(false);
   }
@@ -221,7 +223,18 @@ export default function PartnerPage() {
       )}
       <h1 className="text-2xl font-bold text-gray-800 dark:text-gray-100">Partner</h1>
 
-      {partner ? (
+      {pageLoading ? (
+        <div className="flex flex-col gap-4 animate-pulse">
+          <div className="h-24 rounded-3xl bg-gray-100 dark:bg-gray-800" />
+          <div className="h-12 rounded-3xl bg-gray-100 dark:bg-gray-800" />
+        </div>
+      ) : requestSent ? (
+        <div className="flex flex-col items-center gap-4 py-12 text-center">
+          <span className="text-6xl">💌</span>
+          <h2 className="text-xl font-bold text-gray-800 dark:text-gray-100">Request sent!</h2>
+          <p className="text-sm text-gray-400">Waiting for your partner to accept.<br />They&apos;ll get a notification to approve.</p>
+        </div>
+      ) : partner ? (
         <div className="flex flex-col gap-4">
           <div className="rounded-3xl bg-lavender-light p-5 flex items-center gap-4">
             <div className="flex h-14 w-14 items-center justify-center rounded-full bg-lavender text-2xl text-white font-bold shrink-0">
