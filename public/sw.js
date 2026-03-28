@@ -11,7 +11,9 @@ self.addEventListener("push", (event) => {
     self.registration.showNotification(data.title ?? "Tether", {
       body: data.body ?? "",
       icon: "/icon-192.png",
+      badge: "/badge-72.png",
       data: { url: data.url ?? "/dashboard" },
+      vibrate: [100, 50, 100],
     })
   );
 });
