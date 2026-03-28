@@ -124,13 +124,16 @@ export default function SettingsPage() {
       {/* Profile */}
       <section className="flex flex-col gap-3">
         <p className="text-xs font-semibold uppercase tracking-widest text-gray-400">Profile</p>
-        <div className="rounded-3xl bg-gray-50 dark:bg-gray-800 p-5 flex items-center gap-4">
+        <button
+          onClick={() => !editingName && setEditingName(true)}
+          className="rounded-3xl bg-gray-50 dark:bg-gray-800 p-5 flex items-center gap-4 w-full text-left active:opacity-80 transition-opacity"
+        >
           <div className="flex h-14 w-14 items-center justify-center rounded-full bg-lavender text-2xl text-white font-bold shrink-0">
             {profile?.display_name[0].toUpperCase() ?? "?"}
           </div>
           <div className="flex-1 min-w-0">
             {editingName ? (
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
                 <input
                   autoFocus
                   value={nameInput}
@@ -155,14 +158,16 @@ export default function SettingsPage() {
                 ) : (
                   <span className="text-[10px] font-semibold bg-gray-100 dark:bg-gray-700 text-gray-400 px-2 py-0.5 rounded-full shrink-0">Free</span>
                 )}
-                <button onClick={() => setEditingName(true)} className="text-xs text-lavender hover:underline shrink-0">
-                  Edit
-                </button>
               </div>
             )}
             <p className="text-sm text-gray-400 truncate mt-0.5">{email}</p>
           </div>
-        </div>
+          {!editingName && (
+            <svg viewBox="0 0 24 24" className="h-4 w-4 shrink-0 text-gray-400" fill="none" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M15.232 5.232l3.536 3.536M9 13l6.586-6.586a2 2 0 012.828 0l.172.172a2 2 0 010 2.828L12 16H9v-3z" />
+            </svg>
+          )}
+        </button>
       </section>
 
       {/* Appearance */}
