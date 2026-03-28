@@ -212,6 +212,8 @@ function MoodTrendsChart({ data }: { data: TrendsData }) {
 
 export default function RecapPage() {
   const router = useRouter();
+  const [weeklyInsight, setWeeklyInsight] = useState<string | null>(null);
+  const [weeklyInsufficient, setWeeklyInsufficient] = useState(false);
   const [insight, setInsight] = useState<string | null>(null);
   const [insightLoading, setInsightLoading] = useState(true);
   const [insufficient, setInsufficient] = useState(false);
@@ -223,21 +225,21 @@ export default function RecapPage() {
   const monthName = now.toLocaleString("en-US", { month: "long", year: "numeric" });
 
   useEffect(() => {
-    fetch("/api/ai/insights?type=monthly")
-      .then((r) => r.json())
-      .then((data) => {
-        if (data.insight) setInsight(stripMarkdown(data.insight));
-        else if (data.insufficient) setInsufficient(true);
-        else setInsightError(true);
-      })
-      .catch(() => setInsightError(true))
-      .finally(() => setInsightLoading(false));
+    Promise.all([
+      fetch("/api/ai/insights?type=weekly").then((r) => r.json()),
+      fetch("/api/ai/insights?type=monthly").then((r) => r.json()),
+      fetch("/api/mood-trends").then((r) => r.json()),
+    ]).then(([weekly, monthly, trendsData]) => {
+      if (weekly.insight) setWeeklyInsight(stripMarkdown(weekly.insight));
+      else if (weekly.insufficient) setWeeklyInsufficient(true);
 
-    fetch("/api/mood-trends")
-      .then((r) => r.json())
-      .then((data) => { if (data.myLogs) setTrends(data); })
-      .catch(() => {})
-      .finally(() => setTrendsLoading(false));
+      if (monthly.insight) setInsight(stripMarkdown(monthly.insight));
+      else if (monthly.insufficient) setInsufficient(true);
+      else setInsightError(true);
+
+      if (trendsData.myLogs) setTrends(trendsData);
+    }).catch(() => setInsightError(true))
+      .finally(() => { setInsightLoading(false); setTrendsLoading(false); });
   }, []);
 
   return (
@@ -249,10 +251,27 @@ export default function RecapPage() {
           </svg>
         </button>
         <div>
-          <h1 className="text-2xl font-bold text-gray-800 dark:text-gray-100">Monthly Recap</h1>
+          <h1 className="text-2xl font-bold text-gray-800 dark:text-gray-100">Insights</h1>
           <p className="text-sm text-gray-400">{monthName}</p>
         </div>
       </div>
+
+      {/* Weekly insight */}
+      {(weeklyInsight || weeklyInsufficient) && (
+        <section className="flex flex-col gap-2">
+          <p className="text-xs font-semibold uppercase tracking-widest text-gray-400">This Week</p>
+          <div className="rounded-3xl bg-gradient-to-br from-lavender-light to-blush-light dark:from-lavender/20 dark:to-blush/10 p-5">
+            {weeklyInsight ? (
+              <p className="text-sm leading-relaxed text-gray-700 dark:text-gray-200">{weeklyInsight}</p>
+            ) : (
+              <div className="flex items-center gap-3">
+                <span className="text-lg">📅</span>
+                <p className="text-xs text-lavender-dark/70">Keep checking in together — your weekly insight will appear here.</p>
+              </div>
+            )}
+          </div>
+        </section>
+      )}
 
       {/* Mood trends chart */}
       <section className="flex flex-col gap-2">

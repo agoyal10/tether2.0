@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Link from "next/link";
 
 export default function WeeklyInsightCard() {
   const [insight, setInsight] = useState<string | null>(null);
@@ -24,13 +23,10 @@ export default function WeeklyInsightCard() {
 
   return (
     <section>
-      <div className="flex items-center justify-between mb-3">
+      <div className="mb-3">
         <h2 className="text-xs font-semibold uppercase tracking-widest text-gray-400">
           Weekly Insight
         </h2>
-        <Link href="/recap" className="text-xs font-semibold text-lavender hover:text-lavender-dark">
-          Monthly recap →
-        </Link>
       </div>
 
       <div className="rounded-3xl bg-gradient-to-br from-lavender-light to-blush-light overflow-hidden">
