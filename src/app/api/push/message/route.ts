@@ -3,6 +3,8 @@ import webpush from "web-push";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 
+const MESSAGE_DEBOUNCE_MS = 30 * 1000; // 30 seconds
+
 export async function POST(req: NextRequest) {
   webpush.setVapidDetails(
     process.env.VAPID_SUBJECT!,
@@ -17,23 +19,29 @@ export async function POST(req: NextRequest) {
   const { moodLogId, content } = await req.json();
   const admin = createAdminClient();
 
-  // Get sender name
-  const { data: profile } = await admin
-    .from("profiles").select("display_name").eq("id", user.id).single<{ display_name: string }>();
-
-  // Get partner ID from connection
-  const { data: connection } = await admin
-    .from("connections")
-    .select("user_a_id, user_b_id")
-    .or(`user_a_id.eq.${user.id},user_b_id.eq.${user.id}`)
-    .eq("status", "active")
-    .single();
+  // Get sender name + connection (including debounce timestamp)
+  const [{ data: profile }, { data: connection }] = await Promise.all([
+    admin.from("profiles").select("display_name").eq("id", user.id).single<{ display_name: string }>(),
+    admin
+      .from("connections")
+      .select("id, user_a_id, user_b_id, last_message_push_at")
+      .or(`user_a_id.eq.${user.id},user_b_id.eq.${user.id}`)
+      .eq("status", "active")
+      .single(),
+  ]);
 
   if (!connection) return NextResponse.json({ ok: true });
 
+  // Debounce: skip push if one was sent in the last 30s (partner is likely reading already)
+  if (connection.last_message_push_at) {
+    const elapsed = Date.now() - new Date(connection.last_message_push_at).getTime();
+    if (elapsed < MESSAGE_DEBOUNCE_MS) {
+      return NextResponse.json({ ok: true, reason: "debounced" });
+    }
+  }
+
   const partnerId = connection.user_a_id === user.id ? connection.user_b_id : connection.user_a_id;
 
-  // Fetch partner's push subscriptions
   const { data: subs } = await admin
     .from("push_subscriptions")
     .select("endpoint, p256dh, auth")
@@ -60,6 +68,12 @@ export async function POST(req: NextRequest) {
   results.forEach((r, i) => {
     if (r.status === "rejected") console.error(`[push/message] sub[${i}] failed:`, r.reason);
   });
+
+  // Update debounce timestamp
+  await admin
+    .from("connections")
+    .update({ last_message_push_at: new Date().toISOString() })
+    .eq("id", connection.id);
 
   return NextResponse.json({ ok: true });
 }

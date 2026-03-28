@@ -3,6 +3,8 @@ import webpush from "web-push";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 
+const NUDGE_COOLDOWN_MS = 60 * 60 * 1000; // 1 hour
+
 export async function POST() {
   webpush.setVapidDetails(
     process.env.VAPID_SUBJECT!,
@@ -16,18 +18,30 @@ export async function POST() {
 
   const admin = createAdminClient();
 
-  // Get sender name + active connection
+  // Get sender name + active connection (including rate limit timestamp)
   const [{ data: profile }, { data: connection }] = await Promise.all([
     admin.from("profiles").select("display_name").eq("id", user.id).single(),
     admin
       .from("connections")
-      .select("user_a_id, user_b_id")
+      .select("id, user_a_id, user_b_id, last_nudge_at")
       .or(`user_a_id.eq.${user.id},user_b_id.eq.${user.id}`)
       .eq("status", "active")
       .single(),
   ]);
 
   if (!connection) return NextResponse.json({ ok: true, reason: "no connection" });
+
+  // Rate limit: 1 nudge per hour per connection
+  if (connection.last_nudge_at) {
+    const elapsed = Date.now() - new Date(connection.last_nudge_at).getTime();
+    if (elapsed < NUDGE_COOLDOWN_MS) {
+      const secondsLeft = Math.ceil((NUDGE_COOLDOWN_MS - elapsed) / 1000);
+      return NextResponse.json(
+        { error: "Too many nudges", retryAfter: secondsLeft },
+        { status: 429 }
+      );
+    }
+  }
 
   const senderName = (profile as { display_name: string } | null)?.display_name ?? "Your partner";
   const partnerId = connection.user_a_id === user.id ? connection.user_b_id : connection.user_a_id;
@@ -53,6 +67,12 @@ export async function POST() {
       )
     )
   );
+
+  // Update rate limit timestamp
+  await admin
+    .from("connections")
+    .update({ last_nudge_at: new Date().toISOString() })
+    .eq("id", connection.id);
 
   return NextResponse.json({ ok: true });
 }
