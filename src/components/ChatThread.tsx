@@ -43,6 +43,7 @@ export default function ChatThread({ moodLogId, currentUserId, initialMessages }
   const typingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const lastTypingSentRef = useRef(0);
   const pushDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [lightboxUrl, setLightboxUrl] = useState<string | null>(null);
 
   const GIPHY_KEY = process.env.NEXT_PUBLIC_GIPHY_API_KEY;
 
@@ -508,10 +509,10 @@ export default function ChatThread({ moodLogId, currentUserId, initialMessages }
       );
     }
     return (
-      <a href={url} target="_blank" rel="noopener noreferrer">
+      <button onClick={() => setLightboxUrl(url)} className="block">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img src={url} alt="Shared photo" className="mt-1 max-w-[240px] rounded-2xl object-cover" />
-      </a>
+      </button>
     );
   }
 
@@ -538,6 +539,22 @@ export default function ChatThread({ moodLogId, currentUserId, initialMessages }
 
   return (
     <div className="flex h-full flex-col">
+      {/* Lightbox */}
+      {lightboxUrl && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/90"
+          onClick={() => setLightboxUrl(null)}
+        >
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src={lightboxUrl} alt="Photo" className="max-h-full max-w-full object-contain" onClick={(e) => e.stopPropagation()} />
+          <button
+            className="absolute top-4 right-4 text-white text-3xl leading-none"
+            onClick={() => setLightboxUrl(null)}
+          >
+            ×
+          </button>
+        </div>
+      )}
       {/* Message list */}
       <div ref={scrollContainerRef} className="flex-1 overflow-y-auto px-4 py-4 space-y-3 dark:bg-gray-900">
         <AnimatePresence initial={false}>
