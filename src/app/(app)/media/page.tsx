@@ -68,22 +68,15 @@ export default function MediaPage() {
     });
   }, [supabase, router]);
 
-  async function saveMedia(url: string, isVideo: boolean) {
+  async function openForSave(url: string) {
+    const win = window.open("", "_blank");
+    if (!win) return;
+    win.document.write("<html><body style='margin:0;background:#000;display:flex;align-items:center;justify-content:center;min-height:100vh'><p style='color:white;font-family:sans-serif'>Loading…</p></body></html>");
     try {
-      const res = await fetch(url);
-      const blob = await res.blob();
-      const ext = isVideo ? "mp4" : "jpg";
-      const file = new File([blob], `tether-${Date.now()}.${ext}`, { type: blob.type });
-      if (navigator.share && navigator.canShare?.({ files: [file] })) {
-        await navigator.share({ files: [file] });
-      } else {
-        const blobUrl = URL.createObjectURL(blob);
-        const a = document.createElement("a");
-        a.href = blobUrl; a.download = file.name;
-        document.body.appendChild(a); a.click();
-        document.body.removeChild(a); URL.revokeObjectURL(blobUrl);
-      }
-    } catch { /* silent */ }
+      const blob = await fetch(url).then((r) => r.blob());
+      const blobUrl = URL.createObjectURL(blob);
+      win.location.href = blobUrl;
+    } catch { win.close(); }
   }
 
   const filtered = items.filter((i) =>
@@ -173,15 +166,12 @@ export default function MediaPage() {
             />
           )}
           <div className="absolute flex items-center gap-2" style={{ top: "calc(env(safe-area-inset-top, 0px) + 12px)", right: "12px" }}>
-            <a
-              href={lightbox.url}
-              target="_blank"
-              rel="noopener noreferrer"
+            <button
               className="flex h-7 items-center justify-center rounded-full bg-white/20 backdrop-blur-sm text-white px-2.5 text-[11px] font-semibold"
-              onClick={(e) => e.stopPropagation()}
+              onClick={(e) => { e.stopPropagation(); openForSave(lightbox.url); }}
             >
               Open
-            </a>
+            </button>
             <button className="flex h-7 w-7 items-center justify-center rounded-full bg-white/20 backdrop-blur-sm text-white text-base font-bold" onClick={() => setLightbox(null)}>×</button>
           </div>
         </div>
