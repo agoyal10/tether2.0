@@ -22,6 +22,8 @@ export default function ChatThread({ moodLogId, currentUserId, initialMessages }
   const [pendingMedia, setPendingMedia] = useState<{ path: string; type: "image" | "video" } | null>(null);
   const [showEmojis, setShowEmojis] = useState(false);
   const [showGiphy, setShowGiphy] = useState(false);
+  const [showAttachMenu, setShowAttachMenu] = useState(false);
+  const [locating, setLocating] = useState(false);
   const [giphyQuery, setGiphyQuery] = useState("");
   const [giphyResults, setGiphyResults] = useState<{ id: string; url: string; preview: string; title: string }[]>([]);
   const [giphyLoading, setGiphyLoading] = useState(false);
@@ -96,6 +98,90 @@ export default function ChatThread({ moodLogId, currentUserId, initialMessages }
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ moodLogId, content: "Sent a GIF 🎞️" }),
+    }).catch(() => {});
+  }
+
+  async function sendLocation() {
+    setShowAttachMenu(false);
+    if (!navigator.geolocation) {
+      alert("Geolocation is not supported by your browser");
+      return;
+    }
+    setLocating(true);
+    navigator.geolocation.getCurrentPosition(
+      async (pos) => {
+        setLocating(false);
+        const { latitude, longitude } = pos.coords;
+        const locContent = `location:${latitude.toFixed(6)},${longitude.toFixed(6)}`;
+
+        const optimisticId = `optimistic-${Date.now()}`;
+        const optimistic: Message = {
+          id: optimisticId,
+          mood_log_id: moodLogId,
+          sender_id: currentUserId,
+          content: locContent,
+          media_path: null,
+          created_at: new Date().toISOString(),
+        };
+        setMessages((prev) => [...prev, optimistic]);
+
+        const { data: inserted } = await supabase.from("messages").insert({
+          mood_log_id: moodLogId,
+          sender_id: currentUserId,
+          content: locContent,
+          media_path: null,
+        }).select().single();
+
+        if (inserted) {
+          setMessages((prev) => prev.map((m) => m.id === optimisticId ? { ...inserted } : m));
+          broadcastMessage(inserted);
+        }
+
+        fetch("/api/push/message", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ moodLogId, content: "Shared their location 📍" }),
+        }).catch(() => {});
+      },
+      () => {
+        setLocating(false);
+        alert("Could not get your location. Please allow location access and try again.");
+      },
+      { timeout: 10000 }
+    );
+  }
+
+  async function requestLocation() {
+    setShowAttachMenu(false);
+    const locContent = `location-request:`;
+
+    const optimisticId = `optimistic-${Date.now()}`;
+    const optimistic: Message = {
+      id: optimisticId,
+      mood_log_id: moodLogId,
+      sender_id: currentUserId,
+      content: locContent,
+      media_path: null,
+      created_at: new Date().toISOString(),
+    };
+    setMessages((prev) => [...prev, optimistic]);
+
+    const { data: inserted } = await supabase.from("messages").insert({
+      mood_log_id: moodLogId,
+      sender_id: currentUserId,
+      content: locContent,
+      media_path: null,
+    }).select().single();
+
+    if (inserted) {
+      setMessages((prev) => prev.map((m) => m.id === optimisticId ? { ...inserted } : m));
+      broadcastMessage(inserted);
+    }
+
+    fetch("/api/push/message", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ moodLogId, content: "Wants to know where you are 📍" }),
     }).catch(() => {});
   }
 
@@ -339,6 +425,20 @@ export default function ChatThread({ moodLogId, currentUserId, initialMessages }
   const isMineClass = "rounded-br-md bg-lavender text-white";
   const isTheirsClass = "rounded-bl-md bg-white text-gray-700 dark:bg-gray-800 dark:text-gray-100";
 
+  function renderTextWithLinks(text: string) {
+    const urlRegex = /(https?:\/\/[^\s<>"']+)/g;
+    const parts = text.split(urlRegex);
+    return parts.map((part, i) =>
+      i % 2 === 1 ? (
+        <a key={i} href={part} target="_blank" rel="noopener noreferrer" className="underline break-all opacity-90">
+          {part}
+        </a>
+      ) : (
+        <span key={i}>{part}</span>
+      )
+    );
+  }
+
   function isEmojiOnly(str: string) {
     return /^[\p{Emoji_Presentation}\p{Extended_Pictographic}\u{FE0F}\u{200D}\s]+$/u.test(str.trim());
   }
@@ -357,7 +457,37 @@ export default function ChatThread({ moodLogId, currentUserId, initialMessages }
                 animate={{ opacity: 1, y: 0 }}
                 className={cn("flex flex-col gap-0.5", isMine ? "items-end" : "items-start")}
               >
-                {msg.content?.startsWith("giphy:") ? (
+                {msg.content?.startsWith("location:") ? (() => {
+                  const [lat, lng] = msg.content.slice(9).split(",").map(Number);
+                  const mapsUrl = `https://maps.google.com/maps?q=${lat},${lng}`;
+                  return (
+                    <a href={mapsUrl} target="_blank" rel="noopener noreferrer" className="block">
+                      <div className={cn("flex items-center gap-3 rounded-2xl px-4 py-3 max-w-[220px] shadow-soft", isMine ? "bg-lavender text-white" : "bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-100")}>
+                        <span className="text-2xl shrink-0">📍</span>
+                        <div>
+                          <p className="text-xs font-semibold">Location shared</p>
+                          <p className={cn("text-[10px] mt-0.5", isMine ? "text-white/70" : "text-gray-400")}>Tap to open in Maps</p>
+                        </div>
+                      </div>
+                    </a>
+                  );
+                })() : msg.content?.startsWith("location-request:") ? (
+                  <div className={cn("rounded-2xl px-4 py-3 max-w-[220px] shadow-soft", isMine ? "bg-lavender text-white" : "bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-100")}>
+                    <div className="flex items-center gap-2 mb-2">
+                      <span className="text-xl">📍</span>
+                      <p className="text-xs font-semibold">{isMine ? "You requested their location" : "Wants to know where you are"}</p>
+                    </div>
+                    {!isMine && (
+                      <button
+                        onClick={sendLocation}
+                        disabled={locating}
+                        className="w-full rounded-xl bg-lavender py-1.5 text-xs font-semibold text-white disabled:opacity-60"
+                      >
+                        {locating ? "Getting location…" : "Share my location"}
+                      </button>
+                    )}
+                  </div>
+                ) : msg.content?.startsWith("giphy:") ? (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img src={msg.content.slice(6)} alt="GIF" className="mt-1 max-w-[200px] rounded-2xl" />
                 ) : msg.content?.startsWith("/sticker-") ? (
@@ -375,7 +505,7 @@ export default function ChatThread({ moodLogId, currentUserId, initialMessages }
                         <span className="text-4xl leading-none">{msg.content}</span>
                       ) : (
                         <div className={cn("max-w-[78%] break-words rounded-3xl px-4 py-2.5 text-sm leading-relaxed shadow-soft", isMine ? isMineClass : isTheirsClass)}>
-                          {msg.content}
+                          {renderTextWithLinks(msg.content)}
                         </div>
                       )
                     )}
@@ -533,6 +663,69 @@ export default function ChatThread({ moodLogId, currentUserId, initialMessages }
         </div>
       )}
 
+      {/* Attach tray (photo / GIF / location) */}
+      {showAttachMenu && (
+        <div className="border-t border-gray-100 bg-white px-4 py-3 dark:border-gray-800 dark:bg-gray-900">
+          <div className="grid grid-cols-3 gap-2">
+            {/* Photo */}
+            <button
+              onMouseDown={(e) => e.preventDefault()}
+              onClick={() => { setShowAttachMenu(false); fileInputRef.current?.click(); }}
+              disabled={uploading}
+              className="flex flex-col items-center gap-1.5 rounded-2xl bg-gray-50 py-3 text-gray-500 hover:bg-lavender/10 hover:text-lavender transition-all dark:bg-gray-800 dark:text-gray-400 disabled:opacity-40"
+            >
+              {uploading ? (
+                <svg className="h-5 w-5 animate-spin" viewBox="0 0 24 24" fill="none">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
+                </svg>
+              ) : (
+                <svg viewBox="0 0 24 24" className="h-5 w-5 fill-current">
+                  <path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/>
+                </svg>
+              )}
+              <span className="text-[11px] font-medium">Photo</span>
+            </button>
+            {/* GIF */}
+            <button
+              onMouseDown={(e) => e.preventDefault()}
+              onClick={() => { setShowAttachMenu(false); setShowGiphy(true); setShowEmojis(false); }}
+              className="flex flex-col items-center gap-1.5 rounded-2xl bg-gray-50 py-3 text-gray-500 hover:bg-lavender/10 hover:text-lavender transition-all dark:bg-gray-800 dark:text-gray-400"
+            >
+              <span className="text-lg font-bold tracking-tight">GIF</span>
+              <span className="text-[11px] font-medium">GIF</span>
+            </button>
+            {/* Location */}
+            <button
+              onMouseDown={(e) => e.preventDefault()}
+              onClick={sendLocation}
+              disabled={locating}
+              className="flex flex-col items-center gap-1.5 rounded-2xl bg-gray-50 py-3 text-gray-500 hover:bg-lavender/10 hover:text-lavender transition-all dark:bg-gray-800 dark:text-gray-400 disabled:opacity-40"
+            >
+              {locating ? (
+                <svg className="h-5 w-5 animate-spin" viewBox="0 0 24 24" fill="none">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
+                </svg>
+              ) : (
+                <svg viewBox="0 0 24 24" className="h-5 w-5 fill-current">
+                  <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
+                </svg>
+              )}
+              <span className="text-[11px] font-medium">{locating ? "Locating…" : "Location"}</span>
+            </button>
+          </div>
+          {/* Request location — subtle link below grid */}
+          <button
+            onMouseDown={(e) => e.preventDefault()}
+            onClick={requestLocation}
+            className="mt-2 w-full text-center text-[11px] text-gray-400 hover:text-lavender transition-colors"
+          >
+            Ask for their location instead →
+          </button>
+        </div>
+      )}
+
       {/* Input bar */}
       <div className="border-t border-gray-100 bg-white px-4 py-3 dark:border-gray-800 dark:bg-gray-900">
         <div className="flex items-center gap-2 rounded-3xl border border-gray-200 bg-gray-50 px-3 py-2 focus-within:border-lavender focus-within:bg-white transition-all dark:border-gray-700 dark:bg-gray-800 dark:focus-within:bg-gray-700">
@@ -543,34 +736,18 @@ export default function ChatThread({ moodLogId, currentUserId, initialMessages }
             className="hidden"
             onChange={handleFileSelect}
           />
+          {/* + button — opens attach tray */}
           <button
-            onClick={() => fileInputRef.current?.click()}
-            disabled={uploading}
-            aria-label="Attach media"
-            className="flex h-7 w-7 shrink-0 items-center justify-center text-gray-400 hover:text-lavender transition-all disabled:opacity-40"
+            onMouseDown={(e) => e.preventDefault()}
+            onClick={() => { setShowAttachMenu((v) => !v); setShowEmojis(false); setShowGiphy(false); }}
+            aria-label="Attach"
+            className={cn("flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-lg font-light transition-all", showAttachMenu ? "bg-lavender text-white" : "text-gray-400 hover:text-lavender")}
           >
-            {uploading ? (
-              <svg className="h-4 w-4 animate-spin" viewBox="0 0 24 24" fill="none">
-                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
-              </svg>
-            ) : (
-              <svg viewBox="0 0 24 24" className="h-5 w-5 fill-current">
-                <path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/>
-              </svg>
-            )}
+            {showAttachMenu ? "×" : "+"}
           </button>
           <button
             onMouseDown={(e) => e.preventDefault()}
-            onClick={() => { setShowGiphy((v) => !v); setShowEmojis(false); }}
-            aria-label="GIF"
-            className={cn("flex h-7 w-7 shrink-0 items-center justify-center rounded text-[10px] font-bold tracking-tight transition-all border", showGiphy ? "border-lavender bg-lavender text-white" : "border-gray-300 text-gray-400 hover:border-lavender hover:text-lavender dark:border-gray-600")}
-          >
-            GIF
-          </button>
-          <button
-            onMouseDown={(e) => e.preventDefault()}
-            onClick={() => { setShowEmojis((v) => !v); setShowGiphy(false); }}
+            onClick={() => { setShowEmojis((v) => !v); setShowGiphy(false); setShowAttachMenu(false); }}
             aria-label="Emoji"
             className="flex h-7 w-7 shrink-0 items-center justify-center text-gray-400 hover:text-lavender transition-all"
           >
@@ -584,6 +761,7 @@ export default function ChatThread({ moodLogId, currentUserId, initialMessages }
             onChange={(e) => {
               setContent(e.target.value);
               setShowEmojis(false);
+              setShowAttachMenu(false);
               // Broadcast typing — throttle to once per second
               const now = Date.now();
               if (channelRef.current && now - lastTypingSentRef.current > 1000) {
