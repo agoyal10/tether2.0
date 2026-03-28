@@ -6,6 +6,7 @@ import { getCachedProfile } from "@/lib/profile-cache";
 import DashboardRefresher from "@/components/DashboardRefresher";
 import { MiniCard, HistoryChip } from "@/components/DashboardCards";
 import PendingConnectionBanner from "@/components/PendingConnectionBanner";
+import WeeklyInsightCard from "@/components/WeeklyInsightCard";
 import type { MoodLog } from "@/types";
 
 export default async function DashboardContent() {
@@ -171,6 +172,9 @@ export default async function DashboardContent() {
             </div>
 
           </section>
+
+          {/* ── Weekly AI Insight ── */}
+          <WeeklyInsightCard />
 
           {/* ── History strips ── */}
           {(partnerLogs.length > 1 || myLogs.length > 1) && (
