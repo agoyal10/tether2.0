@@ -548,7 +548,7 @@ export default function ChatThread({ moodLogId, currentUserId, initialMessages }
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src={lightboxUrl} alt="Photo" className="max-h-full max-w-full object-contain" onClick={(e) => e.stopPropagation()} />
           <button
-            className="absolute top-4 right-4 text-white text-3xl leading-none"
+            className="absolute top-4 right-4 flex h-9 w-9 items-center justify-center rounded-full bg-white/20 backdrop-blur-sm text-white text-xl font-bold"
             onClick={() => setLightboxUrl(null)}
           >
             ×
