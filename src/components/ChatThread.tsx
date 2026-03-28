@@ -37,6 +37,7 @@ export default function ChatThread({ moodLogId, currentUserId, initialMessages }
   const channelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
   const typingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const lastTypingSentRef = useRef(0);
+  const pushDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const GIPHY_KEY = process.env.NEXT_PUBLIC_GIPHY_API_KEY;
 
@@ -94,11 +95,14 @@ export default function ChatThread({ moodLogId, currentUserId, initialMessages }
       broadcastMessage(inserted);
     }
 
-    fetch("/api/push/message", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ moodLogId, content: "Sent a GIF 🎞️" }),
-    }).catch(() => {});
+    if (pushDebounceRef.current) clearTimeout(pushDebounceRef.current);
+    pushDebounceRef.current = setTimeout(() => {
+      fetch("/api/push/message", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ moodLogId, content: "Sent a GIF 🎞️" }),
+      }).catch(() => {});
+    }, 2000);
   }
 
   async function sendLocation() {
@@ -137,11 +141,14 @@ export default function ChatThread({ moodLogId, currentUserId, initialMessages }
           broadcastMessage(inserted);
         }
 
-        fetch("/api/push/message", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ moodLogId, content: "Shared their location 📍" }),
-        }).catch(() => {});
+        if (pushDebounceRef.current) clearTimeout(pushDebounceRef.current);
+        pushDebounceRef.current = setTimeout(() => {
+          fetch("/api/push/message", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ moodLogId, content: "Shared their location 📍" }),
+          }).catch(() => {});
+        }, 2000);
       },
       () => {
         setLocating(false);
@@ -178,11 +185,14 @@ export default function ChatThread({ moodLogId, currentUserId, initialMessages }
       broadcastMessage(inserted);
     }
 
-    fetch("/api/push/message", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ moodLogId, content: "Wants to know where you are 📍" }),
-    }).catch(() => {});
+    if (pushDebounceRef.current) clearTimeout(pushDebounceRef.current);
+    pushDebounceRef.current = setTimeout(() => {
+      fetch("/api/push/message", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ moodLogId, content: "Wants to know where you are 📍" }),
+      }).catch(() => {});
+    }, 2000);
   }
 
   const EMOJIS =["❤️","💞","😘","🥰","😍","💋","🔥","💦","😈","🫦","🥵","💫","✨","🌹","💌","🫶","😊","😂","🤣","😭","🙈","💀","🫠","😏","🤭","😉","🧋","💯","👀","🤤"];
@@ -375,11 +385,15 @@ export default function ChatThread({ moodLogId, currentUserId, initialMessages }
     }
 
     const notifContent = trimmed || (media?.type === "video" ? "Sent a video 🎥" : "Sent a photo 📷");
-    fetch("/api/push/message", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ moodLogId, content: notifContent }),
-    }).catch(() => {});
+    // Debounce push: wait 2s after last message before notifying partner
+    if (pushDebounceRef.current) clearTimeout(pushDebounceRef.current);
+    pushDebounceRef.current = setTimeout(() => {
+      fetch("/api/push/message", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ moodLogId, content: notifContent }),
+      }).catch(() => {});
+    }, 2000);
 
     setSending(false);
   }
