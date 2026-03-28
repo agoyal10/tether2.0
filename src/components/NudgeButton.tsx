@@ -15,8 +15,11 @@ export default function NudgeButton({ partnerName }: { partnerName: string }) {
     if (res.ok) {
       setSent(true);
       toast.success(`Nudged ${partnerName}!`);
-      // Reset after 5 minutes so they can nudge again
       setTimeout(() => setSent(false), 5 * 60 * 1000);
+    } else if (res.status === 429) {
+      const { retryAfter } = await res.json();
+      const mins = Math.ceil(retryAfter / 60);
+      toast.error(`Already nudged recently — try again in ${mins} minute${mins === 1 ? "" : "s"}`);
     } else {
       toast.error("Couldn't send nudge");
     }
