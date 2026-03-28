@@ -216,12 +216,15 @@ export default function PartnerPage() {
             <img src={lightbox.url} alt="" className="max-h-screen max-w-full object-contain" onClick={(e) => e.stopPropagation()} />
           )}
           <div className="absolute flex items-center gap-2" style={{ top: "calc(env(safe-area-inset-top, 0px) + 12px)", right: "12px" }}>
-            <button
-              className="flex h-7 w-7 items-center justify-center rounded-full bg-white/20 backdrop-blur-sm text-white"
-              onClick={async (e) => { e.stopPropagation(); await saveMedia(lightbox.url, lightbox.isVideo); }}
+            <a
+              href={lightbox.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex h-7 items-center justify-center rounded-full bg-white/20 backdrop-blur-sm text-white px-2.5 text-[11px] font-semibold"
+              onClick={(e) => e.stopPropagation()}
             >
-              <svg viewBox="0 0 24 24" className="h-4 w-4 fill-current"><path d="M12 16l-5-5h3V4h4v7h3l-5 5zm-7 4h14v-2H5v2z"/></svg>
-            </button>
+              Open
+            </a>
             <button className="flex h-7 w-7 items-center justify-center rounded-full bg-white/20 backdrop-blur-sm text-white text-base font-bold" onClick={() => setLightbox(null)}>×</button>
           </div>
         </div>

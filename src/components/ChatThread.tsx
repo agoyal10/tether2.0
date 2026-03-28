@@ -547,12 +547,20 @@ export default function ChatThread({ moodLogId, currentUserId, initialMessages }
         >
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src={lightboxUrl} alt="Photo" className="max-h-full max-w-full object-contain" onClick={(e) => e.stopPropagation()} />
-          <button
-            className="absolute top-4 right-4 flex h-7 w-7 items-center justify-center rounded-full bg-white/20 backdrop-blur-sm text-white text-base font-bold"
-            onClick={() => setLightboxUrl(null)}
-          >
-            ×
-          </button>
+          <div className="absolute flex items-center gap-2" style={{ top: "calc(env(safe-area-inset-top, 0px) + 12px)", right: "12px" }}>
+            <a
+              href={lightboxUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex h-7 items-center justify-center rounded-full bg-white/20 backdrop-blur-sm text-white px-2.5 text-[11px] font-semibold"
+              onClick={(e) => e.stopPropagation()}
+            >Open</a>
+            <button
+              className="flex h-7 w-7 items-center justify-center rounded-full bg-white/20 backdrop-blur-sm text-white text-base font-bold"
+              onClick={() => setLightboxUrl(null)}
+            >×
+            </button>
+          </div>
         </div>
       )}
       {/* Message list */}
