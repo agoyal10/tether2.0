@@ -48,9 +48,9 @@ export async function POST(req: NextRequest) {
     { onConflict: "user_id,date" }
   );
 
-  // Non-premium always uses sonnet for emoji (it's the default locked value)
-  const modelPref = profile?.model_emoji ?? "sonnet";
-  const model = modelPref === "sonnet" ? "claude-sonnet-4-6" : "claude-haiku-4-5-20251001";
+  // Haiku by default; Sonnet only if premium and explicitly opted in
+  const modelPref = profile?.model_emoji ?? "haiku";
+  const model = (isPremium && modelPref === "sonnet") ? "claude-sonnet-4-6" : "claude-haiku-4-5-20251001";
 
   const prompt = `Create a tiny, expressive SVG emoji (64x64 viewBox) that captures this mood: "${mood}"${note ? ` — note: "${note}"` : ""}.
 

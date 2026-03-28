@@ -240,7 +240,7 @@ export default function SettingsPage() {
                 onClick={() => saveModelEmoji(value)}
                 disabled={savingModel || !profile?.is_premium}
                 className={`flex-1 rounded-2xl py-2 text-xs font-semibold transition-all ${
-                  (profile?.model_emoji ?? "sonnet") === value
+                  (profile?.model_emoji ?? "haiku") === value
                     ? "bg-lavender text-white"
                     : "bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400"
                 } disabled:cursor-not-allowed disabled:opacity-60`}
