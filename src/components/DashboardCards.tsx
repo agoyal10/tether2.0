@@ -39,7 +39,9 @@ export function MiniCard({
         )}
       </div>
       <div className="flex items-center gap-2">
-        {config.image ? (
+        {log.emoji_svg ? (
+          <div className="h-8 w-8 shrink-0" dangerouslySetInnerHTML={{ __html: log.emoji_svg }} />
+        ) : config.image ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img src={config.image} alt={config.label} className="h-8 w-8 object-contain" />
         ) : (
@@ -78,7 +80,9 @@ export function HistoryChip({ log, unread = 0 }: { log: MoodLog; unread?: number
           {unread}
         </span>
       )}
-      {config.image ? (
+      {log.emoji_svg ? (
+        <div className="h-7 w-7 shrink-0" dangerouslySetInnerHTML={{ __html: log.emoji_svg }} />
+      ) : config.image ? (
         // eslint-disable-next-line @next/next/no-img-element
         <img src={config.image} alt={config.label} className="h-7 w-7 object-contain" />
       ) : (
