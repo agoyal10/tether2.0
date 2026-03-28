@@ -67,6 +67,16 @@ export async function GET(req: NextRequest) {
   const periodStart = getPeriodStart(type);
   const partnerId = conn.user_a_id === user.id ? conn.user_b_id : conn.user_a_id;
 
+  const { data: userProfile } = await admin
+    .from("profiles")
+    .select("model_general, is_premium")
+    .eq("id", user.id)
+    .single<{ model_general: string; is_premium: boolean }>();
+
+  const model = (userProfile?.is_premium && userProfile?.model_general === "sonnet")
+    ? "claude-sonnet-4-6"
+    : "claude-haiku-4-5-20251001";
+
   const [{ data: myLogs }, { data: partnerLogs }, { data: myProfile }, { data: partnerProfile }] = await Promise.all([
     admin.from("mood_logs").select("mood, note, created_at").eq("user_id", user.id).gte("created_at", periodStart.toISOString()).order("created_at"),
     admin.from("mood_logs").select("mood, note, created_at").eq("user_id", partnerId).gte("created_at", periodStart.toISOString()).order("created_at"),
@@ -107,7 +117,7 @@ ${formatLogs(partnerLogs)}
 Write a monthly recap addressed to both of them. Don't use headers or bullet points, just warm flowing text.`;
 
   const message = await anthropic.messages.create({
-    model: "claude-haiku-4-5-20251001",
+    model,
     max_tokens: 300,
     messages: [{ role: "user", content: prompt }],
   });

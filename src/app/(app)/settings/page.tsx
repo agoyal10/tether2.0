@@ -13,7 +13,7 @@ import type { Profile } from "@/types";
 export default function SettingsPage() {
   const router = useRouter();
   const supabase = createClient();
-  type FullProfile = Profile & { reminder_enabled: boolean; reminder_hour: number; reminder_timezone: string };
+  type FullProfile = Profile & { reminder_enabled: boolean; reminder_hour: number; reminder_timezone: string; is_premium: boolean; model_general: string; model_emoji: string };
 
   const [profile, setProfile] = useState<FullProfile | null>(null);
   const [email, setEmail] = useState("");
@@ -22,6 +22,7 @@ export default function SettingsPage() {
   const [savingName, setSavingName] = useState(false);
   const [reminderEnabled, setReminderEnabled] = useState(false);
   const [savingReminder, setSavingReminder] = useState(false);
+  const [savingModel, setSavingModel] = useState(false);
 
   // Load from localStorage before first paint — skipped on server, runs sync on client
   useLayoutEffect(() => {
@@ -87,6 +88,28 @@ export default function SettingsPage() {
       toast.success(enabled ? "Reminder on!" : "Reminder off");
     }
     setSavingReminder(false);
+  }
+
+  async function saveModelGeneral(model: string) {
+    if (!profile || !profile.is_premium) return;
+    setSavingModel(true);
+    await supabase.from("profiles").update({ model_general: model }).eq("id", profile.id);
+    const updated = { ...profile, model_general: model };
+    setProfile(updated);
+    localStorage.setItem("tether_profile", JSON.stringify(updated));
+    toast.success("Saved!");
+    setSavingModel(false);
+  }
+
+  async function saveModelEmoji(model: string) {
+    if (!profile || !profile.is_premium) return;
+    setSavingModel(true);
+    await supabase.from("profiles").update({ model_emoji: model }).eq("id", profile.id);
+    const updated = { ...profile, model_emoji: model };
+    setProfile(updated);
+    localStorage.setItem("tether_profile", JSON.stringify(updated));
+    toast.success("Saved!");
+    setSavingModel(false);
   }
 
   async function logout() {
@@ -165,6 +188,60 @@ export default function SettingsPage() {
               reminderEnabled ? "translate-x-6" : "translate-x-1"
             }`} />
           </button>
+        </div>
+      </section>
+
+      {/* AI Models */}
+      <section className="flex flex-col gap-3">
+        <div className="flex items-center gap-2">
+          <p className="text-xs font-semibold uppercase tracking-widest text-gray-400">AI Models</p>
+          {!profile?.is_premium && (
+            <span className="text-[10px] font-semibold bg-lavender/20 text-lavender px-2 py-0.5 rounded-full">Premium to change</span>
+          )}
+        </div>
+
+        {/* Relationship features */}
+        <div className="rounded-3xl bg-gray-50 dark:bg-gray-800 p-5 flex flex-col gap-3">
+          <div>
+            <p className="font-medium text-gray-800 dark:text-gray-100">Relationship features</p>
+            <p className="text-xs text-gray-400 mt-0.5">Coach · Insights · Date ideas</p>
+          </div>
+          <div className="flex gap-2">
+            {[{ value: "haiku", label: "Standard" }, { value: "sonnet", label: "Advanced" }].map(({ value, label }) => (
+              <button
+                key={value}
+                onClick={() => saveModelGeneral(value)}
+                disabled={savingModel || !profile?.is_premium}
+                className={`flex-1 rounded-2xl py-2 text-xs font-semibold transition-all ${
+                  (profile?.model_general ?? "haiku") === value
+                    ? "bg-lavender text-white"
+                    : "bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400"
+                } disabled:cursor-not-allowed disabled:opacity-60`}
+              >{label}</button>
+            ))}
+          </div>
+        </div>
+
+        {/* Emoji generation */}
+        <div className="rounded-3xl bg-gray-50 dark:bg-gray-800 p-5 flex flex-col gap-3">
+          <div>
+            <p className="font-medium text-gray-800 dark:text-gray-100">Emoji generation</p>
+            <p className="text-xs text-gray-400 mt-0.5">Check-in illustrations</p>
+          </div>
+          <div className="flex gap-2">
+            {[{ value: "haiku", label: "Standard" }, { value: "sonnet", label: "Advanced" }].map(({ value, label }) => (
+              <button
+                key={value}
+                onClick={() => saveModelEmoji(value)}
+                disabled={savingModel || !profile?.is_premium}
+                className={`flex-1 rounded-2xl py-2 text-xs font-semibold transition-all ${
+                  (profile?.model_emoji ?? "sonnet") === value
+                    ? "bg-lavender text-white"
+                    : "bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400"
+                } disabled:cursor-not-allowed disabled:opacity-60`}
+              >{label}</button>
+            ))}
+          </div>
         </div>
       </section>
 

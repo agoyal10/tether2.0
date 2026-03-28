@@ -42,6 +42,16 @@ export async function GET(req: NextRequest) {
 
   const partnerId = conn.user_a_id === user.id ? conn.user_b_id : conn.user_a_id;
 
+  const { data: userProfile } = await admin
+    .from("profiles")
+    .select("model_general, is_premium")
+    .eq("id", user.id)
+    .single<{ model_general: string; is_premium: boolean }>();
+
+  const model = (userProfile?.is_premium && userProfile?.model_general === "sonnet")
+    ? "claude-sonnet-4-6"
+    : "claude-haiku-4-5-20251001";
+
   const [{ data: myProfile }, { data: partnerProfile }, { data: myLogs }, { data: partnerLogs }] = await Promise.all([
     admin.from("profiles").select("display_name").eq("id", user.id).single<{ display_name: string }>(),
     admin.from("profiles").select("display_name").eq("id", partnerId).single<{ display_name: string }>(),
@@ -63,7 +73,7 @@ Respond with a JSON array of exactly 3 strings, nothing else. Example format:
 ["idea one", "idea two", "idea three"]`;
 
   const message = await anthropic.messages.create({
-    model: "claude-haiku-4-5-20251001",
+    model,
     max_tokens: 200,
     messages: [{ role: "user", content: prompt }],
   });

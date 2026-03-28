@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { MOOD_CONFIGS, NAUGHTY_MOOD_CONFIGS, LOVE_MOOD_CONFIGS, KATAKNI_CONFIG, type MoodLevel } from "@/types";
@@ -8,7 +8,7 @@ import MoodIcon from "@/components/MoodIcon";
 import type { CheckinMode } from "@/components/NaughtyModeProvider";
 
 interface MoodScaleProps {
-  onSubmit: (mood: MoodLevel, note: string) => Promise<void>;
+  onSubmit: (mood: MoodLevel, note: string, emojiSvg?: string) => Promise<void>;
   isLoading?: boolean;
   naughtyMode?: boolean;
   mode?: CheckinMode;
@@ -18,6 +18,8 @@ export default function MoodScale({ onSubmit, isLoading = false, naughtyMode = f
   const [selected, setSelected] = useState<MoodLevel | null>(null);
   const [note, setNote] = useState("");
   const [submitted, setSubmitted] = useState(false);
+  const [emojiSvg, setEmojiSvg] = useState<string | null>(null);
+  const [generatingEmoji, setGeneratingEmoji] = useState(false);
 
   const resolvedMode = mode ?? (naughtyMode ? "naughty" : "sweet");
   const configs =
@@ -35,10 +37,30 @@ export default function MoodScale({ onSubmit, isLoading = false, naughtyMode = f
     setSelected(null);
   }
 
+  // Reset emoji when mood selection changes
+  useEffect(() => {
+    setEmojiSvg(null);
+  }, [selected]);
+
+  async function generateEmoji() {
+    if (!selected) return;
+    setGeneratingEmoji(true);
+    try {
+      const res = await fetch("/api/ai/emoji", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ mood: selected, note: note.trim() || undefined }),
+      });
+      const data = await res.json();
+      if (data.svg) setEmojiSvg(data.svg);
+    } catch {}
+    setGeneratingEmoji(false);
+  }
+
   async function handleSubmit() {
     if (!selected) return;
     try {
-      await onSubmit(selected, note.trim());
+      await onSubmit(selected, note.trim(), emojiSvg ?? undefined);
       setSubmitted(true);
     } catch {
       // parent handles error toast; stay on form so user can retry
@@ -158,6 +180,32 @@ export default function MoodScale({ onSubmit, isLoading = false, naughtyMode = f
           rows={3}
           className="w-full resize-none rounded-2xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-700 placeholder:text-gray-300 focus:border-lavender focus:bg-white focus:outline-none focus:ring-2 focus:ring-lavender/30 transition-all dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100 dark:placeholder:text-gray-600 dark:focus:bg-gray-700"
         />
+        <div className="flex items-center gap-2 mt-1">
+          <button
+            type="button"
+            onClick={generateEmoji}
+            disabled={!selected || generatingEmoji}
+            className="flex items-center gap-1.5 rounded-2xl bg-lavender/10 px-3 py-1.5 text-xs font-semibold text-lavender hover:bg-lavender/20 disabled:opacity-40 transition-all"
+          >
+            {generatingEmoji ? (
+              <svg className="h-3.5 w-3.5 animate-spin" viewBox="0 0 24 24" fill="none">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"/>
+              </svg>
+            ) : "✨"}
+            {generatingEmoji ? "Generating…" : "Generate emoji"}
+          </button>
+          {emojiSvg && (
+            <div className="flex items-center gap-1.5">
+              <div className="h-8 w-8" dangerouslySetInnerHTML={{ __html: emojiSvg }} />
+              <button
+                type="button"
+                onClick={() => setEmojiSvg(null)}
+                className="text-gray-300 hover:text-gray-500 text-sm leading-none"
+              >×</button>
+            </div>
+          )}
+        </div>
         <span className="self-end text-xs text-gray-300">{note.length}/280</span>
       </div>
 

@@ -104,6 +104,16 @@ export async function POST(req: NextRequest) {
 
   const partnerId = conn.user_a_id === user.id ? conn.user_b_id : conn.user_a_id;
 
+  const { data: userProfile } = await admin
+    .from("profiles")
+    .select("model_general, is_premium")
+    .eq("id", user.id)
+    .single<{ model_general: string; is_premium: boolean }>();
+
+  const model = (userProfile?.is_premium && userProfile?.model_general === "sonnet")
+    ? "claude-sonnet-4-6"
+    : "claude-haiku-4-5-20251001";
+
   // Fetch context in parallel
   const [{ data: myProfile }, { data: partnerProfile }, { data: myLogs }, { data: partnerLogs }] = await Promise.all([
     admin.from("profiles").select("display_name").eq("id", user.id).single<{ display_name: string }>(),
@@ -150,9 +160,9 @@ You are speaking with ${myName} right now. Be warm, personal, and concise (2-4 s
     content: message.trim(),
   });
 
-  // Call Claude Haiku
+  // Call Claude
   const response = await anthropic.messages.create({
-    model: "claude-haiku-4-5-20251001",
+    model,
     max_tokens: 400,
     system: systemPrompt,
     messages: [
