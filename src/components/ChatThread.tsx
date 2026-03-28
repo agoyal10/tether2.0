@@ -399,6 +399,7 @@ export default function ChatThread({ moodLogId, currentUserId, initialMessages }
     const file = e.target.files?.[0];
     if (!file) return;
     e.target.value = "";
+    setShowAttachMenu(false);
 
     setUploading(true);
     const formData = new FormData();
@@ -834,12 +835,10 @@ export default function ChatThread({ moodLogId, currentUserId, initialMessages }
       {showAttachMenu && (
         <div className="border-t border-gray-100 bg-white px-4 py-3 dark:border-gray-800 dark:bg-gray-900">
           <div className="grid grid-cols-4 gap-2">
-            {/* Photo */}
-            <button
-              onMouseDown={(e) => e.preventDefault()}
-              onClick={() => { setShowAttachMenu(false); fileInputRef.current?.click(); }}
-              disabled={uploading}
-              className="flex flex-col items-center gap-1.5 rounded-2xl bg-gray-50 py-3 text-gray-500 hover:bg-lavender/10 hover:text-lavender transition-all dark:bg-gray-800 dark:text-gray-400 disabled:opacity-40"
+            {/* Photo — use label so iOS doesn't block the file picker */}
+            <label
+              htmlFor="chat-file-input"
+              className={`flex flex-col items-center gap-1.5 rounded-2xl bg-gray-50 py-3 text-gray-500 hover:bg-lavender/10 hover:text-lavender transition-all dark:bg-gray-800 dark:text-gray-400 cursor-pointer ${uploading ? "opacity-40 pointer-events-none" : ""}`}
             >
               {uploading ? (
                 <svg className="h-5 w-5 animate-spin" viewBox="0 0 24 24" fill="none">
@@ -852,7 +851,7 @@ export default function ChatThread({ moodLogId, currentUserId, initialMessages }
                 </svg>
               )}
               <span className="text-[11px] font-medium">Photo</span>
-            </button>
+            </label>
             {/* GIF */}
             <button
               onMouseDown={(e) => e.preventDefault()}
@@ -970,6 +969,7 @@ export default function ChatThread({ moodLogId, currentUserId, initialMessages }
         <div className="flex items-center gap-2 rounded-3xl border border-gray-200 bg-gray-50 px-3 py-2 focus-within:border-lavender focus-within:bg-white transition-all dark:border-gray-700 dark:bg-gray-800 dark:focus-within:bg-gray-700">
           <input
             ref={fileInputRef}
+            id="chat-file-input"
             type="file"
             accept="image/*,video/*"
             className="hidden"
