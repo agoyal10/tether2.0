@@ -48,6 +48,7 @@ export async function GET(req: NextRequest) {
     );
 
     const data = await res.json();
+    if (!res.ok) throw new Error(data.error?.message ?? `Spotify error ${res.status}`);
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const tracks = (data.tracks?.items ?? []).map((t: any) => ({
       id: t.id,
