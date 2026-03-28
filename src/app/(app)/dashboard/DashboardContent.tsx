@@ -80,10 +80,6 @@ export default async function DashboardContent() {
     }
   }
 
-  // Fetch logs (extra for streak calc), partner last_seen, reads, messages in parallel
-  const since90 = new Date();
-  since90.setDate(since90.getDate() - 90);
-
   const [partnerLogsResult, myLogsResult, partnerProfileResult] = await Promise.all([
     partnerId && connection
       ? admin
@@ -92,7 +88,7 @@ export default async function DashboardContent() {
           .eq("user_id", partnerId)
           .gte("created_at", connection.created_at)
           .order("created_at", { ascending: false })
-          .limit(60)
+          .limit(6)
       : Promise.resolve({ data: [] as MoodLog[], error: null }),
     supabase
       .from("mood_logs")
@@ -100,7 +96,7 @@ export default async function DashboardContent() {
       .eq("user_id", user.id)
       .gte("created_at", connection?.created_at ?? new Date(0).toISOString())
       .order("created_at", { ascending: false })
-      .limit(60),
+      .limit(6),
     partnerId
       ? admin.from("profiles").select("display_name, last_seen_at").eq("id", partnerId).single<{ display_name: string; last_seen_at: string | null }>()
       : Promise.resolve({ data: null, error: null }),
@@ -109,11 +105,9 @@ export default async function DashboardContent() {
   const partnerLogs = (partnerLogsResult.data ?? []) as MoodLog[];
   const myLogs = (myLogsResult.data ?? []) as MoodLog[];
 
-  const streak = partnerId ? computeStreak(myLogs, partnerLogs) : 0;
-
-  // Only pass last 6 to display cards
-  const partnerLogsDisplay = partnerLogs.slice(0, 6);
-  const myLogsDisplay = myLogs.slice(0, 6);
+  // streak kept for future — computeStreak(myLogs, partnerLogs)
+  const partnerLogsDisplay = partnerLogs;
+  const myLogsDisplay = myLogs;
 
   const allLogIds = [...partnerLogsDisplay, ...myLogsDisplay].map((l) => l.id);
   const safeLogIds = allLogIds.length > 0 ? allLogIds : ["none"];
