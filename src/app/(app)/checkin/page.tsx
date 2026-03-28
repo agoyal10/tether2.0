@@ -90,6 +90,9 @@ export default function CheckinPage() {
       body: JSON.stringify({ moodLogId: log.id }),
     }).catch(() => {});
 
+    // Pre-warm date ideas cache so dashboard loads instantly (fire-and-forget)
+    fetch("/api/ai/date-ideas").catch(() => {});
+
     const successMsg =
       mode === "naughty" ? "Sent! They'll know 😈" :
       mode === "love" ? "Love sent! 💕" :
