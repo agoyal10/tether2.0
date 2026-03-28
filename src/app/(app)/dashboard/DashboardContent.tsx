@@ -8,7 +8,6 @@ import ConnectionRequestWatcher from "@/components/ConnectionRequestWatcher";
 import LastSeenUpdater from "@/components/LastSeenUpdater";
 import { MiniCard, HistoryChip } from "@/components/DashboardCards";
 import PendingConnectionBanner from "@/components/PendingConnectionBanner";
-import WeeklyInsightCard from "@/components/WeeklyInsightCard";
 import DateIdeasCard from "@/components/DateIdeasCard";
 import type { MoodLog, Reaction } from "@/types";
 
@@ -233,9 +232,6 @@ export default async function DashboardContent() {
               )}
             </div>
           </section>
-
-          {/* ── Weekly AI Insight ── */}
-          <WeeklyInsightCard />
 
           {/* ── Date Ideas ── */}
           <DateIdeasCard />
