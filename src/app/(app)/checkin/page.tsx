@@ -213,9 +213,10 @@ export default function CheckinPage() {
         ) : (
           <button
             onClick={() => setShowSongPicker(true)}
-            className="w-full rounded-3xl border border-dashed border-gray-200 dark:border-gray-700 py-3 text-sm text-gray-400 hover:border-lavender hover:text-lavender transition-all"
+            className="w-full rounded-3xl border border-dashed border-gray-200 dark:border-gray-700 py-3 text-sm text-gray-400 hover:border-lavender hover:text-lavender transition-all flex items-center justify-center gap-2"
           >
-            🎵 Add a song
+            <svg viewBox="0 0 24 24" className="h-4 w-4 fill-current"><path d="M12 3v10.55A4 4 0 1 0 14 17V7h4V3h-6Z"/></svg>
+            Add a song
           </button>
         )}
       </div>
