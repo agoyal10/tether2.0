@@ -193,7 +193,7 @@ export default async function DashboardContent() {
             <h2 className="mb-3 text-xs font-semibold uppercase tracking-widest text-gray-400">
               Latest Check-ins
             </h2>
-            <div className="grid grid-cols-2 gap-3 pt-3 px-1">
+            <div className="grid grid-cols-2 gap-3 pt-3 px-1 items-start">
               {partnerLogs[0] ? (
                 <MiniCard
                   log={partnerLogsDisplay[0]}
