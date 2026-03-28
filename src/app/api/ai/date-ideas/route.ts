@@ -11,23 +11,22 @@ export async function GET(req: NextRequest) {
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const admin = createAdminClient();
+  const periodKey = new Date().toISOString().slice(0, 10); // YYYY-MM-DD
 
-  // Kill switch
-  const { data: configRow } = await admin.from("app_config").select("value").eq("key", "ai_date_ideas_enabled").single();
+  // Parallel: kill switch + connection
+  const [{ data: configRow }, { data: conn }] = await Promise.all([
+    admin.from("app_config").select("value").eq("key", "ai_date_ideas_enabled").single(),
+    admin.from("connections")
+      .select("id, user_a_id, user_b_id")
+      .or(`user_a_id.eq.${user.id},user_b_id.eq.${user.id}`)
+      .eq("status", "active")
+      .single(),
+  ]);
+
   if (configRow?.value !== "true") {
     return NextResponse.json({ error: "Feature unavailable", disabled: true }, { status: 503 });
   }
-
-  const { data: conn } = await admin
-    .from("connections")
-    .select("id, user_a_id, user_b_id")
-    .or(`user_a_id.eq.${user.id},user_b_id.eq.${user.id}`)
-    .eq("status", "active")
-    .single();
-
   if (!conn) return NextResponse.json({ error: "No active connection" }, { status: 404 });
-
-  const periodKey = new Date().toISOString().slice(0, 10); // YYYY-MM-DD
 
   // Return cached if exists
   const { data: cached } = await admin
