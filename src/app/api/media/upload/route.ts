@@ -77,7 +77,11 @@ export async function POST(req: NextRequest) {
 
   // Use detected type for content-type, not browser-reported
   const isImage = detectedType === "image";
-  const ext = file.name.split(".").pop()?.toLowerCase() ?? (isImage ? "jpg" : "mp4");
+  const ALLOWED_IMAGE_EXTS = new Set(["jpg","jpeg","png","gif","webp","heic","heif"]);
+  const ALLOWED_VIDEO_EXTS = new Set(["mp4","mov","webm"]);
+  const rawExt = file.name.split(".").pop()?.toLowerCase() ?? "";
+  const allowedExts = isImage ? ALLOWED_IMAGE_EXTS : ALLOWED_VIDEO_EXTS;
+  const ext = allowedExts.has(rawExt) ? rawExt : (isImage ? "jpg" : "mp4");
   const path = `${user.id}/${Date.now()}.${ext}`;
 
   const admin = createAdminClient();

@@ -66,8 +66,9 @@ export async function POST(req: NextRequest) {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-  const { message } = await req.json() as { message: string };
-  if (!message?.trim()) return NextResponse.json({ error: "Empty message" }, { status: 400 });
+  const body = await req.json() as { message: string };
+  const message = typeof body.message === "string" ? body.message.slice(0, 2000) : "";
+  if (!message.trim()) return NextResponse.json({ error: "Empty message" }, { status: 400 });
 
   const admin = createAdminClient();
 

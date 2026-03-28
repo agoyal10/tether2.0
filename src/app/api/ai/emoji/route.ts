@@ -13,8 +13,11 @@ export async function POST(req: NextRequest) {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-  const { mood, note } = await req.json() as { mood: string; note?: string };
-  if (!mood) return NextResponse.json({ error: "Mood required" }, { status: 400 });
+  const VALID_MOODS = new Set(["thriving","good","okay","low","struggling","on_fire","teasing","longing","katakni","devoted","adoring","smitten"]);
+  const body = await req.json() as { mood: string; note?: string };
+  const mood = typeof body.mood === "string" ? body.mood.slice(0, 50) : "";
+  const note = typeof body.note === "string" ? body.note.slice(0, 200) : undefined;
+  if (!mood || !VALID_MOODS.has(mood)) return NextResponse.json({ error: "Invalid mood" }, { status: 400 });
 
   const admin = createAdminClient();
   const { data: profile } = await admin
