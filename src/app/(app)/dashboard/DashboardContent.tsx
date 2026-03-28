@@ -5,11 +5,38 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { getCachedProfile } from "@/lib/profile-cache";
 import DashboardRefresher from "@/components/DashboardRefresher";
 import ConnectionRequestWatcher from "@/components/ConnectionRequestWatcher";
+import LastSeenUpdater from "@/components/LastSeenUpdater";
 import { MiniCard, HistoryChip } from "@/components/DashboardCards";
 import PendingConnectionBanner from "@/components/PendingConnectionBanner";
 import WeeklyInsightCard from "@/components/WeeklyInsightCard";
 import DateIdeasCard from "@/components/DateIdeasCard";
-import type { MoodLog } from "@/types";
+import type { MoodLog, Reaction } from "@/types";
+
+function computeStreak(
+  myLogs: { created_at: string }[],
+  partnerLogs: { created_at: string }[]
+): number {
+  const myDates = new Set(myLogs.map((l) => l.created_at.slice(0, 10)));
+  const partnerDates = new Set(partnerLogs.map((l) => l.created_at.slice(0, 10)));
+  const today = new Date().toISOString().slice(0, 10);
+  const checkFrom = new Date();
+  // If today isn't complete for both, start counting from yesterday
+  if (!myDates.has(today) || !partnerDates.has(today)) {
+    checkFrom.setDate(checkFrom.getDate() - 1);
+  }
+  let streak = 0;
+  for (let i = 0; i < 90; i++) {
+    const d = new Date(checkFrom);
+    d.setDate(d.getDate() - i);
+    const dateStr = d.toISOString().slice(0, 10);
+    if (myDates.has(dateStr) && partnerDates.has(dateStr)) {
+      streak++;
+    } else {
+      break;
+    }
+  }
+  return streak;
+}
 
 export default async function DashboardContent() {
   const supabase = await createClient();
@@ -24,7 +51,6 @@ export default async function DashboardContent() {
       .or(`user_a_id.eq.${user.id},user_b_id.eq.${user.id}`)
       .eq("status", "active")
       .maybeSingle(),
-    // Pending connections where current user is the inviter (not the requester)
     supabase.from("connections")
       .select("id, requester_id")
       .or(`user_a_id.eq.${user.id},user_b_id.eq.${user.id}`)
@@ -54,8 +80,11 @@ export default async function DashboardContent() {
     }
   }
 
-  // Fetch partner logs and own logs in parallel
-  const [partnerLogsResult, myLogsResult] = await Promise.all([
+  // Fetch logs (extra for streak calc), partner last_seen, reads, messages in parallel
+  const since90 = new Date();
+  since90.setDate(since90.getDate() - 90);
+
+  const [partnerLogsResult, myLogsResult, partnerProfileResult] = await Promise.all([
     partnerId && connection
       ? admin
           .from("mood_logs")
@@ -63,7 +92,7 @@ export default async function DashboardContent() {
           .eq("user_id", partnerId)
           .gte("created_at", connection.created_at)
           .order("created_at", { ascending: false })
-          .limit(6)
+          .limit(60)
       : Promise.resolve({ data: [] as MoodLog[], error: null }),
     supabase
       .from("mood_logs")
@@ -71,17 +100,25 @@ export default async function DashboardContent() {
       .eq("user_id", user.id)
       .gte("created_at", connection?.created_at ?? new Date(0).toISOString())
       .order("created_at", { ascending: false })
-      .limit(6),
+      .limit(60),
+    partnerId
+      ? admin.from("profiles").select("display_name, last_seen_at").eq("id", partnerId).single<{ display_name: string; last_seen_at: string | null }>()
+      : Promise.resolve({ data: null, error: null }),
   ]);
 
   const partnerLogs = (partnerLogsResult.data ?? []) as MoodLog[];
   const myLogs = (myLogsResult.data ?? []) as MoodLog[];
 
-  // Fetch reads and messages in parallel
-  const allLogIds = [...partnerLogs, ...myLogs].map((l) => l.id);
+  const streak = partnerId ? computeStreak(myLogs, partnerLogs) : 0;
+
+  // Only pass last 6 to display cards
+  const partnerLogsDisplay = partnerLogs.slice(0, 6);
+  const myLogsDisplay = myLogs.slice(0, 6);
+
+  const allLogIds = [...partnerLogsDisplay, ...myLogsDisplay].map((l) => l.id);
   const safeLogIds = allLogIds.length > 0 ? allLogIds : ["none"];
 
-  const [{ data: reads }, { data: allMessages }] = await Promise.all([
+  const [{ data: reads }, { data: allMessages }, { data: allReactions }] = await Promise.all([
     supabase
       .from("chat_reads")
       .select("mood_log_id, last_read_at")
@@ -90,6 +127,10 @@ export default async function DashboardContent() {
     supabase
       .from("messages")
       .select("mood_log_id, sender_id, created_at")
+      .in("mood_log_id", safeLogIds),
+    supabase
+      .from("reactions")
+      .select("*")
       .in("mood_log_id", safeLogIds),
   ]);
 
@@ -106,27 +147,43 @@ export default async function DashboardContent() {
     unreadCounts[mood_log_id] = (unreadCounts[mood_log_id] ?? 0) + 1;
   });
 
-  const partnerName = partnerLogs[0]?.profile?.display_name ?? "Partner";
+  // Group reactions by mood_log_id
+  const reactionsByLog: Record<string, Reaction[]> = {};
+  (allReactions ?? []).forEach((r: Reaction) => {
+    if (!reactionsByLog[r.mood_log_id]) reactionsByLog[r.mood_log_id] = [];
+    reactionsByLog[r.mood_log_id].push(r);
+  });
+
+  const partnerName = partnerProfileResult.data?.display_name ?? partnerLogs[0]?.profile?.display_name ?? "Partner";
+  const partnerLastSeen = partnerProfileResult.data?.last_seen_at ?? null;
   const myName = profile?.display_name ?? "You";
 
   return (
     <>
+      <LastSeenUpdater userId={user.id} />
       <ConnectionRequestWatcher userId={user.id} />
       {partnerId && <DashboardRefresher partnerId={partnerId} />}
 
       {/* Greeting */}
-      <div>
-        <p className="text-sm text-gray-400">Welcome back,</p>
-        <h1 className="text-2xl font-bold text-gray-800">{myName} 💞</h1>
+      <div className="flex items-start justify-between">
+        <div>
+          <p className="text-sm text-gray-400">Welcome back,</p>
+          <h1 className="text-2xl font-bold text-gray-800 dark:text-gray-100">{myName} 💞</h1>
+        </div>
+        {streak > 0 && (
+          <div className="flex flex-col items-center rounded-2xl bg-orange-50 dark:bg-orange-950/30 px-3 py-2 shrink-0">
+            <span className="text-xl">🔥</span>
+            <span className="text-xs font-bold text-orange-500">{streak}d</span>
+          </div>
+        )}
       </div>
 
-      {/* Pending connection requests (shown to the inviter) */}
+      {/* Pending connection requests */}
       {pendingRequests.length > 0 && (
         <PendingConnectionBanner requests={pendingRequests} />
       )}
 
       {!connection ? (
-        /* No partner yet */
         <div className="rounded-3xl border-2 border-dashed border-lavender-light bg-lavender-light/40 p-6 text-center">
           <span className="text-3xl">💌</span>
           <p className="mt-2 text-sm font-medium text-lavender-dark">No partner connected yet</p>
@@ -142,26 +199,32 @@ export default async function DashboardContent() {
               Latest Check-ins
             </h2>
             <div className="grid grid-cols-2 gap-3 pt-3 px-1">
-              {/* Partner */}
               {partnerLogs[0] ? (
                 <MiniCard
-                  log={partnerLogs[0]}
+                  log={partnerLogsDisplay[0]}
                   label={partnerName}
-                  unread={unreadCounts[partnerLogs[0].id] ?? 0}
+                  unread={unreadCounts[partnerLogsDisplay[0].id] ?? 0}
+                  reactions={reactionsByLog[partnerLogsDisplay[0].id] ?? []}
+                  currentUserId={user.id}
+                  lastSeen={partnerLastSeen}
                 />
               ) : (
-                <div className="flex flex-col items-center justify-center gap-2 rounded-3xl border-2 border-dashed border-gray-100 p-4 text-center">
+                <div className="flex flex-col items-center justify-center gap-2 rounded-3xl border-2 border-dashed border-gray-100 dark:border-gray-800 p-4 text-center">
                   <span className="text-2xl">💤</span>
                   <p className="text-xs text-gray-400">No check-in yet</p>
+                  {partnerLastSeen && (
+                    <p className="text-[10px] text-gray-300">{formatLastSeen(partnerLastSeen)}</p>
+                  )}
                 </div>
               )}
 
-              {/* Mine */}
-              {myLogs[0] ? (
+              {myLogsDisplay[0] ? (
                 <MiniCard
-                  log={myLogs[0]}
+                  log={myLogsDisplay[0]}
                   label="You"
-                  unread={unreadCounts[myLogs[0].id] ?? 0}
+                  unread={unreadCounts[myLogsDisplay[0].id] ?? 0}
+                  reactions={reactionsByLog[myLogsDisplay[0].id] ?? []}
+                  currentUserId={user.id}
                 />
               ) : (
                 <Link
@@ -173,7 +236,6 @@ export default async function DashboardContent() {
                 </Link>
               )}
             </div>
-
           </section>
 
           {/* ── Weekly AI Insight ── */}
@@ -183,29 +245,27 @@ export default async function DashboardContent() {
           <DateIdeasCard />
 
           {/* ── History strips ── */}
-          {(partnerLogs.length > 1 || myLogs.length > 1) && (
+          {(partnerLogsDisplay.length > 1 || myLogsDisplay.length > 1) && (
             <section>
               <h2 className="mb-3 text-xs font-semibold uppercase tracking-widest text-gray-400">
                 Recent History
               </h2>
               <div className="flex flex-col gap-3">
-                {/* Partner history */}
-                {partnerLogs.length > 1 && (
+                {partnerLogsDisplay.length > 1 && (
                   <div>
                     <p className="mb-2 text-xs text-gray-400">{partnerName}</p>
                     <div className="flex gap-2 overflow-x-auto pb-1 no-scrollbar">
-                      {partnerLogs.slice(1).map((log) => (
+                      {partnerLogsDisplay.slice(1).map((log) => (
                         <HistoryChip key={log.id} log={log} unread={unreadCounts[log.id] ?? 0} />
                       ))}
                     </div>
                   </div>
                 )}
-                {/* My history */}
-                {myLogs.length > 1 && (
+                {myLogsDisplay.length > 1 && (
                   <div>
                     <p className="mb-2 text-xs text-gray-400">You</p>
                     <div className="flex gap-2 overflow-x-auto pb-1 no-scrollbar">
-                      {myLogs.slice(1).map((log) => (
+                      {myLogsDisplay.slice(1).map((log) => (
                         <HistoryChip key={log.id} log={log} unread={unreadCounts[log.id] ?? 0} />
                       ))}
                     </div>
@@ -218,4 +278,15 @@ export default async function DashboardContent() {
       )}
     </>
   );
+}
+
+function formatLastSeen(lastSeen: string): string {
+  const diff = Date.now() - new Date(lastSeen).getTime();
+  const mins = Math.floor(diff / 60000);
+  if (mins < 2) return "Active just now";
+  if (mins < 60) return `Active ${mins}m ago`;
+  const hrs = Math.floor(mins / 60);
+  if (hrs < 24) return `Active ${hrs}h ago`;
+  const days = Math.floor(hrs / 24);
+  return `Active ${days}d ago`;
 }

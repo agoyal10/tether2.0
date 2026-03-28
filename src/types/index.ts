@@ -178,8 +178,17 @@ export interface Profile {
   display_name: string;
   avatar_url: string | null;
   invite_code: string;
+  last_seen_at: string | null;
   created_at: string;
   updated_at: string;
+}
+
+export interface Reaction {
+  id: string;
+  mood_log_id: string;
+  user_id: string;
+  emoji: string;
+  created_at: string;
 }
 
 export interface Connection {
