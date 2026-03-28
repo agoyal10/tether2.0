@@ -97,7 +97,7 @@ ${formatLogs(myLogs)}
 ${partnerName}'s check-ins:
 ${formatLogs(partnerLogs)}
 
-Write a short insight addressed to both of them. Don't use headers or bullet points, just warm flowing text.`
+Write a short insight addressed to both of them. No markdown, no headers, no bullet points, no asterisks — just warm flowing sentences.`
     : `You are a warm, insightful relationship assistant. Create a heartfelt monthly recap for this couple based on their mood check-ins. Include: overall mood trends, their best moments, any patterns you notice, and an encouraging note for the next month. Keep it to 4-5 sentences, warm and personal.
 
 ${myName}'s check-ins this month:
@@ -106,7 +106,7 @@ ${formatLogs(myLogs)}
 ${partnerName}'s check-ins this month:
 ${formatLogs(partnerLogs)}
 
-Write a monthly recap addressed to both of them. Don't use headers or bullet points, just warm flowing text.`;
+Write a monthly recap addressed to both of them. No markdown, no headers, no bullet points, no asterisks — just warm flowing sentences.`;
 
   const message = await anthropic.messages.create({
     model,
