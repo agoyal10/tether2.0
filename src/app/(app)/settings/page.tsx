@@ -3,7 +3,7 @@
 export const dynamic = "force-dynamic";
 
 import { useEffect, useLayoutEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import toast from "react-hot-toast";
 import { createClient } from "@/lib/supabase/client";
 import { revalidateProfileCache } from "@/lib/actions";
@@ -12,7 +12,18 @@ import type { Profile } from "@/types";
 
 export default function SettingsPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const supabase = createClient();
+
+  useEffect(() => {
+    if (searchParams.get("upgraded") === "1") {
+      toast.success("Welcome to Premium! 🎉");
+      router.replace("/settings");
+    }
+    if (searchParams.get("cancelled") === "1") {
+      router.replace("/settings");
+    }
+  }, [searchParams, router]);
   type FullProfile = Profile & { reminder_enabled: boolean; reminder_hour: number; reminder_timezone: string; is_premium: boolean; model_general: string; model_emoji: string; love_language: string | null };
 
   const [profile, setProfile] = useState<FullProfile | null>(null);
@@ -24,6 +35,8 @@ export default function SettingsPage() {
   const [savingReminder, setSavingReminder] = useState(false);
   const [savingModel, setSavingModel] = useState(false);
   const [savingLoveLanguage, setSavingLoveLanguage] = useState(false);
+  const [upgradingPremium, setUpgradingPremium] = useState(false);
+  const [managingBilling, setManagingBilling] = useState(false);
 
   // Load from localStorage before first paint — skipped on server, runs sync on client
   useLayoutEffect(() => {
@@ -123,6 +136,30 @@ export default function SettingsPage() {
     localStorage.setItem("tether_profile", JSON.stringify(updated));
     toast.success(newLang ? "Love language saved!" : "Cleared");
     setSavingLoveLanguage(false);
+  }
+
+  async function upgradeToPremium() {
+    setUpgradingPremium(true);
+    try {
+      const res = await fetch("/api/stripe/checkout", { method: "POST" });
+      const { url } = await res.json();
+      if (url) window.location.href = url;
+    } catch {
+      toast.error("Something went wrong. Try again.");
+    }
+    setUpgradingPremium(false);
+  }
+
+  async function manageBilling() {
+    setManagingBilling(true);
+    try {
+      const res = await fetch("/api/stripe/portal", { method: "POST" });
+      const { url } = await res.json();
+      if (url) window.location.href = url;
+    } catch {
+      toast.error("Something went wrong. Try again.");
+    }
+    setManagingBilling(false);
   }
 
   async function logout() {
@@ -294,6 +331,54 @@ export default function SettingsPage() {
             ))}
           </div>
         </div>
+      </section>
+
+      {/* Premium */}
+      <section className="flex flex-col gap-3">
+        <p className="text-xs font-semibold uppercase tracking-widest text-gray-400">Premium</p>
+        {profile?.is_premium ? (
+          <div className="rounded-3xl bg-gradient-to-br from-lavender-light to-blush-light p-5 flex flex-col gap-3">
+            <div className="flex items-center gap-2">
+              <span className="text-xl">✨</span>
+              <div>
+                <p className="font-semibold text-lavender-dark">You&apos;re on Premium</p>
+                <p className="text-xs text-gray-500 mt-0.5">Advanced AI coach · More emoji generations</p>
+              </div>
+            </div>
+            <button
+              onClick={manageBilling}
+              disabled={managingBilling}
+              className="w-full rounded-2xl border border-lavender/40 py-2.5 text-sm font-medium text-lavender-dark hover:bg-white/50 transition-all disabled:opacity-60"
+            >
+              {managingBilling ? "Loading…" : "Manage subscription"}
+            </button>
+          </div>
+        ) : (
+          <div className="rounded-3xl bg-gradient-to-br from-lavender to-blush-dark p-5 flex flex-col gap-4">
+            <div>
+              <p className="font-bold text-white text-lg">Upgrade to Premium</p>
+              <p className="text-sm text-white/80 mt-1">Unlock the full Tether experience</p>
+            </div>
+            <ul className="flex flex-col gap-1.5">
+              {[
+                "Advanced AI relationship coach (Sonnet)",
+                "20 custom emoji generations per day",
+                "Priority support",
+              ].map((f) => (
+                <li key={f} className="flex items-center gap-2 text-sm text-white/90">
+                  <span className="text-white">✓</span> {f}
+                </li>
+              ))}
+            </ul>
+            <button
+              onClick={upgradeToPremium}
+              disabled={upgradingPremium}
+              className="w-full rounded-2xl bg-white py-3 text-sm font-bold text-lavender-dark hover:bg-white/90 transition-all disabled:opacity-60"
+            >
+              {upgradingPremium ? "Loading…" : "Upgrade — $4.99 / month"}
+            </button>
+          </div>
+        )}
       </section>
 
       {/* Account */}
