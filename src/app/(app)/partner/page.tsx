@@ -58,6 +58,7 @@ export default function PartnerPage() {
   const [copied, setCopied] = useState(false);
   const [confirmDisconnect, setConfirmDisconnect] = useState(false);
   const [mediaPreviews, setMediaPreviews] = useState<MediaPreviewItem[]>([]);
+  const [mediaLoading, setMediaLoading] = useState(true);
 
   useEffect(() => {
     supabase.auth.getUser().then(async ({ data: { user } }) => {
@@ -106,9 +107,11 @@ export default function PartnerPage() {
             }))
           );
         }
+        setMediaLoading(false);
       } else {
         localStorage.removeItem("tether_connection");
         localStorage.removeItem("tether_partner");
+        setMediaLoading(false);
       }
     });
   }, [supabase, router]);
@@ -208,12 +211,20 @@ export default function PartnerPage() {
 
           <NudgePartnerButton partnerName={partner.display_name} />
 
-          {mediaPreviews.length > 0 && (
-            <div className="flex flex-col gap-2">
-              <div className="flex items-center justify-between">
-                <p className="text-xs font-semibold uppercase tracking-widest text-gray-400">Shared Media</p>
+          <div className="flex flex-col gap-2">
+            <div className="flex items-center justify-between">
+              <p className="text-xs font-semibold uppercase tracking-widest text-gray-400">Shared Media</p>
+              {!mediaLoading && mediaPreviews.length > 0 && (
                 <Link href="/media" className="text-xs font-semibold text-lavender hover:text-lavender-dark">See all →</Link>
+              )}
+            </div>
+            {mediaLoading ? (
+              <div className="grid grid-cols-3 gap-1">
+                {Array.from({ length: 9 }).map((_, i) => (
+                  <div key={i} className="aspect-square rounded-xl bg-gray-100 dark:bg-gray-800 animate-pulse" />
+                ))}
               </div>
+            ) : mediaPreviews.length > 0 ? (
               <div className="grid grid-cols-3 gap-1">
                 {mediaPreviews.map((item) => (
                   <Link key={item.id} href="/media" className="relative aspect-square overflow-hidden rounded-xl bg-gray-100 dark:bg-gray-800 block">
@@ -231,8 +242,10 @@ export default function PartnerPage() {
                   </Link>
                 ))}
               </div>
-            </div>
-          )}
+            ) : (
+              <p className="text-xs text-gray-400 text-center py-4">No media shared yet</p>
+            )}
+          </div>
 
           <div className="mt-8">
             {confirmDisconnect ? (
