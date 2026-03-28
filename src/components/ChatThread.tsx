@@ -396,6 +396,29 @@ export default function ChatThread({ moodLogId, currentUserId, initialMessages }
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, isPartnerTyping]);
 
+  async function compressImage(file: File): Promise<Blob> {
+    return new Promise((resolve, reject) => {
+      const img = new Image();
+      const url = URL.createObjectURL(file);
+      img.onload = () => {
+        URL.revokeObjectURL(url);
+        const MAX = 2048;
+        let { width, height } = img;
+        if (width > MAX || height > MAX) {
+          if (width > height) { height = Math.round(height * MAX / width); width = MAX; }
+          else { width = Math.round(width * MAX / height); height = MAX; }
+        }
+        const canvas = document.createElement("canvas");
+        canvas.width = width;
+        canvas.height = height;
+        canvas.getContext("2d")!.drawImage(img, 0, 0, width, height);
+        canvas.toBlob((blob) => blob ? resolve(blob) : reject(new Error("Compression failed")), "image/jpeg", 0.85);
+      };
+      img.onerror = reject;
+      img.src = url;
+    });
+  }
+
   async function handleFileSelect(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -406,8 +429,18 @@ export default function ChatThread({ moodLogId, currentUserId, initialMessages }
     const uploadToast = toast.loading("Uploading…");
 
     try {
+      const isVideo = file.type.startsWith("video/");
+      let uploadBlob: Blob = file;
+      let filename = file.name;
+
+      // Compress images (handles HEIC→JPEG conversion + size reduction)
+      if (!isVideo) {
+        uploadBlob = await compressImage(file);
+        filename = filename.replace(/\.[^.]+$/, ".jpg");
+      }
+
       const formData = new FormData();
-      formData.append("file", file);
+      formData.append("file", new File([uploadBlob], filename, { type: isVideo ? file.type : "image/jpeg" }));
 
       const res = await fetch("/api/media/upload", { method: "POST", body: formData });
       const data = await res.json();
@@ -417,12 +450,12 @@ export default function ChatThread({ moodLogId, currentUserId, initialMessages }
         return;
       }
 
-      const type = file.type.startsWith("video/") ? "video" : "image";
-      setPendingMedia({ path: data.path, type });
+      setPendingMedia({ path: data.path, type: isVideo ? "video" : "image" });
       await fetchSignedUrlsForPaths([data.path]);
       toast.dismiss(uploadToast);
-    } catch {
-      toast.error("Upload failed — check your connection", { id: uploadToast });
+    } catch (err) {
+      console.error("[upload]", err);
+      toast.error("Upload failed — try again", { id: uploadToast });
     } finally {
       setUploading(false);
     }
