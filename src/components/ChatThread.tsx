@@ -835,8 +835,13 @@ export default function ChatThread({ moodLogId, currentUserId, initialMessages }
       {showAttachMenu && (
         <div className="border-t border-gray-100 bg-white px-4 py-3 dark:border-gray-800 dark:bg-gray-900">
           <div className="grid grid-cols-4 gap-2">
-            {/* Photo — input overlays the tile directly so iOS can't block it */}
-            <div className={`relative flex flex-col items-center gap-1.5 rounded-2xl bg-gray-50 py-3 text-gray-500 dark:bg-gray-800 dark:text-gray-400 overflow-hidden ${uploading ? "opacity-40" : ""}`}>
+            {/* Photo */}
+            <button
+              onMouseDown={(e) => e.preventDefault()}
+              onClick={() => fileInputRef.current?.click()}
+              disabled={uploading}
+              className="flex flex-col items-center gap-1.5 rounded-2xl bg-gray-50 py-3 text-gray-500 hover:bg-lavender/10 hover:text-lavender transition-all dark:bg-gray-800 dark:text-gray-400 disabled:opacity-40"
+            >
               {uploading ? (
                 <svg className="h-5 w-5 animate-spin" viewBox="0 0 24 24" fill="none">
                   <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
@@ -848,15 +853,7 @@ export default function ChatThread({ moodLogId, currentUserId, initialMessages }
                 </svg>
               )}
               <span className="text-[11px] font-medium">Photo</span>
-              {!uploading && (
-                <input
-                  type="file"
-                  accept="image/*,video/*"
-                  onChange={handleFileSelect}
-                  className="absolute inset-0 opacity-0 cursor-pointer"
-                />
-              )}
-            </div>
+            </button>
             {/* GIF */}
             <button
               onMouseDown={(e) => e.preventDefault()}
@@ -972,6 +969,13 @@ export default function ChatThread({ moodLogId, currentUserId, initialMessages }
       {/* Input bar */}
       <div className="border-t border-gray-100 bg-white px-4 py-3 dark:border-gray-800 dark:bg-gray-900">
         <div className="flex items-center gap-2 rounded-3xl border border-gray-200 bg-gray-50 px-3 py-2 focus-within:border-lavender focus-within:bg-white transition-all dark:border-gray-700 dark:bg-gray-800 dark:focus-within:bg-gray-700">
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/*,video/*"
+            className="hidden"
+            onChange={handleFileSelect}
+          />
           {/* + button — opens attach tray */}
           <button
             onMouseDown={(e) => e.preventDefault()}
