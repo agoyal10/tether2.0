@@ -165,17 +165,9 @@ export default async function DashboardContent() {
       {partnerId && <DashboardRefresher partnerId={partnerId} />}
 
       {/* Greeting */}
-      <div className="flex items-start justify-between">
-        <div>
-          <p className="text-sm text-gray-400">Welcome back,</p>
-          <h1 className="text-2xl font-bold text-gray-800 dark:text-gray-100">{myName} 💞</h1>
-        </div>
-        {streak > 0 && (
-          <div className="flex flex-col items-center rounded-2xl bg-orange-50 dark:bg-orange-950/30 px-3 py-2 shrink-0">
-            <span className="text-xl">🔥</span>
-            <span className="text-xs font-bold text-orange-500">{streak}d</span>
-          </div>
-        )}
+      <div>
+        <p className="text-sm text-gray-400">Welcome back,</p>
+        <h1 className="text-2xl font-bold text-gray-800 dark:text-gray-100">{myName} 💞</h1>
       </div>
 
       {/* Pending connection requests */}
