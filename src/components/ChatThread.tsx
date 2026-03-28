@@ -863,15 +863,22 @@ export default function ChatThread({ moodLogId, currentUserId, initialMessages }
       {/* Music picker */}
       {showMusic && (
         <div className="border-t border-gray-100 bg-white dark:border-gray-800 dark:bg-gray-900">
-          <div className="px-3 pt-2 pb-1">
+          <div className="flex items-center gap-2 px-3 pt-2 pb-1">
             <input
               ref={musicInputRef}
               value={musicQuery}
               onChange={(e) => setMusicQuery(e.target.value)}
               placeholder="Search songs, artists…"
-              className="w-full rounded-2xl border border-gray-200 bg-gray-50 px-3 py-1.5 text-sm text-gray-700 placeholder:text-gray-300 focus:border-[#1DB954] focus:outline-none dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100"
+              className="flex-1 rounded-2xl border border-gray-200 bg-gray-50 px-3 py-1.5 text-sm text-gray-700 placeholder:text-gray-300 focus:border-[#1DB954] focus:outline-none dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100"
               autoFocus
             />
+            <button
+              onMouseDown={(e) => e.preventDefault()}
+              onClick={() => { setShowMusic(false); setMusicQuery(""); setMusicResults([]); }}
+              className="shrink-0 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 text-lg leading-none px-1"
+            >
+              ×
+            </button>
           </div>
           <div className="h-52 overflow-y-auto px-2 pb-2">
             {musicLoading ? (
@@ -925,7 +932,7 @@ export default function ChatThread({ moodLogId, currentUserId, initialMessages }
           {/* + button — opens attach tray */}
           <button
             onMouseDown={(e) => e.preventDefault()}
-            onClick={() => { setShowAttachMenu((v) => !v); setShowEmojis(false); setShowGiphy(false); }}
+            onClick={() => { setShowAttachMenu((v) => !v); setShowEmojis(false); setShowGiphy(false); setShowMusic(false); setMusicQuery(""); setMusicResults([]); }}
             aria-label="Attach"
             className={cn("flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-lg font-light transition-all", showAttachMenu ? "bg-lavender text-white" : "text-gray-400 hover:text-lavender")}
           >
