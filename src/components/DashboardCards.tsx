@@ -54,7 +54,7 @@ export function MiniCard({
   optimisticReactions.forEach((r) => { grouped[r.emoji] = (grouped[r.emoji] ?? 0) + 1; });
 
   return (
-    <div className={cn("flex flex-col gap-2 rounded-3xl border-2 p-4", config.color, config.borderColor)}>
+    <div className={cn("flex flex-col gap-1.5 rounded-3xl border-2 p-3", config.color, config.borderColor)}>
       <div className="flex items-center justify-between">
         <p className="text-[11px] font-semibold uppercase tracking-widest text-gray-400">{label}</p>
         {unread > 0 && (
