@@ -141,7 +141,7 @@ export default function SettingsPage() {
       <section className="flex flex-col gap-3">
         <p className="text-xs font-semibold uppercase tracking-widest text-gray-400">Appearance</p>
         <div className="rounded-3xl bg-gray-50 dark:bg-gray-800 p-5 flex items-center justify-between">
-          <p className="font-medium text-gray-800 dark:text-gray-100">Dark mode</p>
+          <p className="font-medium text-gray-800 dark:text-gray-100">Theme</p>
           <ThemeToggle />
         </div>
       </section>
