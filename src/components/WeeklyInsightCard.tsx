@@ -7,6 +7,7 @@ export default function WeeklyInsightCard() {
   const [insight, setInsight] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [insufficient, setInsufficient] = useState(false);
+  const [expanded, setExpanded] = useState(false);
 
   useEffect(() => {
     fetch("/api/ai/insights?type=weekly")
@@ -32,24 +33,39 @@ export default function WeeklyInsightCard() {
         </Link>
       </div>
 
-      <div className="rounded-3xl bg-gradient-to-br from-lavender-light to-blush-light p-5">
+      <div className="rounded-3xl bg-gradient-to-br from-lavender-light to-blush-light overflow-hidden">
+        {/* Header row — always visible, tap to toggle */}
+        <button
+          onClick={() => !loading && setExpanded((v) => !v)}
+          className="w-full flex items-center justify-between px-5 py-4"
+        >
+          <div className="flex items-center gap-2">
+            <span className="text-lg">✨</span>
+            <p className="text-xs font-semibold text-lavender-dark uppercase tracking-widest">This week</p>
+          </div>
+          {!loading && (
+            <svg
+              viewBox="0 0 24 24"
+              className={`h-4 w-4 fill-none stroke-current text-lavender-dark transition-transform duration-200 ${expanded ? "rotate-180" : ""}`}
+              strokeWidth={2.5}
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+            </svg>
+          )}
+        </button>
+
+        {/* Collapsible body */}
         {loading ? (
-          <div className="flex flex-col gap-2">
+          <div className="flex flex-col gap-2 px-5 pb-5">
             <div className="h-3 w-full rounded-full bg-white/50 animate-pulse" />
             <div className="h-3 w-5/6 rounded-full bg-white/50 animate-pulse" />
             <div className="h-3 w-4/6 rounded-full bg-white/50 animate-pulse" />
           </div>
-        ) : insight ? (
-          <>
-            <div className="flex items-center gap-2 mb-3">
-              <span className="text-lg">✨</span>
-              <p className="text-xs font-semibold text-lavender-dark uppercase tracking-widest">This week</p>
-            </div>
-            <p className="text-sm leading-relaxed text-gray-700">{insight}</p>
-          </>
-        ) : (
-          <p className="text-sm text-gray-400 text-center py-2">No insight available yet</p>
-        )}
+        ) : expanded && insight ? (
+          <p className="text-sm leading-relaxed text-gray-700 px-5 pb-5">{insight}</p>
+        ) : expanded && !insight ? (
+          <p className="text-sm text-gray-400 text-center px-5 pb-5">No insight available yet</p>
+        ) : null}
       </div>
     </section>
   );
