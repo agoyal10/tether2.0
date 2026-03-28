@@ -24,6 +24,11 @@ export default function ChatThread({ moodLogId, currentUserId, initialMessages }
   const [showGiphy, setShowGiphy] = useState(false);
   const [showAttachMenu, setShowAttachMenu] = useState(false);
   const [locating, setLocating] = useState(false);
+  const [showMusic, setShowMusic] = useState(false);
+  const [musicQuery, setMusicQuery] = useState("");
+  const [musicResults, setMusicResults] = useState<SpotifyTrack[]>([]);
+  const [musicLoading, setMusicLoading] = useState(false);
+  const musicInputRef = useRef<HTMLInputElement>(null);
   const [giphyQuery, setGiphyQuery] = useState("");
   const [giphyResults, setGiphyResults] = useState<{ id: string; url: string; preview: string; title: string }[]>([]);
   const [giphyLoading, setGiphyLoading] = useState(false);
@@ -191,6 +196,71 @@ export default function ChatThread({ moodLogId, currentUserId, initialMessages }
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ moodLogId, content: "Wants to know where you are 📍" }),
+      }).catch(() => {});
+    }, 2000);
+  }
+
+  type SpotifyTrack = {
+    id: string;
+    name: string;
+    artist: string;
+    album: string;
+    image: string;
+    preview: string | null;
+    url: string;
+  };
+
+  useEffect(() => {
+    if (!showMusic) return;
+    const controller = new AbortController();
+    const delay = setTimeout(async () => {
+      if (!musicQuery.trim()) { setMusicResults([]); return; }
+      setMusicLoading(true);
+      try {
+        const res = await fetch(`/api/spotify/search?q=${encodeURIComponent(musicQuery)}`, { signal: controller.signal });
+        const { tracks } = await res.json();
+        setMusicResults(tracks ?? []);
+      } catch { /* aborted */ }
+      setMusicLoading(false);
+    }, 400);
+    return () => { clearTimeout(delay); controller.abort(); };
+  }, [showMusic, musicQuery]);
+
+  async function sendTrack(track: SpotifyTrack) {
+    setShowMusic(false);
+    setMusicQuery("");
+    setMusicResults([]);
+
+    const trackContent = `spotify:${JSON.stringify(track)}`;
+    const optimisticId = `optimistic-${Date.now()}`;
+    const optimistic: Message = {
+      id: optimisticId,
+      mood_log_id: moodLogId,
+      sender_id: currentUserId,
+      content: trackContent,
+      media_path: null,
+      created_at: new Date().toISOString(),
+    };
+    setMessages((prev) => [...prev, optimistic]);
+
+    const { data: inserted } = await supabase.from("messages").insert({
+      mood_log_id: moodLogId,
+      sender_id: currentUserId,
+      content: trackContent,
+      media_path: null,
+    }).select().single();
+
+    if (inserted) {
+      setMessages((prev) => prev.map((m) => m.id === optimisticId ? { ...inserted } : m));
+      broadcastMessage(inserted);
+    }
+
+    if (pushDebounceRef.current) clearTimeout(pushDebounceRef.current);
+    pushDebounceRef.current = setTimeout(() => {
+      fetch("/api/push/message", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ moodLogId, content: `Shared a song: ${track.name} — ${track.artist} 🎵` }),
       }).catch(() => {});
     }, 2000);
   }
@@ -507,6 +577,39 @@ export default function ChatThread({ moodLogId, currentUserId, initialMessages }
                       )}
                     </div>
                   );
+                })() : msg.content?.startsWith("spotify:") ? (() => {
+                  let track: SpotifyTrack | null = null;
+                  try { track = JSON.parse(msg.content.slice(8)); } catch { return null; }
+                  if (!track) return null;
+                  return (
+                    <div className={cn("rounded-2xl overflow-hidden max-w-[260px] shadow-soft", isMine ? "bg-lavender text-white" : "bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-100")}>
+                      <div className="flex items-center gap-3 p-3">
+                        {track.image ? (
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img src={track.image} alt={track.album} className="h-12 w-12 rounded-lg shrink-0 object-cover" />
+                        ) : (
+                          <div className="h-12 w-12 rounded-lg shrink-0 bg-black/20 flex items-center justify-center text-xl">🎵</div>
+                        )}
+                        <div className="min-w-0 flex-1">
+                          <p className="text-xs font-bold truncate">{track.name}</p>
+                          <p className={cn("text-[11px] truncate mt-0.5", isMine ? "text-white/70" : "text-gray-400")}>{track.artist}</p>
+                          <p className={cn("text-[10px] truncate", isMine ? "text-white/50" : "text-gray-300")}>{track.album}</p>
+                        </div>
+                      </div>
+                      {track.preview && (
+                        <audio controls src={track.preview} className="w-full h-8" style={{ colorScheme: isMine ? "dark" : "light" }} />
+                      )}
+                      <a
+                        href={track.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className={cn("flex items-center justify-center gap-1.5 py-2 text-[11px] font-semibold border-t", isMine ? "border-white/20 text-white/80 hover:text-white" : "border-gray-100 dark:border-gray-700 text-[#1DB954] hover:text-[#1aa34a]")}
+                      >
+                        <svg viewBox="0 0 24 24" className="h-3.5 w-3.5 fill-current"><path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0zm5.521 17.34c-.24.359-.66.48-1.021.24-2.82-1.74-6.36-2.101-10.561-1.141-.418.122-.779-.179-.899-.539-.12-.421.18-.78.54-.9 4.56-1.021 8.52-.6 11.64 1.32.42.18.479.659.301 1.02zm1.44-3.3c-.301.42-.841.6-1.262.3-3.239-1.98-8.159-2.58-11.939-1.38-.479.12-1.02-.12-1.14-.6-.12-.48.12-1.021.6-1.141C9.6 9.9 15 10.561 18.72 12.84c.361.181.54.78.241 1.2zm.12-3.36C15.24 8.4 8.82 8.16 5.16 9.301c-.6.179-1.2-.181-1.38-.721-.18-.601.18-1.2.72-1.381 4.26-1.26 11.28-1.02 15.721 1.621.539.3.719 1.02.419 1.56-.299.421-1.02.599-1.559.3z"/></svg>
+                        Open in Spotify
+                      </a>
+                    </div>
+                  );
                 })() : msg.content?.startsWith("giphy:") ? (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img src={msg.content.slice(6)} alt="GIF" className="mt-1 max-w-[200px] rounded-2xl" />
@@ -686,7 +789,7 @@ export default function ChatThread({ moodLogId, currentUserId, initialMessages }
       {/* Attach tray (photo / GIF / location) */}
       {showAttachMenu && (
         <div className="border-t border-gray-100 bg-white px-4 py-3 dark:border-gray-800 dark:bg-gray-900">
-          <div className="grid grid-cols-3 gap-2">
+          <div className="grid grid-cols-4 gap-2">
             {/* Photo */}
             <button
               onMouseDown={(e) => e.preventDefault()}
@@ -712,7 +815,7 @@ export default function ChatThread({ moodLogId, currentUserId, initialMessages }
               onClick={() => { setShowAttachMenu(false); setShowGiphy(true); setShowEmojis(false); }}
               className="flex flex-col items-center gap-1.5 rounded-2xl bg-gray-50 py-3 text-gray-500 hover:bg-lavender/10 hover:text-lavender transition-all dark:bg-gray-800 dark:text-gray-400"
             >
-              <span className="text-lg font-bold tracking-tight">GIF</span>
+              <span className="text-base font-bold tracking-tight">GIF</span>
               <span className="text-[11px] font-medium">GIF</span>
             </button>
             {/* Location */}
@@ -732,7 +835,18 @@ export default function ChatThread({ moodLogId, currentUserId, initialMessages }
                   <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
                 </svg>
               )}
-              <span className="text-[11px] font-medium">{locating ? "Locating…" : "Location"}</span>
+              <span className="text-[11px] font-medium">{locating ? "…" : "Location"}</span>
+            </button>
+            {/* Music */}
+            <button
+              onMouseDown={(e) => e.preventDefault()}
+              onClick={() => { setShowAttachMenu(false); setShowMusic(true); setTimeout(() => musicInputRef.current?.focus(), 50); }}
+              className="flex flex-col items-center gap-1.5 rounded-2xl bg-gray-50 py-3 text-gray-500 hover:bg-[#1DB954]/10 hover:text-[#1DB954] transition-all dark:bg-gray-800 dark:text-gray-400"
+            >
+              <svg viewBox="0 0 24 24" className="h-5 w-5 fill-current">
+                <path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0zm5.521 17.34c-.24.359-.66.48-1.021.24-2.82-1.74-6.36-2.101-10.561-1.141-.418.122-.779-.179-.899-.539-.12-.421.18-.78.54-.9 4.56-1.021 8.52-.6 11.64 1.32.42.18.479.659.301 1.02zm1.44-3.3c-.301.42-.841.6-1.262.3-3.239-1.98-8.159-2.58-11.939-1.38-.479.12-1.02-.12-1.14-.6-.12-.48.12-1.021.6-1.141C9.6 9.9 15 10.561 18.72 12.84c.361.181.54.78.241 1.2zm.12-3.36C15.24 8.4 8.82 8.16 5.16 9.301c-.6.179-1.2-.181-1.38-.721-.18-.601.18-1.2.72-1.381 4.26-1.26 11.28-1.02 15.721 1.621.539.3.719 1.02.419 1.56-.299.421-1.02.599-1.559.3z"/>
+              </svg>
+              <span className="text-[11px] font-medium">Music</span>
             </button>
           </div>
           {/* Request location — subtle link below grid */}
@@ -743,6 +857,58 @@ export default function ChatThread({ moodLogId, currentUserId, initialMessages }
           >
             Ask for their location instead →
           </button>
+        </div>
+      )}
+
+      {/* Music picker */}
+      {showMusic && (
+        <div className="border-t border-gray-100 bg-white dark:border-gray-800 dark:bg-gray-900">
+          <div className="px-3 pt-2 pb-1">
+            <input
+              ref={musicInputRef}
+              value={musicQuery}
+              onChange={(e) => setMusicQuery(e.target.value)}
+              placeholder="Search songs, artists…"
+              className="w-full rounded-2xl border border-gray-200 bg-gray-50 px-3 py-1.5 text-sm text-gray-700 placeholder:text-gray-300 focus:border-[#1DB954] focus:outline-none dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100"
+              autoFocus
+            />
+          </div>
+          <div className="h-52 overflow-y-auto px-2 pb-2">
+            {musicLoading ? (
+              <div className="flex h-full items-center justify-center">
+                <svg className="h-5 w-5 animate-spin text-[#1DB954]" viewBox="0 0 24 24" fill="none">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
+                </svg>
+              </div>
+            ) : !musicQuery.trim() ? (
+              <p className="py-6 text-center text-xs text-gray-400">Search for a song to share</p>
+            ) : musicResults.length === 0 ? (
+              <p className="py-6 text-center text-xs text-gray-400">No results found</p>
+            ) : (
+              <div className="flex flex-col gap-1 pt-1">
+                {musicResults.map((track) => (
+                  <button
+                    key={track.id}
+                    onClick={() => sendTrack(track)}
+                    className="flex items-center gap-3 rounded-xl px-2 py-1.5 text-left hover:bg-gray-50 dark:hover:bg-gray-800 transition-all"
+                  >
+                    {track.image ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img src={track.image} alt={track.album} className="h-10 w-10 rounded-lg shrink-0 object-cover" />
+                    ) : (
+                      <div className="h-10 w-10 rounded-lg shrink-0 bg-gray-100 dark:bg-gray-700 flex items-center justify-center text-lg">🎵</div>
+                    )}
+                    <div className="min-w-0">
+                      <p className="text-xs font-semibold text-gray-800 dark:text-gray-100 truncate">{track.name}</p>
+                      <p className="text-[11px] text-gray-400 truncate">{track.artist} · {track.album}</p>
+                    </div>
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+          <p className="pb-1 text-center text-[9px] text-gray-300">Powered by Spotify</p>
         </div>
       )}
 
@@ -782,6 +948,7 @@ export default function ChatThread({ moodLogId, currentUserId, initialMessages }
               setContent(e.target.value);
               setShowEmojis(false);
               setShowAttachMenu(false);
+              setShowMusic(false);
               // Broadcast typing — throttle to once per second
               const now = Date.now();
               if (channelRef.current && now - lastTypingSentRef.current > 1000) {
