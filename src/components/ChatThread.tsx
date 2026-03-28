@@ -46,6 +46,10 @@ export default function ChatThread({ moodLogId, currentUserId, initialMessages }
   const lastTypingSentRef = useRef(0);
   const pushDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [lightboxUrl, setLightboxUrl] = useState<string | null>(null);
+  const [imgScale, setImgScale] = useState(1);
+  const [imgTranslate, setImgTranslate] = useState({ x: 0, y: 0 });
+  const pinchRef = useRef<{ startDist: number; startScale: number } | null>(null);
+  const panRef = useRef<{ startX: number; startY: number; startTx: number; startTy: number } | null>(null);
 
   const GIPHY_KEY = process.env.NEXT_PUBLIC_GIPHY_API_KEY;
 
@@ -564,6 +568,56 @@ export default function ChatThread({ moodLogId, currentUserId, initialMessages }
     );
   }
 
+  // Reset zoom when lightbox opens/closes
+  useEffect(() => {
+    setImgScale(1);
+    setImgTranslate({ x: 0, y: 0 });
+  }, [lightboxUrl]);
+
+  function handleLightboxTouchStart(e: React.TouchEvent) {
+    if (e.touches.length === 2) {
+      const dist = Math.hypot(
+        e.touches[1].clientX - e.touches[0].clientX,
+        e.touches[1].clientY - e.touches[0].clientY
+      );
+      pinchRef.current = { startDist: dist, startScale: imgScale };
+      panRef.current = null;
+    } else if (e.touches.length === 1) {
+      panRef.current = {
+        startX: e.touches[0].clientX,
+        startY: e.touches[0].clientY,
+        startTx: imgTranslate.x,
+        startTy: imgTranslate.y,
+      };
+      pinchRef.current = null;
+    }
+  }
+
+  function handleLightboxTouchMove(e: React.TouchEvent) {
+    if (e.touches.length === 2 && pinchRef.current) {
+      const dist = Math.hypot(
+        e.touches[1].clientX - e.touches[0].clientX,
+        e.touches[1].clientY - e.touches[0].clientY
+      );
+      const newScale = Math.min(5, Math.max(1, pinchRef.current.startScale * (dist / pinchRef.current.startDist)));
+      setImgScale(newScale);
+      if (newScale <= 1) setImgTranslate({ x: 0, y: 0 });
+    } else if (e.touches.length === 1 && panRef.current && imgScale > 1) {
+      const dx = e.touches[0].clientX - panRef.current.startX;
+      const dy = e.touches[0].clientY - panRef.current.startY;
+      setImgTranslate({ x: panRef.current.startTx + dx, y: panRef.current.startTy + dy });
+    }
+  }
+
+  function handleLightboxTouchEnd() {
+    pinchRef.current = null;
+    panRef.current = null;
+    setImgScale((prev) => {
+      if (prev < 1) { setImgTranslate({ x: 0, y: 0 }); return 1; }
+      return prev;
+    });
+  }
+
   const isMineClass = "rounded-br-md bg-lavender text-white";
   const isTheirsClass = "rounded-bl-md bg-white text-gray-700 dark:bg-gray-800 dark:text-gray-100";
 
@@ -591,10 +645,24 @@ export default function ChatThread({ moodLogId, currentUserId, initialMessages }
       {lightboxUrl && (
         <div
           className="fixed inset-0 z-50 flex items-center justify-center bg-black/90"
-          onClick={() => setLightboxUrl(null)}
+          onClick={() => { if (imgScale <= 1) setLightboxUrl(null); }}
         >
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={lightboxUrl} alt="Photo" className="max-h-full max-w-full object-contain" onClick={(e) => e.stopPropagation()} />
+          <img
+            src={lightboxUrl}
+            alt="Photo"
+            className="max-h-full max-w-full object-contain"
+            style={{
+              transform: `translate(${imgTranslate.x}px, ${imgTranslate.y}px) scale(${imgScale})`,
+              transition: pinchRef.current || panRef.current ? "none" : "transform 0.15s ease",
+              touchAction: "none",
+              cursor: imgScale > 1 ? "grab" : "default",
+            }}
+            onClick={(e) => e.stopPropagation()}
+            onTouchStart={handleLightboxTouchStart}
+            onTouchMove={handleLightboxTouchMove}
+            onTouchEnd={handleLightboxTouchEnd}
+          />
           <div className="absolute flex items-center gap-2" style={{ top: "calc(env(safe-area-inset-top, 0px) + 12px)", right: "12px" }}>
             <button
               className="flex h-7 items-center justify-center rounded-full bg-white/20 backdrop-blur-sm text-white px-2.5 text-[11px] font-semibold"
