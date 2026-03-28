@@ -5,6 +5,7 @@ export const dynamic = "force-dynamic";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
+import toast from "react-hot-toast";
 
 interface MediaItem {
   id: string;
@@ -21,6 +22,9 @@ export default function MediaPage() {
   const [loading, setLoading] = useState(true);
   const [lightbox, setLightbox] = useState<MediaItem | null>(null);
   const [filter, setFilter] = useState<"all" | "photos" | "videos">("all");
+  const [selecting, setSelecting] = useState(false);
+  const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
     supabase.auth.getUser().then(async ({ data: { user } }) => {
@@ -38,7 +42,7 @@ export default function MediaPage() {
 
       const { data: msgs } = await supabase
         .from("messages")
-        .select("id, media_path, created_at")
+        .select("id, media_path, created_at, sender_id")
         .in("sender_id", [user.id, partnerId])
         .not("media_path", "is", null)
         .order("created_at", { ascending: false });
@@ -79,6 +83,40 @@ export default function MediaPage() {
     } catch { win.close(); }
   }
 
+  function toggleSelect(id: string) {
+    setSelected((prev) => {
+      const next = new Set(prev);
+      next.has(id) ? next.delete(id) : next.add(id);
+      return next;
+    });
+  }
+
+  function cancelSelect() {
+    setSelecting(false);
+    setSelected(new Set());
+  }
+
+  async function deleteSelected() {
+    if (!selected.size) return;
+    setDeleting(true);
+    try {
+      const res = await fetch("/api/media/delete", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ messageIds: Array.from(selected) }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error ?? "Delete failed");
+      setItems((prev) => prev.filter((i) => !selected.has(i.id)));
+      toast.success(`Deleted ${data.deleted} item${data.deleted === 1 ? "" : "s"}`);
+      cancelSelect();
+    } catch {
+      toast.error("Couldn't delete — you can only delete your own media");
+    } finally {
+      setDeleting(false);
+    }
+  }
+
   const filtered = items.filter((i) =>
     filter === "all" ? true : filter === "videos" ? i.isVideo : !i.isVideo
   );
@@ -86,26 +124,44 @@ export default function MediaPage() {
   return (
     <div className="flex flex-col gap-4">
       <div className="flex items-center gap-3">
-        <button onClick={() => router.back()} className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200">
-          <svg viewBox="0 0 24 24" className="h-5 w-5 fill-none stroke-current strokeWidth-2"><path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7"/></svg>
-        </button>
-        <h1 className="text-2xl font-bold text-gray-800 dark:text-gray-100">Shared Media</h1>
+        {selecting ? (
+          <button onClick={cancelSelect} className="text-sm font-medium text-gray-400 hover:text-gray-600">
+            Cancel
+          </button>
+        ) : (
+          <button onClick={() => router.back()} className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200">
+            <svg viewBox="0 0 24 24" className="h-5 w-5 fill-none stroke-current strokeWidth-2"><path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7"/></svg>
+          </button>
+        )}
+        <h1 className="text-2xl font-bold text-gray-800 dark:text-gray-100 flex-1">
+          {selecting && selected.size > 0 ? `${selected.size} selected` : "Shared Media"}
+        </h1>
+        {!loading && filtered.length > 0 && !selecting && (
+          <button
+            onClick={() => setSelecting(true)}
+            className="text-sm font-semibold text-lavender hover:text-lavender-dark"
+          >
+            Select
+          </button>
+        )}
       </div>
 
       {/* Filter tabs */}
-      <div className="flex gap-2">
-        {(["all", "photos", "videos"] as const).map((f) => (
-          <button
-            key={f}
-            onClick={() => setFilter(f)}
-            className={`rounded-full px-4 py-1.5 text-xs font-semibold capitalize transition-all ${
-              filter === f ? "bg-lavender text-white" : "bg-gray-100 text-gray-500 dark:bg-gray-800 dark:text-gray-400"
-            }`}
-          >
-            {f}
-          </button>
-        ))}
-      </div>
+      {!selecting && (
+        <div className="flex gap-2">
+          {(["all", "photos", "videos"] as const).map((f) => (
+            <button
+              key={f}
+              onClick={() => setFilter(f)}
+              className={`rounded-full px-4 py-1.5 text-xs font-semibold capitalize transition-all ${
+                filter === f ? "bg-lavender text-white" : "bg-gray-100 text-gray-500 dark:bg-gray-800 dark:text-gray-400"
+              }`}
+            >
+              {f}
+            </button>
+          ))}
+        </div>
+      )}
 
       {loading ? (
         <div className="flex items-center justify-center py-20">
@@ -121,22 +177,54 @@ export default function MediaPage() {
           {filtered.map((item) => (
             <button
               key={item.id}
-              onClick={() => setLightbox(item)}
+              onClick={() => selecting ? toggleSelect(item.id) : setLightbox(item)}
               className="relative aspect-square overflow-hidden rounded-lg bg-gray-100 dark:bg-gray-800"
             >
               {item.isVideo ? (
                 <>
                   <video src={item.url} className="h-full w-full object-cover" />
-                  <div className="absolute inset-0 flex items-center justify-center">
-                    <svg viewBox="0 0 24 24" className="h-8 w-8 fill-white drop-shadow-lg"><path d="M8 5v14l11-7z"/></svg>
-                  </div>
+                  {!selecting && (
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <svg viewBox="0 0 24 24" className="h-8 w-8 fill-white drop-shadow-lg"><path d="M8 5v14l11-7z"/></svg>
+                    </div>
+                  )}
                 </>
               ) : (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img src={item.url} alt="" className="h-full w-full object-cover" />
               )}
+
+              {/* Selection overlay */}
+              {selecting && (
+                <div className={`absolute inset-0 transition-colors ${selected.has(item.id) ? "bg-lavender/30" : "bg-transparent"}`}>
+                  <div className={`absolute bottom-1.5 right-1.5 h-5 w-5 rounded-full border-2 flex items-center justify-center transition-colors ${
+                    selected.has(item.id)
+                      ? "bg-lavender border-lavender"
+                      : "bg-white/60 border-white backdrop-blur-sm"
+                  }`}>
+                    {selected.has(item.id) && (
+                      <svg viewBox="0 0 24 24" className="h-3 w-3 fill-none stroke-white" strokeWidth={3}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                      </svg>
+                    )}
+                  </div>
+                </div>
+              )}
             </button>
           ))}
+        </div>
+      )}
+
+      {/* Delete bar */}
+      {selecting && selected.size > 0 && (
+        <div className="sticky bottom-4">
+          <button
+            onClick={deleteSelected}
+            disabled={deleting}
+            className="w-full rounded-3xl bg-blush py-3.5 text-sm font-semibold text-white hover:bg-blush-dark disabled:opacity-60 transition-all shadow-card"
+          >
+            {deleting ? "Deleting…" : `Delete ${selected.size} item${selected.size === 1 ? "" : "s"}`}
+          </button>
         </div>
       )}
 
@@ -156,7 +244,6 @@ export default function MediaPage() {
               onClick={(e) => e.stopPropagation()}
             />
           ) : (
-            // eslint-disable-next-line @next/next/no-img-element
             // eslint-disable-next-line @next/next/no-img-element
             <img
               src={lightbox.url}
