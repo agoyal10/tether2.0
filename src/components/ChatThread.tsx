@@ -755,15 +755,22 @@ export default function ChatThread({ moodLogId, currentUserId, initialMessages }
       {/* GIPHY picker */}
       {showGiphy && (
         <div className="border-t border-gray-100 bg-white dark:border-gray-800 dark:bg-gray-900">
-          <div className="px-3 pt-2 pb-1">
+          <div className="px-3 pt-2 pb-1 flex items-center gap-2">
             <input
               ref={giphyInputRef}
               value={giphyQuery}
               onChange={(e) => setGiphyQuery(e.target.value)}
               placeholder="Search GIFs…"
-              className="w-full rounded-2xl border border-gray-200 bg-gray-50 px-3 py-1.5 text-sm text-gray-700 placeholder:text-gray-300 focus:border-lavender focus:outline-none dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100"
+              className="flex-1 rounded-2xl border border-gray-200 bg-gray-50 px-3 py-1.5 text-sm text-gray-700 placeholder:text-gray-300 focus:border-lavender focus:outline-none dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100"
               autoFocus
             />
+            <button
+              onMouseDown={(e) => e.preventDefault()}
+              onClick={() => { setShowGiphy(false); setGiphyQuery(""); }}
+              className="text-gray-400 hover:text-gray-600 text-lg leading-none px-1"
+            >
+              ×
+            </button>
           </div>
           <div className="h-48 overflow-y-auto px-2 pb-2">
             {giphyLoading ? (
