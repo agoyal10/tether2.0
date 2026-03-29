@@ -218,6 +218,7 @@ export default function RecapPage() {
   const [insightLoading, setInsightLoading] = useState(true);
   const [insufficient, setInsufficient] = useState(false);
   const [insightError, setInsightError] = useState(false);
+  const [monthlyPremiumRequired, setMonthlyPremiumRequired] = useState(false);
   const [trends, setTrends] = useState<TrendsData | null>(null);
   const [trendsLoading, setTrendsLoading] = useState(true);
 
@@ -235,6 +236,7 @@ export default function RecapPage() {
 
       if (monthly.insight) setInsight(stripMarkdown(monthly.insight));
       else if (monthly.insufficient) setInsufficient(true);
+      else if (monthly.premiumRequired) setMonthlyPremiumRequired(true);
       else setInsightError(true);
 
       if (trendsData.myLogs) setTrends(trendsData);
@@ -303,7 +305,18 @@ export default function RecapPage() {
         {!loading && (
           <div className="px-5 py-4">
             <p className="text-[10px] font-semibold uppercase tracking-widest text-gray-400 mb-2">This month</p>
-            {insightLoading ? null : insight ? (
+            {insightLoading ? null : monthlyPremiumRequired ? (
+              <div className="rounded-2xl bg-gradient-to-br from-lavender/10 to-blush/10 border border-lavender/20 p-4 flex flex-col gap-2">
+                <p className="text-sm font-semibold text-lavender-dark dark:text-lavender">✨ Premium feature</p>
+                <p className="text-xs text-gray-500 dark:text-gray-400">Unlock your monthly relationship recap with a Premium subscription.</p>
+                <button
+                  onClick={() => router.push("/settings")}
+                  className="mt-1 self-start rounded-xl bg-lavender px-4 py-1.5 text-xs font-semibold text-white hover:bg-lavender-dark transition-all"
+                >
+                  Upgrade →
+                </button>
+              </div>
+            ) : insight ? (
               <p className="text-sm leading-relaxed text-gray-700 dark:text-gray-300">{insight}</p>
             ) : insufficient ? (
               <p className="text-sm text-gray-400 italic">Not enough check-ins yet — keep going together.</p>

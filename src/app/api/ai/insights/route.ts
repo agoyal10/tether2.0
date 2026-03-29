@@ -50,6 +50,18 @@ export async function GET(req: NextRequest) {
 
   if (!conn) return NextResponse.json({ error: "No active connection" }, { status: 404 });
 
+  // Monthly recap is premium-only
+  if (type === "monthly") {
+    const { data: profile } = await admin
+      .from("profiles")
+      .select("is_premium")
+      .eq("id", user.id)
+      .single<{ is_premium: boolean }>();
+    if (!profile?.is_premium) {
+      return NextResponse.json({ error: "Premium required", premiumRequired: true }, { status: 403 });
+    }
+  }
+
   const periodKey = getPeriodKey(type);
 
   // Return cached insight if it exists
