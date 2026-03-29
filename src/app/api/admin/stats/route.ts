@@ -63,10 +63,25 @@ export async function GET() {
     admin.from("ai_insights").select("*", { count: "exact", head: true }).eq("type", "drift_alert").gte("created_at", `${todayStr}T00:00:00`),
   ]);
 
+  // Fetch emails from auth.users for recent users
+  const userIds = (recentUsers ?? []).map((u) => u.id);
+  const emailMap: Record<string, string> = {};
+  await Promise.all(
+    userIds.map(async (id) => {
+      const { data } = await admin.auth.admin.getUserById(id);
+      if (data?.user?.email) emailMap[id] = data.user.email;
+    })
+  );
+
+  const recentWithEmail = (recentUsers ?? []).map((u) => ({
+    ...u,
+    email: emailMap[u.id] ?? null,
+  }));
+
   const emojiCountToday = (emojiToday ?? []).reduce((sum: number, r: { count: number }) => sum + (r.count ?? 0), 0);
 
   return NextResponse.json({
-    users: { total: totalUsers ?? 0, newThisWeek: newUsersThisWeek ?? 0, recent: recentUsers ?? [] },
+    users: { total: totalUsers ?? 0, newThisWeek: newUsersThisWeek ?? 0, recent: recentWithEmail },
     couples: { active: activeCouples ?? 0, pending: pendingCouples ?? 0 },
     checkins: { today: checkinsToday ?? 0, thisWeek: checkinsThisWeek ?? 0, total: totalCheckins ?? 0 },
     ai: { insightsToday: aiInsightsToday ?? 0, emojiToday: emojiCountToday },

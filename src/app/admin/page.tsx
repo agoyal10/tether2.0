@@ -6,7 +6,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 
 interface Stats {
-  users: { total: number; newThisWeek: number; recent: { id: string; display_name: string; created_at: string; is_premium: boolean; is_banned: boolean }[] };
+  users: { total: number; newThisWeek: number; recent: { id: string; display_name: string; email: string | null; created_at: string; is_premium: boolean; is_banned: boolean }[] };
   couples: { active: number; pending: number };
   checkins: { today: number; thisWeek: number; total: number };
   ai: { insightsToday: number; emojiToday: number };
@@ -181,7 +181,8 @@ export default function AdminPage() {
               <div key={u.id} className="flex items-center justify-between px-4 py-2.5 border-t border-gray-50 dark:border-gray-700">
                 <div>
                   <p className={`text-sm font-medium ${u.is_banned ? "line-through text-gray-400" : "text-gray-800 dark:text-gray-100"}`}>{u.display_name}</p>
-                  <p className="text-xs text-gray-400">{new Date(u.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })}</p>
+                  <p className="text-xs text-gray-400">{u.email ?? "—"}</p>
+                  <p className="text-xs text-gray-300">{new Date(u.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })}</p>
                 </div>
                 <div className="flex items-center gap-2">
                   {u.is_premium && !u.is_banned && (
