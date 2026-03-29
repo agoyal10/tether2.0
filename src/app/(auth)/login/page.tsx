@@ -20,6 +20,7 @@ function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const next = searchParams.get("next") ?? "/dashboard";
+  const isBanned = searchParams.get("banned") === "1";
   const supabase = createClient();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -61,6 +62,13 @@ function LoginForm() {
           <h1 className="mt-3 text-3xl font-bold text-gray-800">Tether</h1>
           <p className="mt-1 text-sm text-gray-400">Stay connected with your person</p>
         </div>
+
+        {isBanned && (
+          <div className="mb-6 rounded-2xl bg-red-50 border border-red-100 px-4 py-3 text-center">
+            <p className="text-sm font-medium text-red-600">Your account has been suspended.</p>
+            <p className="text-xs text-red-400 mt-0.5">Contact support if you think this is a mistake.</p>
+          </div>
+        )}
 
         {/* Google */}
         <button
