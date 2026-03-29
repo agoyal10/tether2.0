@@ -94,16 +94,23 @@ export default function CheckinPage() {
     // Pre-warm date ideas cache so dashboard loads instantly (fire-and-forget)
     fetch("/api/ai/date-ideas").catch(() => {});
 
-    // Fetch streak to show on success screen
-    fetch("/api/streak").then((r) => r.json()).then(({ streak: s }) => setStreak(s)).catch(() => {});
-
     const successMsg =
       mode === "naughty" ? "Sent! They'll know 😈" :
       mode === "love" ? "Love sent! 💕" :
       "Check-in sent! 💞";
     toast.success(successMsg);
-    setTimeout(() => router.push("/dashboard"), 1500);
     setLoading(false);
+
+    // Fetch streak, then redirect after showing it for 2s
+    fetch("/api/streak")
+      .then((r) => r.json())
+      .then(({ streak: s }) => {
+        setStreak(s);
+        setTimeout(() => router.push("/dashboard"), 2000);
+      })
+      .catch(() => {
+        setTimeout(() => router.push("/dashboard"), 1500);
+      });
   }
 
   const modeLabel = mode === "naughty" ? "Naughty" : mode === "love" ? "Love" : "Sweet";
