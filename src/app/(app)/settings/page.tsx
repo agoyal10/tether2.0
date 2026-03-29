@@ -80,6 +80,17 @@ function SettingsInner() {
       .then((cfg) => setForceStandardModel(cfg.ai_force_standard_model === "true"))
       .catch(() => {});
 
+    // Live updates — pick up admin config changes without reload
+    const channel = supabase
+      .channel("app-config-watch")
+      .on("postgres_changes", { event: "*", schema: "public", table: "app_config" }, (payload) => {
+        const row = payload.new as { key: string; value: string };
+        if (row?.key === "ai_force_standard_model") {
+          setForceStandardModel(row.value === "true");
+        }
+      })
+      .subscribe();
+
     supabase.auth.getUser().then(async ({ data: { user } }) => {
       if (!user) { router.push("/login"); return; }
       const userEmail = user.email ?? "";
@@ -95,6 +106,8 @@ function SettingsInner() {
         localStorage.setItem("tether_profile", JSON.stringify(p));
       }
     });
+
+    return () => { supabase.removeChannel(channel); };
   }, [supabase, router]);
 
   async function saveName() {
@@ -313,9 +326,9 @@ function SettingsInner() {
               <button
                 key={value}
                 onClick={() => saveModelGeneral(value)}
-                disabled={savingModel || !profile?.is_premium || forceStandardModel || (forceStandardModel && value === "sonnet")}
+                disabled={savingModel || !profile?.is_premium || forceStandardModel}
                 className={`flex-1 rounded-2xl py-2 text-xs font-semibold transition-all ${
-                  (forceStandardModel ? "haiku" : (profile?.is_premium ? (profile?.model_general ?? "haiku") : "haiku")) === value
+                  (profile?.is_premium ? (profile?.model_general ?? "haiku") : "haiku") === value
                     ? "bg-lavender text-white"
                     : "bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400"
                 } disabled:cursor-not-allowed disabled:opacity-60`}
@@ -335,9 +348,9 @@ function SettingsInner() {
               <button
                 key={value}
                 onClick={() => saveModelEmoji(value)}
-                disabled={savingModel || !profile?.is_premium || forceStandardModel || (forceStandardModel && value === "sonnet")}
+                disabled={savingModel || !profile?.is_premium || forceStandardModel}
                 className={`flex-1 rounded-2xl py-2 text-xs font-semibold transition-all ${
-                  (forceStandardModel ? "haiku" : (profile?.is_premium ? (profile?.model_emoji ?? "haiku") : "haiku")) === value
+                  (profile?.is_premium ? (profile?.model_emoji ?? "haiku") : "haiku") === value
                     ? "bg-lavender text-white"
                     : "bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400"
                 } disabled:cursor-not-allowed disabled:opacity-60`}
