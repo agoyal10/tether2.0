@@ -30,7 +30,10 @@ export default function BucketList({ connectionId, userId }: { connectionId: str
       .channel(`bucket-${connectionId}`)
       .on("postgres_changes", { event: "*", schema: "public", table: "bucket_list", filter: `connection_id=eq.${connectionId}` }, (payload) => {
         if (payload.eventType === "INSERT") {
-          setItems((prev) => sortItems([...prev, payload.new as BucketItem]));
+          setItems((prev) => {
+            if (prev.some((i) => i.id === payload.new.id)) return prev;
+            return sortItems([...prev, payload.new as BucketItem]);
+          });
         } else if (payload.eventType === "UPDATE") {
           setItems((prev) => sortItems(prev.map((i) => i.id === payload.new.id ? payload.new as BucketItem : i)));
         } else if (payload.eventType === "DELETE") {
