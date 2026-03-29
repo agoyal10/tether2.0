@@ -63,7 +63,7 @@ export async function GET(request: NextRequest) {
       invite_code: generateInviteCode(),
     });
 
-    redirectTo = next === "/dashboard" ? `${origin}/invite` : `${origin}${next}`;
+    redirectTo = next === "/dashboard" ? `${origin}/onboarding` : `${origin}${next}`;
   }
 
   // Update the redirect URL and return with session cookies attached
