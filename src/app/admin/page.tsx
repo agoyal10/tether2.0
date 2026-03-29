@@ -44,12 +44,16 @@ export default function AdminPage() {
   const [stats, setStats] = useState<Stats | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
+  const [coachLimit, setCoachLimit] = useState<string>("50");
+  const [savingLimit, setSavingLimit] = useState(false);
 
   async function load() {
     const res = await fetch("/api/admin/stats");
     if (res.status === 403) { router.push("/dashboard"); return; }
     if (!res.ok) { setError(true); setLoading(false); return; }
-    setStats(await res.json());
+    const data = await res.json();
+    setStats(data);
+    setCoachLimit(data.killSwitches?.find((k: { key: string }) => k.key === "ai_coach_daily_limit")?.value ?? "50");
     setLoading(false);
   }
 
@@ -271,16 +275,29 @@ export default function AdminPage() {
           <div className="rounded-2xl bg-white dark:bg-gray-800 px-4 py-3 shadow-sm flex items-center justify-between gap-4">
             <div>
               <p className="text-sm font-medium text-gray-700 dark:text-gray-300">Coach messages / couple / day</p>
-              <p className="text-xs text-gray-400">Counts both partners' messages + coach replies</p>
+              <p className="text-xs text-gray-400">Counts both partners&apos; messages + coach replies</p>
             </div>
-            <input
-              type="number"
-              min={0}
-              max={1000}
-              defaultValue={getConfigValue("ai_coach_daily_limit", "50")}
-              onBlur={(e) => setConfigValue("ai_coach_daily_limit", e.target.value)}
-              className="w-20 rounded-xl border border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 px-3 py-1.5 text-sm text-gray-800 dark:text-gray-100 text-center focus:border-lavender focus:outline-none focus:ring-2 focus:ring-lavender/30"
-            />
+            <div className="flex items-center gap-2">
+              <input
+                type="number"
+                min={0}
+                max={1000}
+                value={coachLimit}
+                onChange={(e) => setCoachLimit(e.target.value)}
+                className="w-20 rounded-xl border border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 px-3 py-1.5 text-sm text-gray-800 dark:text-gray-100 text-center focus:border-lavender focus:outline-none focus:ring-2 focus:ring-lavender/30"
+              />
+              <button
+                onClick={async () => {
+                  setSavingLimit(true);
+                  await setConfigValue("ai_coach_daily_limit", coachLimit);
+                  setSavingLimit(false);
+                }}
+                disabled={savingLimit}
+                className="rounded-xl bg-lavender px-3 py-1.5 text-xs font-semibold text-white disabled:opacity-50 hover:bg-lavender-dark transition-colors"
+              >
+                {savingLimit ? "Saving…" : "Save"}
+              </button>
+            </div>
           </div>
         </section>
 
