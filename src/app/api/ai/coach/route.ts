@@ -46,7 +46,7 @@ export async function GET() {
   ]);
 
   const limitStr = await getConfig(admin, "ai_coach_daily_limit");
-  const limit = parseInt(limitStr ?? "20", 10);
+  const limit = parseInt(limitStr ?? "50", 10);
   const remaining = Math.max(0, limit - (count ?? 0));
 
   return NextResponse.json({
@@ -89,7 +89,7 @@ export async function POST(req: NextRequest) {
 
   // Daily limit check
   const limitStr = await getConfig(admin, "ai_coach_daily_limit");
-  const limit = parseInt(limitStr ?? "20", 10);
+  const limit = parseInt(limitStr ?? "50", 10);
   const todayStart = new Date();
   todayStart.setHours(0, 0, 0, 0);
 

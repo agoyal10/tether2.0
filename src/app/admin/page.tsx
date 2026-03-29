@@ -72,14 +72,45 @@ export default function AdminPage() {
     });
   }
 
+  async function setConfigValue(key: string, value: string) {
+    await fetch("/api/admin/config", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ key, value }),
+    });
+    setStats((s) => {
+      if (!s) return s;
+      return {
+        ...s,
+        killSwitches: s.killSwitches.map((k) => k.key === key ? { ...k, value } : k),
+      };
+    });
+  }
+
   function getSwitch(key: string) {
     return stats?.killSwitches.find((k) => k.key === key)?.value === "true";
   }
 
+  function getConfigValue(key: string, fallback: string) {
+    return stats?.killSwitches.find((k) => k.key === key)?.value ?? fallback;
+  }
+
   const SWITCH_LABELS: Record<string, string> = {
+    ai_coach_enabled: "Coach",
     ai_date_ideas_enabled: "Date ideas",
     ai_drift_alert_enabled: "Drift alerts (mood nudges)",
   };
+
+  // Merge DB rows with defaults so all known keys always appear
+  const SWITCH_DEFAULTS: Record<string, string> = {
+    ai_coach_enabled: "true",
+    ai_date_ideas_enabled: "true",
+    ai_drift_alert_enabled: "true",
+  };
+  const mergedSwitches = Object.keys(SWITCH_LABELS).map((key) => {
+    const existing = stats.killSwitches.find((k) => k.key === key);
+    return existing ?? { key, value: SWITCH_DEFAULTS[key] ?? "true", updated_at: "" };
+  });
 
   if (loading) {
     return (
@@ -188,14 +219,33 @@ export default function AdminPage() {
         <section className="flex flex-col gap-3">
           <p className="text-xs font-semibold uppercase tracking-widest text-gray-400">Kill Switches</p>
           <div className="rounded-2xl bg-white dark:bg-gray-800 px-4 shadow-sm">
-            {stats.killSwitches.map((sw) => (
+            {mergedSwitches.map((sw) => (
               <Toggle
                 key={sw.key}
-                label={SWITCH_LABELS[sw.key] ?? sw.key}
+                label={SWITCH_LABELS[sw.key]}
                 enabled={sw.value === "true"}
                 onToggle={(v) => toggleKillSwitch(sw.key, v)}
               />
             ))}
+          </div>
+        </section>
+
+        {/* Numeric config */}
+        <section className="flex flex-col gap-3">
+          <p className="text-xs font-semibold uppercase tracking-widest text-gray-400">Limits</p>
+          <div className="rounded-2xl bg-white dark:bg-gray-800 px-4 py-3 shadow-sm flex items-center justify-between gap-4">
+            <div>
+              <p className="text-sm font-medium text-gray-700 dark:text-gray-300">Coach messages / couple / day</p>
+              <p className="text-xs text-gray-400">Counts both partners' messages + coach replies</p>
+            </div>
+            <input
+              type="number"
+              min={0}
+              max={1000}
+              defaultValue={getConfigValue("ai_coach_daily_limit", "50")}
+              onBlur={(e) => setConfigValue("ai_coach_daily_limit", e.target.value)}
+              className="w-20 rounded-xl border border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 px-3 py-1.5 text-sm text-gray-800 dark:text-gray-100 text-center focus:border-lavender focus:outline-none focus:ring-2 focus:ring-lavender/30"
+            />
           </div>
         </section>
 
