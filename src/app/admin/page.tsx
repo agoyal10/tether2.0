@@ -6,7 +6,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 
 interface Stats {
-  users: { total: number; newThisWeek: number; recent: { id: string; display_name: string; created_at: string; is_premium: boolean }[] };
+  users: { total: number; newThisWeek: number; recent: { id: string; display_name: string; created_at: string; is_premium: boolean; is_banned: boolean }[] };
   couples: { active: number; pending: number };
   checkins: { today: number; thisWeek: number; total: number };
   ai: { insightsToday: number; emojiToday: number };
@@ -54,6 +54,24 @@ export default function AdminPage() {
   }
 
   useEffect(() => { load(); }, []);
+
+  async function banUser(userId: string, banned: boolean) {
+    await fetch("/api/admin/ban", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ userId, banned }),
+    });
+    setStats((s) => {
+      if (!s) return s;
+      return {
+        ...s,
+        users: {
+          ...s.users,
+          recent: s.users.recent.map((u) => u.id === userId ? { ...u, is_banned: banned } : u),
+        },
+      };
+    });
+  }
 
   async function toggleKillSwitch(key: string, value: boolean) {
     if (!stats) return;
@@ -158,12 +176,29 @@ export default function AdminPage() {
             {stats.users.recent.map((u) => (
               <div key={u.id} className="flex items-center justify-between px-4 py-2.5 border-t border-gray-50 dark:border-gray-700">
                 <div>
-                  <p className="text-sm font-medium text-gray-800 dark:text-gray-100">{u.display_name}</p>
+                  <p className={`text-sm font-medium ${u.is_banned ? "line-through text-gray-400" : "text-gray-800 dark:text-gray-100"}`}>{u.display_name}</p>
                   <p className="text-xs text-gray-400">{new Date(u.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })}</p>
                 </div>
-                {u.is_premium && (
-                  <span className="text-[10px] font-bold bg-gradient-to-r from-lavender to-blush-dark text-white px-2 py-0.5 rounded-full">Premium</span>
-                )}
+                <div className="flex items-center gap-2">
+                  {u.is_premium && !u.is_banned && (
+                    <span className="text-[10px] font-bold bg-gradient-to-r from-lavender to-blush-dark text-white px-2 py-0.5 rounded-full">Premium</span>
+                  )}
+                  {u.is_banned ? (
+                    <button
+                      onClick={() => banUser(u.id, false)}
+                      className="text-[10px] font-semibold bg-gray-100 dark:bg-gray-700 text-gray-500 px-2 py-0.5 rounded-full hover:bg-green-100 hover:text-green-700 transition-colors"
+                    >
+                      Unban
+                    </button>
+                  ) : (
+                    <button
+                      onClick={() => banUser(u.id, true)}
+                      className="text-[10px] font-semibold text-gray-300 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950 px-2 py-0.5 rounded-full transition-colors"
+                    >
+                      Ban
+                    </button>
+                  )}
+                </div>
               </div>
             ))}
           </div>

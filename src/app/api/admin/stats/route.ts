@@ -37,7 +37,7 @@ export async function GET() {
     // Users
     admin.from("profiles").select("*", { count: "exact", head: true }),
     admin.from("profiles").select("*", { count: "exact", head: true }).gte("created_at", weekAgoStr),
-    admin.from("profiles").select("id, display_name, created_at, is_premium").order("created_at", { ascending: false }).limit(10),
+    admin.from("profiles").select("id, display_name, created_at, is_premium, is_banned").order("created_at", { ascending: false }).limit(10),
 
     // Couples
     admin.from("connections").select("*", { count: "exact", head: true }).eq("status", "active"),
