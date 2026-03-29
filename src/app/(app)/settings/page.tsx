@@ -389,6 +389,7 @@ function SettingsInner() {
             </div>
             <ul className="flex flex-col gap-1.5">
               {[
+                "Monthly relationship recap & insights",
                 "Advanced AI relationship coach (Sonnet)",
                 "20 custom emoji generations per day",
                 "Priority support",
