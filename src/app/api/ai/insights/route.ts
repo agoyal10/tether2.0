@@ -118,11 +118,14 @@ Write a monthly recap addressed to both of them. No markdown, no headers, no bul
 
   const content = (message.content[0] as { type: string; text: string }).text.trim();
 
-  // Cache the result
-  await admin.from("ai_insights").upsert(
-    { connection_id: conn.id, type, period_key: periodKey, content },
-    { onConflict: "connection_id,type,period_key" }
-  );
+  // Cache the result — delete first then insert to avoid needing a unique constraint
+  await admin.from("ai_insights")
+    .delete()
+    .eq("connection_id", conn.id)
+    .eq("type", type)
+    .eq("period_key", periodKey);
+  await admin.from("ai_insights")
+    .insert({ connection_id: conn.id, type, period_key: periodKey, content });
 
   return NextResponse.json({ insight: content, cached: false });
 }

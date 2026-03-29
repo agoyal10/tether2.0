@@ -97,11 +97,14 @@ Respond with a JSON array of exactly 3 strings, nothing else. Example format:
     ideas = raw.split("\n").filter((l) => l.trim().length > 0 && !l.trim().startsWith("[") && !l.trim().startsWith("]")).slice(0, 3);
   }
 
-  // Cache for the day
-  await admin.from("ai_insights").upsert(
-    { connection_id: conn.id, type: "date_ideas", period_key: periodKey, content: JSON.stringify(ideas) },
-    { onConflict: "connection_id,type,period_key" }
-  );
+  // Cache for the day — delete first then insert to avoid needing a unique constraint
+  await admin.from("ai_insights")
+    .delete()
+    .eq("connection_id", conn.id)
+    .eq("type", "date_ideas")
+    .eq("period_key", periodKey);
+  await admin.from("ai_insights")
+    .insert({ connection_id: conn.id, type: "date_ideas", period_key: periodKey, content: JSON.stringify(ideas) });
 
   return NextResponse.json({ ideas, cached: false });
 }
