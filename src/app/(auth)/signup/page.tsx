@@ -65,7 +65,7 @@ function SignupForm() {
     }
 
     toast.success("Welcome to Tether! 💞");
-    router.push(next);
+    router.push(next === "/dashboard" ? "/onboarding" : next);
     router.refresh();
     setLoading(false);
   }
