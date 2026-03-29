@@ -33,7 +33,7 @@ export default function MoodCard({ log, isPartner = false, unreadCount = 0, hide
       <div className="flex items-start justify-between">
         <div className="flex items-center gap-3">
           {log.emoji_svg ? (
-            <div className="h-10 w-10 shrink-0" dangerouslySetInnerHTML={{ __html: log.emoji_svg }} />
+            <div className="h-10 w-10 shrink-0 [&>svg]:w-full [&>svg]:h-full" dangerouslySetInnerHTML={{ __html: log.emoji_svg }} />
           ) : config.image ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img src={config.image} alt={config.label} className="h-10 w-10 object-contain" />

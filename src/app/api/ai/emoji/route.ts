@@ -7,13 +7,18 @@ const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
 // Strip any scripts, event handlers, or external references from SVG
 function sanitizeSvg(svg: string): string {
-  return svg
+  let s = svg
     .replace(/<script[\s\S]*?<\/script>/gi, "")       // remove <script> blocks
     .replace(/\bon\w+\s*=/gi, "data-removed=")         // remove event handlers (onclick= etc)
     .replace(/javascript\s*:/gi, "")                   // remove javascript: URIs
     .replace(/<use[^>]*href\s*=\s*["'][^"']*["'][^>]*>/gi, "") // remove <use> with external refs
     .replace(/xlink:href\s*=\s*["'][^"']*["']/gi, "") // remove xlink:href
+    .replace(/<image[\s\S]*?\/?\s*>/gi, "")            // remove <image> elements (no external images)
     .trim();
+  // Force the SVG to fill its container by removing fixed width/height attributes
+  s = s.replace(/(<svg[^>]*)\s+width\s*=\s*["'][^"']*["']/gi, "$1");
+  s = s.replace(/(<svg[^>]*)\s+height\s*=\s*["'][^"']*["']/gi, "$1");
+  return s;
 }
 
 const FREE_DAILY_LIMIT = 5;
