@@ -18,6 +18,11 @@ export async function GET() {
 
   const admin = createAdminClient();
 
+  const enabled = await getConfig(admin, "ai_coach_enabled");
+  if (enabled !== "true") {
+    return NextResponse.json({ error: "Coach is currently unavailable", disabled: true }, { status: 503 });
+  }
+
   const { data: conn } = await admin
     .from("connections")
     .select("id, user_a_id, user_b_id")
