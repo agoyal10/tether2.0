@@ -2,7 +2,7 @@
 
 export const dynamic = "force-dynamic";
 
-import { Suspense, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import toast from "react-hot-toast";
@@ -20,7 +20,14 @@ function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const next = searchParams.get("next") ?? "/dashboard";
-  const isBanned = searchParams.get("banned") === "1";
+  const [isBanned, setIsBanned] = useState(searchParams.get("banned") === "1");
+
+  useEffect(() => {
+    const hash = window.location.hash;
+    if (hash.includes("user_banned") || (hash.includes("access_denied") && hash.includes("banned"))) {
+      setIsBanned(true);
+    }
+  }, []);
   const supabase = createClient();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
