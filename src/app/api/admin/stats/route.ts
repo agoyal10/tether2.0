@@ -78,17 +78,15 @@ export async function GET() {
     email: emailMap[u.id] ?? null,
   }));
 
-  // Storage stats via storage schema
-  const { data: storageObjects } = await admin
-    .schema("storage")
-    .from("objects")
-    .select("metadata");
-
-  const storageFileCount = storageObjects?.length ?? 0;
-  const storageBytesUsed = (storageObjects ?? []).reduce((sum, obj) => {
-    const size = obj.metadata?.size ?? 0;
-    return sum + size;
-  }, 0);
+  // Storage stats via Storage API
+  const { data: buckets } = await admin.storage.listBuckets();
+  let storageFileCount = 0;
+  let storageBytesUsed = 0;
+  for (const bucket of (buckets ?? [])) {
+    const { data: files } = await admin.storage.from(bucket.name).list("", { limit: 10000, offset: 0 });
+    storageFileCount += files?.length ?? 0;
+    storageBytesUsed += (files ?? []).reduce((sum, f) => sum + (f.metadata?.size ?? 0), 0);
+  }
 
   const emojiCountToday = (emojiToday ?? []).reduce((sum: number, r: { count: number }) => sum + (r.count ?? 0), 0);
 
