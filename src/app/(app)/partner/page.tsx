@@ -8,6 +8,7 @@ import Link from "next/link";
 import toast from "react-hot-toast";
 import { createClient } from "@/lib/supabase/client";
 import type { Connection, Profile } from "@/types";
+import BucketList from "@/components/BucketList";
 
 interface MediaPreviewItem { id: string; url: string; isVideo: boolean; }
 
@@ -59,6 +60,7 @@ export default function PartnerPage() {
   const [copied, setCopied] = useState(false);
   const [requestSent, setRequestSent] = useState(false);
   const [confirmDisconnect, setConfirmDisconnect] = useState(false);
+  const [tab, setTab] = useState<"partner" | "bucket">("partner");
   const [mediaPreviews, setMediaPreviews] = useState<MediaPreviewItem[]>([]);
   const [mediaLoading, setMediaLoading] = useState(true);
   const [lightbox, setLightbox] = useState<MediaPreviewItem | null>(null);
@@ -221,7 +223,25 @@ export default function PartnerPage() {
           </div>
         </div>
       )}
-      <h1 className="text-2xl font-bold text-gray-800 dark:text-gray-100">Partner</h1>
+      <div className="flex items-center justify-between">
+        <h1 className="text-2xl font-bold text-gray-800 dark:text-gray-100">Partner</h1>
+        {partner && (
+          <div className="flex rounded-2xl bg-gray-100 dark:bg-gray-800 p-1 gap-1">
+            <button
+              onClick={() => setTab("partner")}
+              className={`rounded-xl px-3 py-1.5 text-xs font-semibold transition-all ${tab === "partner" ? "bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-100 shadow-sm" : "text-gray-400"}`}
+            >
+              Profile
+            </button>
+            <button
+              onClick={() => setTab("bucket")}
+              className={`rounded-xl px-3 py-1.5 text-xs font-semibold transition-all ${tab === "bucket" ? "bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-100 shadow-sm" : "text-gray-400"}`}
+            >
+              Bucket List
+            </button>
+          </div>
+        )}
+      </div>
 
       {pageLoading ? (
         <div className="flex flex-col gap-4 animate-pulse">
@@ -235,6 +255,9 @@ export default function PartnerPage() {
           <p className="text-sm text-gray-400">Waiting for your partner to accept.<br />They&apos;ll get a notification to approve.</p>
         </div>
       ) : partner ? (
+        tab === "bucket" ? (
+          <BucketList connectionId={connection!.id} userId={profile?.id ?? ""} />
+        ) :
         <div className="flex flex-col gap-4">
           <div className="rounded-3xl bg-lavender-light p-5 flex items-center gap-4">
             <div className="flex h-14 w-14 items-center justify-center rounded-full bg-lavender text-2xl text-white font-bold shrink-0">
@@ -323,6 +346,7 @@ export default function PartnerPage() {
         </div>
       ) : (
         <div className="flex flex-col gap-6">
+
           <div className="rounded-3xl bg-lavender-light p-5">
             <p className="text-xs font-semibold uppercase tracking-widest text-lavender-dark mb-3">Invite Your Partner</p>
             <div className="flex items-center justify-between gap-3">
