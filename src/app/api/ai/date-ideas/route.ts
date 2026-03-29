@@ -56,9 +56,23 @@ export async function GET(req: NextRequest) {
   const myMood = myLogs?.[0]?.mood ?? "okay";
   const partnerMood = partnerLogs?.[0]?.mood ?? "okay";
 
-  const prompt = `${myName} is feeling "${myMood}" and ${partnerName} is feeling "${partnerMood}" today.
+  const THEMES = [
+    "adventure and exploration", "creativity and making things", "food and cooking",
+    "nature and outdoors", "games and friendly competition", "relaxation and self-care",
+    "learning something new together", "nostalgia and revisiting memories",
+    "music and dancing", "giving back or doing something kind", "fitness and movement",
+    "arts and culture", "tech and gadgets", "surprise and mystery",
+  ];
+  const theme = THEMES[Math.floor(Math.random() * THEMES.length)];
 
-Suggest exactly 3 date ideas for them. Make them specific, varied (one cozy/at-home, one out-and-about, one spontaneous/playful), and tailored to how they're both feeling. Keep each idea to one sentence.
+  const AVOID = [
+    "cooking together at home", "road trip", "dance party", "blanket fort",
+    "cooking dinner", "explore a new part of town",
+  ];
+
+  const prompt = `${myName} is feeling "${myMood}" and ${partnerName} is feeling "${partnerMood}" today. Today's creative theme: ${theme}.
+
+Suggest exactly 3 specific, surprising date ideas for them based on their moods and this theme. Be imaginative — avoid generic ideas like: ${AVOID.join(", ")}. Each idea should feel fresh and unexpected. Keep each to one sentence.
 
 Respond with a JSON array of exactly 3 strings, nothing else. Example format:
 ["idea one", "idea two", "idea three"]`;
