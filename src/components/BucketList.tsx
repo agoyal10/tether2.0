@@ -59,7 +59,16 @@ export default function BucketList({ connectionId, userId }: { connectionId: str
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ text }),
     });
-    if (!res.ok) setInput(text); // restore on error
+    if (!res.ok) {
+      setInput(text);
+    } else {
+      const { item } = await res.json();
+      // Add immediately; realtime will dedup if it also fires
+      setItems((prev) => {
+        if (prev.some((i) => i.id === item.id)) return prev;
+        return sortItems([...prev, item]);
+      });
+    }
     setAdding(false);
     inputRef.current?.focus();
   }
