@@ -108,7 +108,7 @@ export default function AdminPage() {
     ai_drift_alert_enabled: "true",
   };
   const mergedSwitches = Object.keys(SWITCH_LABELS).map((key) => {
-    const existing = stats.killSwitches.find((k) => k.key === key);
+    const existing = stats?.killSwitches.find((k) => k.key === key);
     return existing ?? { key, value: SWITCH_DEFAULTS[key] ?? "true", updated_at: "" };
   });
 
