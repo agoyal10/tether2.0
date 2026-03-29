@@ -21,7 +21,23 @@ function SettingsInner() {
 
   useEffect(() => {
     if (searchParams.get("upgraded") === "1") {
-      toast.success("Welcome to Premium! 🎉");
+      // Sync premium status directly from Stripe (webhook may be delayed)
+      fetch("/api/stripe/sync", { method: "POST" })
+        .then((r) => r.json())
+        .then(({ is_premium }) => {
+          if (is_premium) {
+            setProfile((p) => {
+              if (!p) return p;
+              const updated = { ...p, is_premium: true };
+              localStorage.setItem("tether_profile", JSON.stringify(updated));
+              return updated;
+            });
+            toast.success("Welcome to Premium! 🎉");
+          } else {
+            toast.error("Payment received but subscription not active yet. Try refreshing in a moment.");
+          }
+        })
+        .catch(() => toast.success("Welcome to Premium! 🎉"));
       router.replace("/settings");
     }
     if (searchParams.get("cancelled") === "1") {
@@ -146,8 +162,12 @@ function SettingsInner() {
     setUpgradingPremium(true);
     try {
       const res = await fetch("/api/stripe/checkout", { method: "POST" });
-      const { url } = await res.json();
-      if (url) window.location.href = url;
+      const data = await res.json();
+      if (data.url) {
+        window.location.href = data.url;
+      } else {
+        toast.error(data.error ?? "Could not start checkout. Try again.");
+      }
     } catch {
       toast.error("Something went wrong. Try again.");
     }
@@ -158,8 +178,12 @@ function SettingsInner() {
     setManagingBilling(true);
     try {
       const res = await fetch("/api/stripe/portal", { method: "POST" });
-      const { url } = await res.json();
-      if (url) window.location.href = url;
+      const data = await res.json();
+      if (data.url) {
+        window.location.href = data.url;
+      } else {
+        toast.error(data.error ?? "Could not open billing portal. Try again.");
+      }
     } catch {
       toast.error("Something went wrong. Try again.");
     }
