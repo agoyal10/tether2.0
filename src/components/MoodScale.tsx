@@ -13,9 +13,10 @@ interface MoodScaleProps {
   isLoading?: boolean;
   naughtyMode?: boolean;
   mode?: CheckinMode;
+  streak?: number;
 }
 
-export default function MoodScale({ onSubmit, isLoading = false, naughtyMode = false, mode }: MoodScaleProps) {
+export default function MoodScale({ onSubmit, isLoading = false, naughtyMode = false, mode, streak }: MoodScaleProps) {
   const [selected, setSelected] = useState<MoodLevel | null>(null);
   const [note, setNote] = useState("");
   const [gratitude, setGratitude] = useState("");
@@ -95,10 +96,16 @@ export default function MoodScale({ onSubmit, isLoading = false, naughtyMode = f
         ) : (
           <MoodIcon level={selectedConfig.level} emoji={selectedConfig.emoji} className="h-16 w-16" />
         )}
-        <p className="text-xl font-semibold text-gray-700">Check-in sent!</p>
-        <p className="text-sm text-gray-400">
-          Your partner has been notified.
-        </p>
+        <p className="text-xl font-semibold text-gray-700 dark:text-gray-200">Check-in sent!</p>
+        <p className="text-sm text-gray-400">Your partner has been notified.</p>
+        {streak != null && streak > 0 && (
+          <div className="mt-1 flex items-center gap-1.5 rounded-2xl bg-orange-50 dark:bg-orange-900/20 px-4 py-2">
+            <span className="text-lg">🔥</span>
+            <p className="text-sm font-semibold text-orange-500">
+              {streak} day{streak === 1 ? "" : "s"} in a row!
+            </p>
+          </div>
+        )}
       </motion.div>
     );
   }

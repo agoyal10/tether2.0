@@ -24,6 +24,7 @@ export default function CheckinPage() {
   const router = useRouter();
   const supabase = createClient();
   const [loading, setLoading] = useState(false);
+  const [streak, setStreak] = useState<number | undefined>(undefined);
   const { mode, toggle: toggleMode } = useNaughtyMode();
 
   // Song picker state
@@ -93,6 +94,9 @@ export default function CheckinPage() {
     // Pre-warm date ideas cache so dashboard loads instantly (fire-and-forget)
     fetch("/api/ai/date-ideas").catch(() => {});
 
+    // Fetch streak to show on success screen
+    fetch("/api/streak").then((r) => r.json()).then(({ streak: s }) => setStreak(s)).catch(() => {});
+
     const successMsg =
       mode === "naughty" ? "Sent! They'll know 😈" :
       mode === "love" ? "Love sent! 💕" :
@@ -142,7 +146,7 @@ export default function CheckinPage() {
         </button>
       </div>
       <div className={`rounded-4xl p-6 shadow-card transition-colors ${cardBg}`}>
-        <MoodScale onSubmit={handleSubmit} isLoading={loading} mode={mode} />
+        <MoodScale onSubmit={handleSubmit} isLoading={loading} mode={mode} streak={streak} />
       </div>
 
       {/* Song picker */}
