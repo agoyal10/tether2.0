@@ -13,6 +13,7 @@ interface Stats {
   revenue: { premium: number };
   killSwitches: { key: string; value: string; updated_at: string }[];
   push: { subscriptions: number; driftAlertsToday: number };
+  storage: { files: number; bytes: number };
 }
 
 function StatCard({ label, value, sub }: { label: string; value: number | string; sub?: string }) {
@@ -243,6 +244,23 @@ export default function AdminPage() {
           <div className="grid grid-cols-2 gap-3">
             <StatCard label="Premium users" value={stats.revenue.premium} sub={`$${(stats.revenue.premium * 4.99).toFixed(2)} MRR`} />
             <StatCard label="Free users" value={stats.users.total - stats.revenue.premium} />
+          </div>
+        </section>
+
+        {/* Storage */}
+        <section className="flex flex-col gap-3">
+          <p className="text-xs font-semibold uppercase tracking-widest text-gray-400">Storage</p>
+          <div className="grid grid-cols-2 gap-3">
+            <StatCard label="Files" value={stats.storage.files.toLocaleString()} />
+            <StatCard
+              label="Used"
+              value={stats.storage.bytes < 1024 * 1024
+                ? `${(stats.storage.bytes / 1024).toFixed(1)} KB`
+                : stats.storage.bytes < 1024 * 1024 * 1024
+                ? `${(stats.storage.bytes / (1024 * 1024)).toFixed(1)} MB`
+                : `${(stats.storage.bytes / (1024 * 1024 * 1024)).toFixed(2)} GB`}
+              sub="of 1 GB free tier"
+            />
           </div>
         </section>
 
