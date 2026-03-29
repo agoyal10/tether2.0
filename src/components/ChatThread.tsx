@@ -781,7 +781,7 @@ export default function ChatThread({ moodLogId, currentUserId, initialMessages }
                     {msg.media_path && renderMedia(msg)}
                     {msg.content && (
                       isEmojiOnly(msg.content) ? (
-                        <span className="text-3xl leading-none">{msg.content}</span>
+                        <span className="text-3xl leading-none block">{msg.content.trim()}</span>
                       ) : (
                         <div className={cn("max-w-[78%] break-words rounded-3xl px-4 py-2.5 text-sm leading-relaxed shadow-soft", isMine ? isMineClass : isTheirsClass)}>
                           {renderTextWithLinks(msg.content)}
