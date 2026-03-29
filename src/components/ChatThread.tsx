@@ -636,7 +636,9 @@ export default function ChatThread({ moodLogId, currentUserId, initialMessages }
   }
 
   function isEmojiOnly(str: string) {
-    return /^[\p{Emoji_Presentation}\p{Extended_Pictographic}\u{FE0F}\u{200D}\s]+$/u.test(str.trim());
+    // Strip all emoji-related unicode (presentations, modifiers, ZWJ, variation selectors, regional indicators, tags)
+    const stripped = str.trim().replace(/[\p{Emoji}\p{Emoji_Presentation}\p{Emoji_Modifier}\p{Emoji_Modifier_Base}\p{Extended_Pictographic}\u{FE0F}\u{FE0E}\u{200D}\u{20E3}\u{1F3FB}-\u{1F3FF}\u{E0020}-\u{E007F}\s]/gu, "");
+    return stripped.length === 0 && str.trim().length > 0;
   }
 
   return (
