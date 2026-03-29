@@ -310,7 +310,7 @@ function SettingsInner() {
         {forceStandardModel && (
           <div className="rounded-2xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800 px-4 py-3">
             <p className="text-xs font-medium text-amber-700 dark:text-amber-400">
-              Admin has set all AI models to Standard. Advanced models are currently unavailable.
+              Advanced models are currently unavailable.
             </p>
           </div>
         )}
