@@ -59,7 +59,9 @@ export async function GET(req: NextRequest) {
     .eq("connection_id", conn.id)
     .eq("type", type)
     .eq("period_key", periodKey)
-    .single();
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
 
   if (cached) return NextResponse.json({ insight: cached.content, cached: true });
 
