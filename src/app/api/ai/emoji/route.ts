@@ -63,8 +63,10 @@ export async function POST(req: NextRequest) {
   );
 
   // Haiku by default; Sonnet only if premium and explicitly opted in
+  const { data: forceStandardRow } = await admin.from("app_config").select("value").eq("key", "ai_force_standard_model").single();
+  const forceStandard = forceStandardRow?.value === "true";
   const modelPref = profile?.model_emoji ?? "haiku";
-  const model = (isPremium && modelPref === "sonnet") ? "claude-sonnet-4-6" : "claude-haiku-4-5-20251001";
+  const model = (!forceStandard && isPremium && modelPref === "sonnet") ? "claude-sonnet-4-6" : "claude-haiku-4-5-20251001";
 
   const prompt = `Create a tiny, expressive SVG emoji (64x64 viewBox) that captures this mood: "${mood}"${note ? ` — note: "${note}"` : ""}.
 

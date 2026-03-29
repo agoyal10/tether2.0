@@ -122,6 +122,7 @@ export default function AdminPage() {
     ai_coach_enabled: "Coach",
     ai_date_ideas_enabled: "Date ideas",
     ai_drift_alert_enabled: "Drift alerts (mood nudges)",
+    ai_force_standard_model: "Force Standard model (override user preference)",
   };
 
   // Merge DB rows with defaults so all known keys always appear
@@ -129,6 +130,7 @@ export default function AdminPage() {
     ai_coach_enabled: "true",
     ai_date_ideas_enabled: "true",
     ai_drift_alert_enabled: "true",
+    ai_force_standard_model: "false",
   };
   const mergedSwitches = Object.keys(SWITCH_LABELS).map((key) => {
     const existing = stats?.killSwitches.find((k) => k.key === key);

@@ -47,6 +47,7 @@ function SettingsInner() {
   type FullProfile = Profile & { reminder_enabled: boolean; reminder_hour: number; reminder_timezone: string; is_premium: boolean; model_general: string; model_emoji: string; love_language: string | null };
 
   const [profile, setProfile] = useState<FullProfile | null>(null);
+  const [forceStandardModel, setForceStandardModel] = useState(false);
   const [email, setEmail] = useState("");
   const [editingName, setEditingName] = useState(false);
   const [nameInput, setNameInput] = useState("");
@@ -74,6 +75,11 @@ function SettingsInner() {
   }, []);
 
   useEffect(() => {
+    fetch("/api/config")
+      .then((r) => r.json())
+      .then((cfg) => setForceStandardModel(cfg.ai_force_standard_model === "true"))
+      .catch(() => {});
+
     supabase.auth.getUser().then(async ({ data: { user } }) => {
       if (!user) { router.push("/login"); return; }
       const userEmail = user.email ?? "";
@@ -283,10 +289,18 @@ function SettingsInner() {
       <section className="flex flex-col gap-3">
         <div className="flex items-center gap-2">
           <p className="text-xs font-semibold uppercase tracking-widest text-gray-400">AI Models</p>
-          {!profile?.is_premium && (
+          {!profile?.is_premium && !forceStandardModel && (
             <span className="text-[10px] font-semibold bg-lavender/20 text-lavender px-2 py-0.5 rounded-full">Premium to change</span>
           )}
         </div>
+
+        {forceStandardModel && (
+          <div className="rounded-2xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800 px-4 py-3">
+            <p className="text-xs font-medium text-amber-700 dark:text-amber-400">
+              Admin has set all AI models to Standard. Advanced models are currently unavailable.
+            </p>
+          </div>
+        )}
 
         {/* Coach */}
         <div className="rounded-3xl bg-gray-50 dark:bg-gray-800 p-5 flex flex-col gap-3">
@@ -299,9 +313,9 @@ function SettingsInner() {
               <button
                 key={value}
                 onClick={() => saveModelGeneral(value)}
-                disabled={savingModel || !profile?.is_premium}
+                disabled={savingModel || !profile?.is_premium || forceStandardModel || (forceStandardModel && value === "sonnet")}
                 className={`flex-1 rounded-2xl py-2 text-xs font-semibold transition-all ${
-                  (profile?.is_premium ? (profile?.model_general ?? "haiku") : "haiku") === value
+                  (forceStandardModel ? "haiku" : (profile?.is_premium ? (profile?.model_general ?? "haiku") : "haiku")) === value
                     ? "bg-lavender text-white"
                     : "bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400"
                 } disabled:cursor-not-allowed disabled:opacity-60`}
@@ -321,9 +335,9 @@ function SettingsInner() {
               <button
                 key={value}
                 onClick={() => saveModelEmoji(value)}
-                disabled={savingModel || !profile?.is_premium}
+                disabled={savingModel || !profile?.is_premium || forceStandardModel || (forceStandardModel && value === "sonnet")}
                 className={`flex-1 rounded-2xl py-2 text-xs font-semibold transition-all ${
-                  (profile?.is_premium ? (profile?.model_emoji ?? "haiku") : "haiku") === value
+                  (forceStandardModel ? "haiku" : (profile?.is_premium ? (profile?.model_emoji ?? "haiku") : "haiku")) === value
                     ? "bg-lavender text-white"
                     : "bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400"
                 } disabled:cursor-not-allowed disabled:opacity-60`}

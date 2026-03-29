@@ -116,7 +116,8 @@ export async function POST(req: NextRequest) {
     .eq("id", user.id)
     .single<{ model_general: string; is_premium: boolean }>();
 
-  const model = (userProfile?.is_premium && userProfile?.model_general === "sonnet")
+  const forceStandard = await getConfig(admin, "ai_force_standard_model");
+  const model = (forceStandard !== "true" && userProfile?.is_premium && userProfile?.model_general === "sonnet")
     ? "claude-sonnet-4-6"
     : "claude-haiku-4-5-20251001";
 
